@@ -97,6 +97,8 @@ document.addEventListener("keydown", ev => {
   const t = ev.target;
   if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
   if ($("#drawer").classList.contains("visible")) return;
+  // Space on a focused button / summary / link belongs to that control
+  if ((ev.code === "Space" || ev.key === " ") && t && t.closest && t.closest("button, summary, a[href], [role=button], [role=menuitem]")) return;
 
   if (S.view === "cards") {
     if (keyIs(ev, "approve")) { ev.preventDefault(); cardAct("approved"); }

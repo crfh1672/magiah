@@ -7,7 +7,7 @@
 async function openDrawer(id) {
   $("#drawer").classList.add("visible");
   $("#drawerScrim").classList.add("visible");
-  openLayer($("#drawer"));
+  openLayer($("#drawer"), "#viewtabs button.active");
   const body = $("#drawerBody");
   body.replaceChildren(el("div", { class: "loading-row" }, "טוען…"));
   let resp;

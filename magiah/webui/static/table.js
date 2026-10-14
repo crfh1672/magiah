@@ -142,6 +142,7 @@ function renderTableRows() {
     for (const c of cols) tr.append(cell[c.key]());
     tr.addEventListener("click", () => openDrawer(r.id));
     makeActivatable(tr, () => openDrawer(r.id));
+    tr.setAttribute("aria-haspopup", "dialog");
     tb.append(tr);
   }
 }
@@ -246,5 +247,15 @@ $("#stMenu").addEventListener("keydown", ev => {
   const i = items.indexOf(document.activeElement);
   if (ev.key === "ArrowDown") { ev.preventDefault(); items[(i + 1) % items.length].focus(); }
   else if (ev.key === "ArrowUp") { ev.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
-  else if (ev.key === "Tab" || ev.key === "Escape") { ev.preventDefault(); closeStatusMenu(); }
+  else if (ev.key === "Escape") { ev.preventDefault(); closeStatusMenu(); }
+  else if (ev.key === "Tab") {
+    // dismiss, then continue from the chip that opened the menu: the menu
+    // is not in the page's tab order, so the browser could not do it itself
+    const anchor = $("#stMenu")._anchor;
+    const order = () => [...document.querySelectorAll(FOCUSABLE)].filter(e => isShown(e) && !$("#stMenu").contains(e));
+    closeStatusMenu();
+    const list = order(), at = list.indexOf(anchor);
+    const next = at < 0 ? null : list[at + (ev.shiftKey ? -1 : 1)];
+    if (next) { ev.preventDefault(); next.focus(); }
+  }
 });
