@@ -253,6 +253,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 }
 #fBookList .book-item:last-child { border-bottom: none; }
 #fBookList .book-item:hover { background: var(--accent-soft); }
+#fBookList .book-item:focus-visible, #bsResults .bs-item:focus-visible { outline-offset: -2px; }
 #fBookList .book-item.selected { background: var(--accent); color: var(--on-accent); }
 #fBookList .book-item .bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #fBookList .book-item .bcount { color: var(--faint); font-size: var(--fs-xs); flex-shrink: 0; }
@@ -383,6 +384,7 @@ table.ftable td {
 }
 table.ftable tbody tr { cursor: pointer; transition: background .1s; }
 table.ftable tbody tr:hover { background: var(--accent-soft); }
+table.ftable tbody tr:focus-visible { outline-offset: -2px; background: var(--accent-soft); }
 table.ftable tbody tr.selrow { background: var(--blue-soft); }
 table.ftable td.snip {
   max-width: 340px;
@@ -416,6 +418,7 @@ table.ftable td.refcell { max-width: 140px; overflow: hidden; text-overflow: ell
 
 /* status chips */
 .chip {
+  font: inherit; font-size: var(--fs-xs); line-height: 1.4;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -504,11 +507,12 @@ table.ftable td.loading-row, table.ftable td.empty-row { padding: 30px; }
   box-shadow: var(--shadow-lg);
   z-index: 100;
   transform: translateX(-105%);
-  transition: transform .2s ease;
+  visibility: hidden;
+  transition: transform .2s ease, visibility 0s .2s;
   display: flex;
   flex-direction: column;
 }
-#drawer.visible { transform: translateX(0); }
+#drawer.visible { transform: translateX(0); visibility: visible; transition-delay: 0s; }
 #drawer header {
   display: flex;
   align-items: center;
@@ -1147,6 +1151,7 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: 700; background:
 .help-block ol, .help-block ul { padding-inline-start: 22px; }
 
 /* ==================== tooltips ==================== */
+.info-i:focus-visible { outline-offset: 2px; border-radius: 50%; }
 .info-i {
   display: inline-block;
   color: var(--faint);

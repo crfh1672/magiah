@@ -18,12 +18,68 @@ function el(tag, attrs, ...children) {
     else if (k === "text") n.textContent = v;
     else n.setAttribute(k, v);
   }
+  // a tooltip nobody can reach by keyboard is no tooltip
+  if (attrs && attrs.dataset && attrs.dataset.tip && !/^(BUTTON|INPUT|SELECT|TEXTAREA|A)$/.test(n.tagName)) n.tabIndex = 0;
   for (const c of children.flat()) {
     if (c == null) continue;
     n.append(c.nodeType ? c : document.createTextNode(String(c)));
   }
   return n;
 }
+
+/* Make a non-button element usable from the keyboard: focusable, optional
+ * role, Enter / Space activate it. */
+function makeActivatable(node, fn, role) {
+  node.tabIndex = 0;
+  if (role) node.setAttribute("role", role);
+  node.addEventListener("keydown", ev => {
+    if (ev.target !== node) return;
+    if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); fn(ev); }
+  });
+  return node;
+}
+
+/* ---- dialogs (drawer, scan modal): focus moves in, Tab stays inside, focus
+ * goes back to whatever opened the dialog ---- */
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
+const LAYERS = [];
+/* Is this element really on screen? A closed <details> hides its content
+ * without always clearing offsetParent, so check the ancestors too (a
+ * <summary> itself stays visible). */
+function isShown(e) {
+  if (!e || e.offsetParent === null) return false;
+  for (let p = e.parentElement; p; p = p.parentElement) {
+    if (p.tagName === "DETAILS" && !p.open && !(e.tagName === "SUMMARY" && e.parentElement === p)) return false;
+  }
+  return true;
+}
+function openLayer(node, fallbackSel) {
+  if (LAYERS.some(l => l.node === node)) return;
+  LAYERS.push({ node, opener: document.activeElement, fallbackSel });
+  requestAnimationFrame(() => {
+    const first = [...node.querySelectorAll(FOCUSABLE)].find(isShown);
+    if (first) first.focus();
+  });
+}
+function closeLayer(node) {
+  const i = LAYERS.findIndex(l => l.node === node);
+  if (i < 0) return;
+  const [l] = LAYERS.splice(i, 1);
+  // the opener may be gone or hidden (a closed menu item): use the fallback
+  let back = l.opener;
+  if (!back || !document.contains(back) || !isShown(back)) back = l.fallbackSel ? $(l.fallbackSel) : null;
+  if (back && back.focus) back.focus();
+}
+document.addEventListener("keydown", ev => {
+  if (ev.key !== "Tab" || !LAYERS.length) return;
+  const node = LAYERS[LAYERS.length - 1].node;
+  const items = [...node.querySelectorAll(FOCUSABLE)].filter(isShown);
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (!node.contains(document.activeElement)) { ev.preventDefault(); first.focus(); }
+  else if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+  else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+});
 
 /* An icon from the sprite in index.html (<symbol id="i-NAME">). Coloured by
  * currentColor; decorative, so hidden from screen readers. */
@@ -601,7 +657,10 @@ function syncFilterControls() {
   $("#globalSearch").value = f.q;
   $$("#fErrtypes input[type=checkbox]").forEach(c => { c.checked = f.errtypes.includes(c.value); });
   $$("#fStatuses input[type=checkbox]").forEach(c => { c.checked = f.statuses.includes(c.value); });
-  $$("#fBookList .book-item").forEach(b => b.classList.toggle("selected", b.dataset.key === f.book));
+  $$("#fBookList .book-item").forEach(b => {
+    b.classList.toggle("selected", b.dataset.key === f.book);
+    b.setAttribute("aria-pressed", b.dataset.key === f.book ? "true" : "false");
+  });
   if (f.min_rank || f.sort !== "rank" || f.dir !== "desc" || !S.hideIrr || !S.hideDb) $("#fMore").open = true;
   $("#fixInclude").checked = S.fixInclude;
   if ($("#fixBook")) $("#fixBook").value = S.fixKey;
@@ -732,11 +791,14 @@ const loadBooks = debounce(async function () {
       const item = el("div", { class: "book-item" + (S.filters.book === key ? " selected" : ""), dataset: { key } },
         el("span", { class: "bname", title: label }, el("bdi", null, label)),
         el("span", { class: "bcount" }, cnt));
-      item.addEventListener("click", () => {
+      const pick = () => {
         S.filters.book = S.filters.book === key ? "" : key;
         syncFilterControls();
         filtersChanged();
-      });
+      };
+      item.addEventListener("click", pick);
+      makeActivatable(item, pick, "button");
+      item.setAttribute("aria-pressed", S.filters.book === key ? "true" : "false");
       box.append(item);
     }
   } catch (e) {
@@ -787,7 +849,7 @@ function renderTableHead() {
 function statusChip(row) {
   const st = effStatus(row);
   const info = statusInfo(st);
-  const chip = el("span", { class: "chip st-" + st, title: "לחיצה לשינוי סטטוס" }, (info.icon ? info.icon + " " : "") + info.hebrew);
+  const chip = el("button", { type: "button", class: "chip st-" + st, title: "לחיצה לשינוי סטטוס", "aria-haspopup": "menu" }, (info.icon ? info.icon + " " : "") + info.hebrew);
   chip.addEventListener("click", ev => {
     ev.stopPropagation();
     openStatusMenu(ev.currentTarget, sKey => setStatus([row.id], sKey).catch(() => {}));
@@ -826,6 +888,7 @@ function renderTableRows() {
     tr.append(el("td", { class: "snip" }, renderSnippet(r.snippet, r.word, null, effFix(r))));
     tr.append(el("td", null, statusChip(r)));
     tr.addEventListener("click", () => openDrawer(r.id));
+    makeActivatable(tr, () => openDrawer(r.id));
     tb.append(tr);
   }
 }
@@ -906,19 +969,38 @@ function openStatusMenu(anchor, onPick) {
     b.addEventListener("click", () => { closeStatusMenu(); onPick(s.key); });
     menu.append(b);
   }
+  menu.setAttribute("role", "menu");
+  menu._anchor = anchor;
   const r = anchor.getBoundingClientRect();
   menu.style.display = "block";
   const mw = 180;
   menu.style.top = Math.min(window.innerHeight - 250, r.bottom + 4) + "px";
   menu.style.left = Math.max(8, Math.min(window.innerWidth - mw - 8, r.left)) + "px";
+  for (const b of menu.children) b.setAttribute("role", "menuitem");
+  if (menu.firstElementChild) menu.firstElementChild.focus();
   setTimeout(() => document.addEventListener("click", closeStatusMenu, { once: true }), 0);
 }
-function closeStatusMenu() { $("#stMenu").style.display = "none"; }
+function closeStatusMenu() {
+  const menu = $("#stMenu");
+  const wasOpen = menu.style.display === "block";
+  menu.style.display = "none";
+  const a = menu._anchor;
+  menu._anchor = null;
+  if (wasOpen && a && document.contains(a) && menu.contains(document.activeElement)) a.focus();
+}
+$("#stMenu").addEventListener("keydown", ev => {
+  const items = [...$("#stMenu").children];
+  const i = items.indexOf(document.activeElement);
+  if (ev.key === "ArrowDown") { ev.preventDefault(); items[(i + 1) % items.length].focus(); }
+  else if (ev.key === "ArrowUp") { ev.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  else if (ev.key === "Tab" || ev.key === "Escape") { ev.preventDefault(); closeStatusMenu(); }
+});
 
 /* ---------------------------------------------------------- drawer */
 async function openDrawer(id) {
   $("#drawer").classList.add("visible");
   $("#drawerScrim").classList.add("visible");
+  openLayer($("#drawer"));
   const body = $("#drawerBody");
   body.replaceChildren(el("div", { class: "loading-row" }, "טוען…"));
   let resp;
@@ -1146,6 +1228,7 @@ function renderDrawer(r, history) {
 function closeDrawer() {
   $("#drawer").classList.remove("visible");
   $("#drawerScrim").classList.remove("visible");
+  closeLayer($("#drawer"));
 }
 
 /* ---------------------------------------------------------- card view */
@@ -2723,6 +2806,7 @@ function fileUnitNode(pf) {
 function openScanModal() {
   $("#scanModal").classList.add("visible");
   $("#scanScrim").classList.add("visible");
+  openLayer($("#scanModal"), "#moreMenu > summary");
   loadBackups();
   loadScanConfig().catch(e => toast("טעינת הגדרות הסריקה נכשלה: " + e.message, "err"));
   syncScanStatusOnce();
@@ -2730,6 +2814,7 @@ function openScanModal() {
 function closeScanModal() {
   $("#scanModal").classList.remove("visible");
   $("#scanScrim").classList.remove("visible");
+  closeLayer($("#scanModal"));
 }
 
 async function loadBackups() {
@@ -3172,11 +3257,15 @@ async function bsSearch() {
       el("span", { class: "bs-ttl" }, b.title,
         dir ? el("span", { class: "bs-path" }, dir) : null),
       el("span", { class: "bs-org" }, b.origin || ""));
-    row.addEventListener("click", () => {
-      $$("#bsResults .bs-item").forEach(x => x.classList.remove("on"));
+    const choose = () => {
+      $$("#bsResults .bs-item").forEach(x => { x.classList.remove("on"); x.setAttribute("aria-pressed", "false"); });
       row.classList.add("on");
+      row.setAttribute("aria-pressed", "true");
       bsSetChosen(b);
-    });
+    };
+    row.addEventListener("click", choose);
+    makeActivatable(row, choose, "button");
+    row.setAttribute("aria-pressed", "false");
     return row;
   }));
 }
@@ -3391,8 +3480,7 @@ document.addEventListener("keydown", ev => {
 });
 
 /* ---------------------------------------------------------- tooltips */
-document.addEventListener("mouseover", ev => {
-  const t = ev.target.closest && ev.target.closest("[data-tip]");
+function showTip(t) {
   const tip = $("#tooltip");
   if (!t) { tip.style.display = "none"; return; }
   tip.textContent = t.dataset.tip;
@@ -3405,7 +3493,11 @@ document.addEventListener("mouseover", ev => {
   if (y + tip.offsetHeight > window.innerHeight - 8) y = r.top - tip.offsetHeight - 7;
   tip.style.left = x + "px";
   tip.style.top = y + "px";
-});
+}
+const tipTarget = ev => ev.target.closest && ev.target.closest("[data-tip]");
+document.addEventListener("mouseover", ev => showTip(tipTarget(ev)));
+document.addEventListener("focusin", ev => showTip(tipTarget(ev)));
+document.addEventListener("focusout", () => showTip(null));
 
 /* ---------------------------------------------------------- theme */
 function applyTheme(t) {
