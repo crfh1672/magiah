@@ -311,70 +311,77 @@
 <style>
 /* modal styles (kept next to markup for clarity) */
 .modal-scrim { position: fixed; inset: 0; background: rgba(10,18,28,.4); z-index: 390; display: none; }
-.modal-scrim.visible { display: block; }
+.modal-scrim.visible { display: block; animation: scrim-in var(--t-base); }
+@keyframes scrim-in { from { opacity: 0; } to { opacity: 1; } }
 .modal {
   position: fixed; top: 8vh; inset-inline: 0; margin: 0 auto;
   width: min(640px, 94vw); max-height: 84vh; overflow: hidden;
   background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: var(--shadow-lg); z-index: 400; display: none; flex-direction: column;
 }
-.modal.visible { display: flex; }
-.modal > header { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; border-bottom: 1px solid var(--border); font-weight: 700; }
-.modal > header button { background: none; border: 0; font-size: 19px; cursor: pointer; color: var(--muted); }
-.modal-body { padding: 14px 18px; overflow-y: auto; }
-.scan-row { padding: 10px 0; border-bottom: 1px dashed var(--border); }
-.scan-row p { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+.modal.visible { display: flex; animation: modal-in var(--t-spring); }
+@keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+.modal > header { display: flex; justify-content: space-between; align-items: center; padding: 13px var(--sp-4); border-bottom: 1px solid var(--border); font-weight: var(--fw-bold); font-size: var(--fs-md); }
+.modal > header button { background: none; border: 0; font-size: 19px; cursor: pointer; color: var(--muted); transition: color var(--t-fast); }
+.modal > header button:hover { color: var(--text); }
+.modal-body { padding: var(--sp-3) 18px; overflow-y: auto; }
+.scan-row { padding: var(--sp-3) 0; border-bottom: 1px dashed var(--border); }
+.scan-row p { margin: 6px 0 0; color: var(--muted); font-size: var(--fs-sm); line-height: var(--lh-normal); }
 .btn.warn { border-color: var(--amber); color: var(--amber); }
 .btn.warn:hover { background: var(--amber-soft); color: var(--amber); }
 .btn.danger { border-color: var(--red); color: var(--red); }
 .btn.danger:hover { background: var(--red-soft); color: var(--red); }
-.modal-body h4 { margin: 14px 0 8px; color: var(--muted); }
-#backupsList .bk-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 2px; border-bottom: 1px solid var(--border); font-size: 13px; }
-#backupsList .bk-item code { direction: ltr; overflow: hidden; text-overflow: ellipsis; font-size: 12px; color: var(--muted); }
+.modal-body h4 { margin: var(--sp-3) 0 var(--sp-2); color: var(--muted); font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+#backupsList .bk-item { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-2); padding: 6px 2px; border-bottom: 1px solid var(--border); font-size: var(--fs-sm); }
+#backupsList .bk-item code { direction: ltr; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-sm); color: var(--muted); }
 
 /* §9d — run-scan panel */
-#scanRunSection { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 12px; background: var(--panel-2); }
-#scanRunSection > summary { cursor: pointer; font-weight: 700; padding: 10px 12px; list-style: none; }
+#scanRunSection { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: var(--sp-3); background: var(--panel-2); }
+#scanRunSection > summary { cursor: pointer; font-weight: var(--fw-bold); padding: var(--sp-3) 12px; list-style: none; transition: background var(--t-fast); }
+#scanRunSection > summary:hover { background: var(--accent-soft); }
 #scanRunSection > summary::-webkit-details-marker { display: none; }
 #scanRunSection[open] > summary { border-bottom: 1px solid var(--border); }
-#scanRunSection .scanrun { padding: 12px; }
+#scanRunSection .scanrun { padding: var(--sp-3); }
 #scanModes label.chk-row { align-items: flex-start; }
 #scanModes .mode-desc { display: block; color: var(--faint); font-size: 11.5px; margin-top: 1px; }
 #scanStages { display: flex; flex-wrap: wrap; gap: 4px 14px; }
-#scanAdvanced { margin: 10px 0; border: 1px dashed var(--border); border-radius: var(--radius-sm); }
-#scanAdvanced > summary { cursor: pointer; padding: 8px 10px; color: var(--muted); font-size: 13px; }
-#scanFields { padding: 4px 10px 10px; max-height: 260px; overflow-y: auto; }
-.scan-field { display: grid; grid-template-columns: 1fr 110px; gap: 3px 10px; align-items: center; padding: 7px 0; border-bottom: 1px dashed var(--border); }
+#scanAdvanced { margin: var(--sp-3) 0; border: 1px dashed var(--border); border-radius: var(--radius-sm); }
+#scanAdvanced > summary { cursor: pointer; padding: var(--sp-2) var(--sp-3); color: var(--muted); font-size: var(--fs-sm); }
+#scanFields { padding: 4px var(--sp-3) var(--sp-3); max-height: 260px; overflow-y: auto; }
+.scan-field { display: grid; grid-template-columns: 1fr 110px; gap: 3px var(--sp-3); align-items: center; padding: 7px 0; border-bottom: 1px dashed var(--border); }
 .scan-field:last-child { border-bottom: 0; }
-.scan-field .sf-label { font-weight: 600; font-size: 13px; }
-.scan-field .sf-exp { grid-column: 1 / -1; color: var(--muted); font-size: 12px; line-height: 1.55; }
-.scan-field input { width: 110px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); direction: ltr; text-align: center; }
-.scan-field textarea { grid-column: 1 / -1; width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); direction: ltr; font-size: 12px; }
-.scan-run-actions { display: flex; gap: 8px; margin: 10px 0 4px; flex-wrap: wrap; }
-#scanStatusPanel { margin-top: 10px; }
-#scanStateLine { font-weight: 700; margin-bottom: 6px; }
+.scan-field .sf-label { font-weight: var(--fw-semibold); font-size: var(--fs-sm); }
+.scan-field .sf-exp { grid-column: 1 / -1; color: var(--muted); font-size: var(--fs-sm); line-height: var(--lh-normal); }
+.scan-field input { width: 110px; padding: 4px var(--sp-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); direction: ltr; text-align: center; transition: border-color var(--t-base); }
+.scan-field input:focus { border-color: var(--accent); outline: none; box-shadow: var(--shadow-focus); }
+.scan-field textarea { grid-column: 1 / -1; width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); direction: ltr; font-size: var(--fs-sm); }
+.scan-run-actions { display: flex; gap: var(--sp-2); margin: var(--sp-3) 0 4px; flex-wrap: wrap; }
+#scanStatusPanel { margin-top: var(--sp-3); }
+#scanStateLine { font-weight: var(--fw-bold); margin-bottom: 6px; }
 #scanStateLine.run { color: var(--accent); }
 #scanStateLine.ok { color: var(--green); }
 #scanStateLine.err { color: var(--red); }
 /* single-book scan panel */
-#bookScanSection { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 12px; background: var(--panel-2); }
-#bookScanSection > summary { cursor: pointer; font-weight: 700; padding: 10px 12px; list-style: none; }
+#bookScanSection { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: var(--sp-3); background: var(--panel-2); }
+#bookScanSection > summary { cursor: pointer; font-weight: var(--fw-bold); padding: var(--sp-3) 12px; list-style: none; transition: background var(--t-fast); }
+#bookScanSection > summary:hover { background: var(--accent-soft); }
 #bookScanSection > summary::-webkit-details-marker { display: none; }
 #bookScanSection[open] > summary { border-bottom: 1px solid var(--border); }
-.bs-intro { margin: 0 0 12px; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
-#bsSearch, #bsFilePath { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); }
+.bs-intro { margin: 0 0 var(--sp-3); color: var(--muted); font-size: var(--fs-sm); line-height: var(--lh-relaxed); }
+#bsSearch, #bsFilePath { width: 100%; padding: 6px var(--sp-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); transition: border-color var(--t-base), box-shadow var(--t-base); }
+#bsSearch:focus, #bsFilePath:focus { border-color: var(--accent); outline: none; box-shadow: var(--shadow-focus); }
 #bsFilePath { direction: ltr; text-align: left; }
 #bsResults { max-height: 210px; overflow-y: auto; margin-top: 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); }
-#bsResults .empty { padding: 10px; color: var(--faint); font-size: 12.5px; }
-#bsResults .bs-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 13px; }
+#bsResults .empty { padding: var(--sp-3); color: var(--faint); font-size: var(--fs-sm); }
+#bsResults .bs-item { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-2); padding: 7px var(--sp-3); border-bottom: 1px solid var(--border); cursor: pointer; font-size: var(--fs-sm); transition: background var(--t-fast); }
 #bsResults .bs-item:last-child { border-bottom: 0; }
 #bsResults .bs-item:hover, #bsResults .bs-item.on { background: var(--accent-soft); }
 #bsResults .bs-item .bs-org { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
 #bsResults .bs-item .bs-ttl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bs-path { display: block; direction: ltr; text-align: right; color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#bsChosen { margin: 10px 0 4px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--accent-soft); font-size: 13px; font-weight: 600; }
-.bs-ctx { margin-top: 10px; align-items: flex-start; }
-#scanLog { direction: ltr; text-align: left; unicode-bidi: plaintext; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; max-height: 220px; overflow: auto; font-family: Consolas, "Courier New", monospace; font-size: 11.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; margin: 0; }
+.bs-path { display: block; direction: ltr; text-align: right; color: var(--faint); font-size: var(--fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#bsChosen { margin: var(--sp-3) 0 4px; padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm); background: var(--accent-soft); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.bs-ctx { margin-top: var(--sp-3); align-items: flex-start; }
+#scanLog { direction: ltr; text-align: left; unicode-bidi: plaintext; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); max-height: 220px; overflow: auto; font-family: var(--font-mono); font-size: 11.5px; line-height: var(--lh-normal); white-space: pre-wrap; word-break: break-all; margin: 0; }
 </style>
 
 <script src="/static/cardqueue.js"></script>
