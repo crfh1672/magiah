@@ -602,6 +602,7 @@ function syncFilterControls() {
   $$("#fErrtypes input[type=checkbox]").forEach(c => { c.checked = f.errtypes.includes(c.value); });
   $$("#fStatuses input[type=checkbox]").forEach(c => { c.checked = f.statuses.includes(c.value); });
   $$("#fBookList .book-item").forEach(b => b.classList.toggle("selected", b.dataset.key === f.book));
+  if (f.min_rank || f.sort !== "rank" || f.dir !== "desc" || !S.hideIrr || !S.hideDb) $("#fMore").open = true;
   $("#fixInclude").checked = S.fixInclude;
   if ($("#fixBook")) $("#fixBook").value = S.fixKey;
   syncModeButtons();
@@ -649,7 +650,51 @@ function onStatusFilterChange() {
   S.filters.statuses = $$("#fStatuses input:checked").map(c => c.value);
   filtersChanged();
 }
+/* ---- active filters: what is the list narrowed by, one click to undo each ---- */
+const DEFAULT_FILTERS = () => ({ origin: "", book: "", errtypes: [], statuses: [], verified: false, min_rank: 0, q: "", sort: "rank", dir: "desc" });
+
+function activeFilterChips() {
+  const f = S.filters, chips = [];
+  const add = (label, clear) => chips.push({ label, clear });
+  if (f.q) add("חיפוש: " + f.q, () => { f.q = ""; });
+  if (f.origin) add("מאגר: " + (originInfo(f.origin).hebrew || f.origin), () => { f.origin = ""; });
+  if (f.book) {
+    const b = S.bookList.find(x => (x.key || x.name || x.source) === f.book);
+    add("ספר: " + (b ? (b.name || b.source) : f.book), () => { f.book = ""; });
+  }
+  for (const k of f.errtypes) add(errtypeInfo(k).hebrew || k, () => { f.errtypes = f.errtypes.filter(x => x !== k); });
+  for (const k of f.statuses) add("סטטוס: " + statusInfo(k).hebrew, () => { f.statuses = f.statuses.filter(x => x !== k); });
+  if (f.verified) add("מאומתים בלבד", () => { f.verified = false; });
+  if (f.min_rank) add("ציון מ־" + fmtRank(f.min_rank), () => { f.min_rank = 0; });
+  return chips;
+}
+
+function renderActiveFilters() {
+  const box = $("#activeFilters");
+  if (!box) return;
+  const chips = (S.view === "table" || S.view === "cards") ? activeFilterChips() : [];
+  box.hidden = !chips.length;
+  box.replaceChildren(...chips.map(c => {
+    const b = el("button", { type: "button", class: "fchip", "aria-label": "הסר סינון: " + c.label },
+      el("span", null, c.label), icon("x"));
+    b.addEventListener("click", () => {
+      c.clear();
+      $("#fBookSearch").value = "";
+      syncFilterControls();
+      loadBooks();
+      filtersChanged();
+    });
+    return b;
+  }));
+  if (chips.length > 1) {
+    const all = el("button", { type: "button", class: "fchip-clear" }, "נקה הכל");
+    all.addEventListener("click", () => $("#btnClearFilters").click());
+    box.append(all);
+  }
+}
+
 function filtersChanged() {
+  renderActiveFilters();
   S.page = 1;
   S.sel.clear();
   S.cardStale = true;
@@ -670,6 +715,7 @@ const loadBooks = debounce(async function () {
     const resp = await api("/api/books?" + p);
     const books = Array.isArray(resp) ? resp : (resp.books || resp.rows || []);
     S.bookList = books;
+    renderActiveFilters();
     const box = $("#fBookList");
     box.replaceChildren();
     if (!books.length) { box.append(el("div", { class: "empty" }, "לא נמצאו ספרים")); return; }
@@ -3228,6 +3274,7 @@ function showView(v, skipHash) {
   $("#btnHelp").classList.toggle("active", v === "help");
   $$("section.view").forEach(s => s.classList.toggle("visible", s.id === "view-" + v));
   if (!skipHash) writeHash();
+  renderActiveFilters();
   refreshCurrentView();
 }
 
@@ -3375,7 +3422,7 @@ function bindControls() {
     filtersChanged();
   });
   $("#btnClearFilters").addEventListener("click", () => {
-    S.filters = { origin: "", book: "", errtypes: [], statuses: [], verified: false, min_rank: 0, q: "", sort: "rank", dir: "desc" };
+    S.filters = DEFAULT_FILTERS();
     $("#fBookSearch").value = "";
     syncFilterControls();
     loadBooks();

@@ -95,6 +95,11 @@
 
     <div class="f-group">
       <label class="chk-row"><input type="checkbox" id="fVerified"> מאומתים בלבד <span class="info-i" data-tip="הצג רק ממצאים ברמת ודאות גבוהה — מומלץ להתחיל מהם">ⓘ</span></label>
+    </div>
+
+    <details id="fMore" class="f-more">
+      <summary>אפשרויות נוספות</summary>
+    <div class="f-group">
       <label class="chk-row"><input type="checkbox" id="fHideIrr" checked> הסתר נתיבי «לא רלוונטי» <span class="info-i" data-tip="ספרים שנתיב הקובץ שלהם כולל «לא רלוונטי» (או «לא רלונטי») לא יוצגו — בטבלה, בכרטיסים ובמתקן">ⓘ</span></label>
       <label class="chk-row"><input type="checkbox" id="fHideDb" checked> הסתר ספרים לייצוא בלבד <span class="info-i" data-tip="ספרים ממסד הנתונים שאינם קובץ טקסט — אפשר רק לייצא את התיקונים שלהם">ⓘ</span></label>
     </div>
@@ -117,6 +122,7 @@
         <option value="word:asc">לפי מילה</option>
       </select>
     </div>
+    </details>
 
     <button id="btnClearFilters"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg> ניקוי כל הסינונים</button>
   </aside>
@@ -131,6 +137,7 @@
       <button data-view="stats"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> סטטיסטיקה</button>
       <span class="tab-hint" id="sessionCounter"></span>
     </nav>
+    <div id="activeFilters" role="group" aria-label="סינונים פעילים" hidden></div>
 
     <!-- ===================== table view ===================== -->
     <section id="view-table" class="view visible">

@@ -300,6 +300,25 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 #viewtabs button.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 #viewtabs .tab-hint { margin-inline-start: auto; align-self: center; color: var(--faint); font-size: var(--fs-xs); }
 
+/* ---- active filter chips ---- */
+#activeFilters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); flex: 0 0 auto; }
+#activeFilters[hidden] { display: none; }
+.fchip {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  padding: 3px 6px 3px 10px; border-radius: 14px;
+  border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent-strong);
+  font: inherit; font-size: var(--fs-xs); font-weight: 600; cursor: pointer;
+}
+.fchip .ic { width: 14px; height: 14px; }
+.fchip:hover { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+.fchip-clear { border: 0; background: none; color: var(--muted); font: inherit; font-size: var(--fs-xs); cursor: pointer; text-decoration: underline; padding: 3px var(--sp-2); }
+.fchip-clear:hover { color: var(--red); }
+
+/* secondary sidebar filters live behind one disclosure */
+.f-more { margin-bottom: var(--sp-4); }
+.f-more > summary { cursor: pointer; font-weight: 700; font-size: var(--fs-sm); color: var(--muted); padding: var(--sp-1) 0 var(--sp-2); }
+.f-more > summary:hover { color: var(--accent); }
+
 section.view { display: none; }
 section.view.visible { display: block; }
 
