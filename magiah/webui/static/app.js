@@ -889,6 +889,7 @@ function renderTableRows() {
     tr.append(el("td", null, statusChip(r)));
     tr.addEventListener("click", () => openDrawer(r.id));
     makeActivatable(tr, () => openDrawer(r.id));
+    tr.setAttribute("aria-haspopup", "dialog");
     tb.append(tr);
   }
 }
@@ -993,14 +994,24 @@ $("#stMenu").addEventListener("keydown", ev => {
   const i = items.indexOf(document.activeElement);
   if (ev.key === "ArrowDown") { ev.preventDefault(); items[(i + 1) % items.length].focus(); }
   else if (ev.key === "ArrowUp") { ev.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
-  else if (ev.key === "Tab" || ev.key === "Escape") { ev.preventDefault(); closeStatusMenu(); }
+  else if (ev.key === "Escape") { ev.preventDefault(); closeStatusMenu(); }
+  else if (ev.key === "Tab") {
+    // dismiss, then continue from the chip that opened the menu: the menu
+    // is not in the page's tab order, so the browser could not do it itself
+    const anchor = $("#stMenu")._anchor;
+    const order = () => [...document.querySelectorAll(FOCUSABLE)].filter(e => isShown(e) && !$("#stMenu").contains(e));
+    closeStatusMenu();
+    const list = order(), at = list.indexOf(anchor);
+    const next = at < 0 ? null : list[at + (ev.shiftKey ? -1 : 1)];
+    if (next) { ev.preventDefault(); next.focus(); }
+  }
 });
 
 /* ---------------------------------------------------------- drawer */
 async function openDrawer(id) {
   $("#drawer").classList.add("visible");
   $("#drawerScrim").classList.add("visible");
-  openLayer($("#drawer"));
+  openLayer($("#drawer"), "#viewtabs button.active");
   const body = $("#drawerBody");
   body.replaceChildren(el("div", { class: "loading-row" }, "טוען…"));
   let resp;
@@ -3433,6 +3444,8 @@ document.addEventListener("keydown", ev => {
   const t = ev.target;
   if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
   if ($("#scanModal").classList.contains("visible") || $("#drawer").classList.contains("visible")) return;
+  // Space on a focused button / summary / link belongs to that control
+  if ((ev.code === "Space" || ev.key === " ") && t && t.closest && t.closest("button, summary, a[href], [role=button], [role=menuitem]")) return;
 
   if (S.view === "cards") {
     if (keyIs(ev, "approve")) { ev.preventDefault(); cardAct("approved"); }
