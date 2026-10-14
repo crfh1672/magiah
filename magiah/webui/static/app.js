@@ -178,6 +178,9 @@ const S = {
   // can only be exported (remembered per browser, not in the URL)
   hideIrr: true,
   hideDb: true,
+  // table presentation, remembered per browser
+  density: "comfortable",     // comfortable | compact
+  hiddenCols: new Set(),      // column keys the reviewer turned off
   filters: { origin: "", book: "", errtypes: [], statuses: [], verified: false, min_rank: 0, q: "", sort: "rank", dir: "desc" },
   page: 1,
   pageSize: 50,
@@ -819,16 +822,67 @@ const TABLE_COLS = [
   { key: "status" },
 ];
 
+/* The word and its suggestion are what the table is for: they cannot be hidden. */
+const LOCKED_COLS = new Set(["word", "suggestion"]);
+const visibleCols = () => TABLE_COLS.filter(c => !S.hiddenCols.has(c.key));
+
+function loadTablePrefs() {
+  try {
+    const d = localStorage.getItem("magiah_density");
+    if (d === "compact" || d === "comfortable") S.density = d;
+    const h = JSON.parse(localStorage.getItem("magiah_hidden_cols") || "[]");
+    if (Array.isArray(h)) S.hiddenCols = new Set(h.filter(k => TABLE_COLS.some(c => c.key === k) && !LOCKED_COLS.has(k)));
+  } catch (e) {}
+}
+function saveTablePrefs() {
+  try {
+    localStorage.setItem("magiah_density", S.density);
+    localStorage.setItem("magiah_hidden_cols", JSON.stringify([...S.hiddenCols]));
+  } catch (e) {}
+}
+function applyDensity() {
+  $("#tblWrap").classList.toggle("compact", S.density === "compact");
+  $$("#densitySeg .seg-btn").forEach(b => {
+    const on = b.dataset.density === S.density;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+function renderColsMenu() {
+  const box = $("#colsMenuBody");
+  box.replaceChildren(...TABLE_COLS.map(c => {
+    const cb = el("input", { type: "checkbox" });
+    cb.checked = !S.hiddenCols.has(c.key);
+    cb.disabled = LOCKED_COLS.has(c.key);
+    cb.addEventListener("change", () => {
+      if (cb.checked) S.hiddenCols.delete(c.key); else S.hiddenCols.add(c.key);
+      saveTablePrefs();
+      renderTableHead();
+      renderTableRows();
+    });
+    return el("label", { class: "chk-row" }, cb, el("span", null, colInfo(c.key).hebrew || c.key));
+  }));
+}
+function bindTableTools() {
+  loadTablePrefs();
+  $$("#densitySeg .seg-btn").forEach(b => b.addEventListener("click", () => {
+    S.density = b.dataset.density;
+    saveTablePrefs();
+    applyDensity();
+  }));
+  applyDensity();
+}
+
 function renderTableHead() {
   const tr = el("tr");
-  const all = el("input", { type: "checkbox", title: "בחירת כל העמוד" });
+  const all = el("input", { type: "checkbox", title: "בחירת כל העמוד", "aria-label": "בחירת כל העמוד" });
   all.addEventListener("change", () => {
     if (all.checked) S.tableRows.forEach(r => S.sel.add(r.id));
     else S.tableRows.forEach(r => S.sel.delete(r.id));
     renderTableRows(); updateBulkBar();
   });
   tr.append(el("th", null, all));
-  for (const c of TABLE_COLS) {
+  for (const c of visibleCols()) {
     const info = colInfo(c.key);
     const th = el("th", { class: c.sortable ? "sortable" : "" }, info.hebrew);
     if (info.explanation) th.append(el("span", { class: "info-i", dataset: { tip: info.explanation } }, "ⓘ"));
@@ -860,13 +914,14 @@ function statusChip(row) {
 function renderTableRows() {
   const tb = $("#tblBody");
   tb.replaceChildren();
+  const cols = visibleCols();
   if (!S.tableRows.length) {
-    tb.append(el("tr", null, el("td", { class: "empty-row", colspan: String(TABLE_COLS.length + 1) }, "אין ממצאים בסינון הנוכחי")));
+    tb.append(el("tr", null, el("td", { class: "empty-row", colspan: String(cols.length + 1) }, "אין ממצאים בסינון הנוכחי")));
     return;
   }
   for (const r of S.tableRows) {
     const tr = el("tr", { class: S.sel.has(r.id) ? "selrow" : "" });
-    const cb = el("input", { type: "checkbox" });
+    const cb = el("input", { type: "checkbox", "aria-label": "בחירת שורה" });
     cb.checked = S.sel.has(r.id);
     cb.addEventListener("click", ev => {
       ev.stopPropagation();
@@ -875,18 +930,22 @@ function renderTableRows() {
       updateBulkBar();
     });
     tr.append(el("td", null, cb));
-    // letter-level diff here too, so scanning the table shows *what* changed
-    tr.append(el("td", null, wordDiffNode(r.word || "", effFix(r), "err", "w-err")));
-    tr.append(el("td", null, effFix(r)
-      ? wordDiffNode(effFix(r), r.word || "", "fix", "w-fix")
-      : el("bdi", { class: "w-fix" }, "")));
-    tr.append(el("td", { class: "num" }, fmtRank(r.rank)));
-    tr.append(el("td", null, r.verified ? el("span", { class: "vbadge" }, "מאומת") : ""));
-    tr.append(el("td", null, el("span", { class: "et-tag", title: errtypeInfo(r.errtype).explanation || "" }, errtypeInfo(r.errtype).hebrew)));
-    tr.append(el("td", { class: "bookcell", title: r.source || "" }, el("bdi", null, r.source || "")));
-    tr.append(el("td", { class: "refcell", title: r.ref || "" }, el("bdi", null, r.ref || "")));
-    tr.append(el("td", { class: "snip" }, renderSnippet(r.snippet, r.word, null, effFix(r))));
-    tr.append(el("td", null, statusChip(r)));
+    // one cell per column; letter-level diff on the word pair, so scanning the
+    // table shows *what* changed
+    const cell = {
+      word: () => el("td", null, wordDiffNode(r.word || "", effFix(r), "err", "w-err")),
+      suggestion: () => el("td", null, effFix(r)
+        ? wordDiffNode(effFix(r), r.word || "", "fix", "w-fix")
+        : el("bdi", { class: "w-fix" }, "")),
+      rank: () => el("td", { class: "num" }, fmtRank(r.rank)),
+      verified: () => el("td", null, r.verified ? el("span", { class: "vbadge" }, "מאומת") : ""),
+      errtype: () => el("td", null, el("span", { class: "et-tag", title: errtypeInfo(r.errtype).explanation || "" }, errtypeInfo(r.errtype).hebrew)),
+      source: () => el("td", { class: "bookcell", title: r.source || "" }, el("bdi", null, r.source || "")),
+      ref: () => el("td", { class: "refcell", title: r.ref || "" }, el("bdi", null, r.ref || "")),
+      snippet: () => el("td", { class: "snip" }, renderSnippet(r.snippet, r.word, null, effFix(r))),
+      status: () => el("td", null, statusChip(r)),
+    };
+    for (const c of cols) tr.append(cell[c.key]());
     tr.addEventListener("click", () => openDrawer(r.id));
     makeActivatable(tr, () => openDrawer(r.id));
     tb.append(tr);
@@ -3627,6 +3686,8 @@ async function init() {
     S.meta = { origins: [], errtypes: [], statuses: FALLBACK_STATUSES, columns: [] };
   }
   buildSidebar();
+  bindTableTools();
+  renderColsMenu();
   renderResultBanner();
   loadBooks();
   showView(S.view, true);

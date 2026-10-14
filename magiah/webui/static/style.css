@@ -331,6 +331,14 @@ section.view.visible { display: block; }
   box-shadow: var(--shadow);
 }
 
+#tblTools { display: flex; justify-content: flex-end; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-2); flex: 0 0 auto; }
+#tblTools .menu { min-width: 190px; }
+#tblTools .menu .chk-row { padding: 6px 10px; border-radius: 6px; }
+#tblTools .menu .chk-row:hover { background: var(--accent-soft); color: inherit; }
+/* compact density: more rows per screen */
+#tblWrap.compact table.ftable td { padding-top: 2px; padding-bottom: 2px; font-size: var(--fs-xs); }
+#tblWrap.compact table.ftable th { padding-top: 6px; padding-bottom: 6px; }
+#tblWrap.compact .chip, #tblWrap.compact .et-tag { padding-top: 0; padding-bottom: 0; }
 #bulkBar {
   display: none;
   align-items: center;

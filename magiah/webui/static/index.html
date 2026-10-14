@@ -141,6 +141,16 @@
 
     <!-- ===================== table view ===================== -->
     <section id="view-table" class="view visible">
+      <div id="tblTools">
+        <details id="colsMenu" class="menu-wrap">
+          <summary class="btn sm">עמודות</summary>
+          <div class="menu" id="colsMenuBody"></div>
+        </details>
+        <div class="seg" id="densitySeg" role="group" aria-label="צפיפות הטבלה">
+          <button type="button" class="seg-btn active" data-density="comfortable" aria-pressed="true">נינוח</button>
+          <button type="button" class="seg-btn" data-density="compact" aria-pressed="false">צפוף</button>
+        </div>
+      </div>
       <div id="bulkBar">
         <span class="bulk-count"></span>
         <div class="bulk-actions"></div>
