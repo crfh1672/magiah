@@ -3197,7 +3197,7 @@ function bindExports() {
     await runExport("/api/export/fixes", {}, "ייצוא תיקונים ל־to_send");
   });
 }
-function closeExportMenu() { $("#exportMenu").removeAttribute("open"); }
+function closeExportMenu() { $$("details.menu-wrap").forEach(d => d.removeAttribute("open")); }
 
 async function runExport(path, body, label) {
   toast(label + " — מתבצע, נא להמתין…");
@@ -3225,7 +3225,6 @@ async function runExport(path, body, label) {
 function showView(v, skipHash) {
   S.view = v;
   $$("#viewtabs button[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === v));
-  $("#btnStats").classList.toggle("active", v === "stats");
   $("#btnHelp").classList.toggle("active", v === "help");
   $$("section.view").forEach(s => s.classList.toggle("visible", s.id === "view-" + v));
   if (!skipHash) writeHash();
@@ -3339,7 +3338,7 @@ document.addEventListener("mouseover", ev => {
 /* ---------------------------------------------------------- theme */
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
-  $("#btnTheme").replaceChildren(icon(t === "dark" ? "sun" : "moon"));
+  $("#btnTheme").replaceChildren(icon(t === "dark" ? "sun" : "moon"), t === "dark" ? " מצב בהיר" : " מצב כהה");
   try { localStorage.setItem("magiah_theme", t); } catch (e) {}
 }
 function initTheme() {
@@ -3443,9 +3442,11 @@ function bindControls() {
   $("#fixModeBracket").addEventListener("click", () => setFixMode("bracket"));
   $("#fixApply").addEventListener("click", applyFixes);
   $("#fixUndoFile").addEventListener("click", undoFileEdit);
+  // dropdown menus close on an outside click, and after an item is chosen
   document.addEventListener("click", ev => {
-    const em = $("#exportMenu");
-    if (em.hasAttribute("open") && !em.contains(ev.target)) em.removeAttribute("open");
+    for (const d of $$("details.menu-wrap[open]")) {
+      if (!d.contains(ev.target) || ev.target.closest(".menu button")) d.removeAttribute("open");
+    }
   });
   bindExports();
   bindScanModal();

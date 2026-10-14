@@ -156,11 +156,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 #topbar .spacer { flex: 1; }
 .tb-btn.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 
-/* export dropdown */
-#exportMenu { position: relative; }
-#exportMenu > summary { list-style: none; cursor: pointer; }
-#exportMenu > summary::-webkit-details-marker { display: none; }
-#exportMenu .menu {
+/* dropdown menus (export, more): <details class="menu-wrap"> */
+.menu-wrap { position: relative; }
+.menu-wrap > summary { list-style: none; cursor: pointer; }
+.menu-wrap > summary::-webkit-details-marker { display: none; }
+.menu-wrap .menu {
   position: absolute;
   top: calc(100% + 6px);
   inset-inline-end: 0;
@@ -172,8 +172,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
   padding: 6px;
   z-index: 60;
 }
-#exportMenu .menu button {
-  display: block;
+.menu-wrap .menu button {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   width: 100%;
   text-align: right;
   border: 0;
@@ -182,8 +184,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
   border-radius: 6px;
   cursor: pointer;
 }
-#exportMenu .menu button:hover { background: var(--accent-soft); }
-#exportMenu .menu .sep { border-top: 1px solid var(--border); margin: 5px 2px; }
+.menu-wrap .menu button:hover, .menu-wrap .menu button:focus-visible { background: var(--accent-soft); }
+.menu-wrap .menu button.active { background: var(--accent-soft); font-weight: 700; }
+.menu-wrap .menu .sep { border-top: 1px solid var(--border); margin: 5px 2px; }
 
 /* ==================== layout ==================== */
 #layout {
