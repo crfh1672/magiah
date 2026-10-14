@@ -802,16 +802,18 @@ section#view-cards.visible { display: flex; flex-direction: column; }
 .act-reject kbd { border-color: var(--red); color: var(--red); }
 .card-actions .act-skip { color: var(--muted); }
 
-/* secondary row — the occasional escapes */
-.card-actions.second-row button {
-  font-size: var(--fs-sm);
-  padding: 7px 12px;
-  background: transparent;
-  border-color: var(--border);
-  color: var(--muted);
+/* the rarer decisions: one menu under the primary row */
+.card-more-row { display: flex; justify-content: center; margin-top: var(--sp-1); }
+.card-more .menu { top: auto; bottom: calc(100% + 6px); inset-inline-end: auto; inset-inline-start: 50%; transform: translateX(50%); min-width: 230px; }
+.menu-wrap .menu .menu-title { font-size: var(--fs-xs); color: var(--muted); font-weight: 700; padding: var(--sp-1) 10px; }
+.menu-wrap .menu button kbd, .sc-row kbd {
+  margin-inline-start: auto;
+  background: var(--panel-2); border: 1px solid var(--border-strong); border-bottom-width: 2px;
+  border-radius: 4px; padding: 0 6px; font: inherit; font-size: var(--fs-xs); color: var(--muted);
 }
-.card-actions.second-row button:hover { color: var(--text); background: var(--accent-soft); }
-.card-actions.second-row button kbd { font-size: var(--fs-xs); }
+.sc-menu { min-width: 250px; }
+.sc-row { display: flex; align-items: center; gap: var(--sp-3); padding: 3px 10px; font-size: var(--fs-sm); }
+.sc-row kbd { margin-inline-start: 0; min-width: 3.2em; text-align: center; flex: none; }
 #cardFixRow { display: none; gap: 8px; margin-top: 14px; }
 #cardFixRow.visible { display: flex; }
 #cardFixInput {

@@ -1209,7 +1209,7 @@ function renderCard() {
   meta.replaceChildren(...[
     el("span", null, "בתור: " + fmtNum(q.queue.length) + (q.exhausted ? "" : "+")),
     q.skipped.length ? el("span", { title: "יוצגו שוב בסוף התור" }, "נדחו לאחר כך: " + fmtNum(q.skipped.length)) : null,
-    el("span", null, "קיצורים: י=אושר · נ=לא שגיאה · ד=לא בכל מקום · ת=תיקון · ע=התעלם · ב=בירור · ק=תוקן · רווח=דלג")]
+    shortcutsMenu()]
     .filter(Boolean));
   box.replaceChildren();
   if (!r) {
@@ -1266,15 +1266,27 @@ function renderCard() {
     mkBtn("אושר — זו שגיאה", "י", () => cardAct("approved"), "act-approve", "check-circle"),
     mkBtn("לא שגיאה", "נ", () => cardAct("not_error"), "act-reject", "x-circle"),
     mkBtn("דלג", "רווח", () => cardSkip(), "act-skip", "skip")));
-  box.append(el("div", { class: "card-actions second-row" },
-    mkBtn("לא שגיאה בכל מקום", "ד", () => cardAct("not_error", { scope: "word" }), null, "x-circle"),
-    // narrower than "everywhere": the word may still be wrong elsewhere
-    mkBtn("תקין בספר זה", "", () => cardAct("not_error", { scope: "book" }), null, "x-circle"),
-    mkBtn("ההצעה שגויה", "", () => cardAct("not_error", { scope: "replacement" }), null, "x-circle"),
-    mkBtn("תיקון ידני", "ת", () => toggleCardFix(true), null, "pencil"),
-    mkBtn("התעלם", "ע", () => cardAct("ignored"), null, "ban"),
-    mkBtn("דרוש בירור", "ב", () => cardAct("unsure"), null, "help"),
-    mkBtn("תוקן בספר", "ק", () => cardAct("fixed"), null, "wrench")));
+  // The rarer decisions live in one menu (same actions, same shortcuts), so
+  // the card shows three buttons instead of ten.
+  const item = (label, kbd, fn, ico) => {
+    const b = el("button", { type: "button" }, icon(ico), el("span", null, label), kbd ? el("kbd", null, kbd) : null);
+    b.addEventListener("click", fn);
+    return b;
+  };
+  box.append(el("div", { class: "card-more-row" },
+    el("details", { class: "menu-wrap card-more" },
+      el("summary", { class: "btn" }, "עוד פעולות", icon("more")),
+      el("div", { class: "menu" },
+        el("div", { class: "menu-title" }, "לא שגיאה…"),
+        item("בכל מקום", "ד", () => cardAct("not_error", { scope: "word" }), "x-circle"),
+        // narrower than "everywhere": the word may still be wrong elsewhere
+        item("תקין בספר זה", "", () => cardAct("not_error", { scope: "book" }), "x-circle"),
+        item("ההצעה שגויה", "", () => cardAct("not_error", { scope: "replacement" }), "x-circle"),
+        el("div", { class: "sep" }),
+        item("תיקון ידני", "ת", () => toggleCardFix(true), "pencil"),
+        item("דרוש בירור", "ב", () => cardAct("unsure"), "help"),
+        item("התעלם", "ע", () => cardAct("ignored"), "ban"),
+        item("תוקן בספר", "ק", () => cardAct("fixed"), "wrench")))));
   const fixRow = el("div", { id: "cardFixRow", class: S.cardFixOpen ? "visible" : "" },
     el("input", { id: "cardFixInput", type: "text", placeholder: "הקלד את התיקון הנכון ולחץ Enter…", dir: "rtl" }),
     el("button", { class: "btn primary" }, "שמור ואשר"));
@@ -1286,6 +1298,19 @@ function renderCard() {
   });
   box.append(fixRow);
   if (S.cardFixOpen) setTimeout(() => { const i = $("#cardFixInput"); if (i) { i.value = effFix(r); i.focus(); i.select(); } }, 0);
+}
+
+/* Keyboard shortcuts, kept one click away instead of a sentence on every card. */
+const CARD_SHORTCUTS = [
+  ["י", "אושר — זו שגיאה"], ["נ", "לא שגיאה (מופע זה)"], ["ד", "לא שגיאה בכל מקום"],
+  ["ת", "תיקון ידני"], ["ע", "התעלם"], ["ב", "דרוש בירור"], ["ק", "תוקן בספר"],
+  ["רווח", "דלג"], ["Ctrl+Z", "ביטול הפעולה האחרונה"],
+];
+function shortcutsMenu() {
+  return el("details", { class: "menu-wrap" },
+    el("summary", { class: "btn sm" }, icon("help"), "קיצורי מקלדת"),
+    el("div", { class: "menu sc-menu" },
+      CARD_SHORTCUTS.map(([k, label]) => el("div", { class: "sc-row" }, el("kbd", null, k), el("span", null, label)))));
 }
 
 function toggleCardFix(open) {
