@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from magiah import normalize                                    # noqa: E402
 from magiah.webui import (db, fixer_api, hebrew, journal,     # noqa: E402
                           patcher)
+from appsrc import app_source                                   # noqa: E402
 from test_anchor_write import (FixerEnv, TempCase, finding, raw,  # noqa: E402
                                scan_snippet, write)
 
@@ -667,12 +668,10 @@ class TestNamesPastMaxPath(FixerEnv):
 # the fixer view
 # ---------------------------------------------------------------------------
 
-APP_JS = os.path.join(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__))), 'magiah', 'webui', 'static', 'app.js')
 
 
 def _js_function(src, name):
-    """The source of ``function name(...) {...}`` in app.js."""
+    """The source of ``function name(...) {...}`` in the web UI scripts."""
     start = src.index('function %s(' % name)
     depth, i = 0, src.index('{', start)
     while True:
@@ -689,8 +688,7 @@ class TestFixerView(FixerEnv):
 
     def setUp(self):
         super().setUp()
-        with open(APP_JS, encoding='utf-8') as f:
-            self.src = f.read()
+        self.src = app_source()
 
     @unittest.skipIf(shutil.which('node') is None, 'node is not installed')
     def test_needs_vocalization_is_shown_and_kept_out_of_the_batch(self):

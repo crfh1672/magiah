@@ -71,7 +71,7 @@ jobs:
           python - <<'EOF'
           import glob, sys, zipfile
           names = set(zipfile.ZipFile(glob.glob('dist/*.whl')[0]).namelist())
-          need = {f'magiah/webui/static/{f}' for f in ('index.html', 'app.js', 'style.css')}
+          need = {f'magiah/webui/static/{f}' for f in ('index.html', 'core.js', 'main.js', 'style.css')}
           missing = sorted(need - names)
           if missing:
               sys.exit(f'wheel is missing: {missing}')
