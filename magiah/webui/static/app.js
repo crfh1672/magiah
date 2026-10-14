@@ -1159,10 +1159,12 @@ function renderCard() {
   const meta = $("#cardMeta");
   const r = currentCard();
   const q = cardQueue();
-  meta.replaceChildren(
+  // replaceChildren() would print a null as the text "null": drop it first
+  meta.replaceChildren(...[
     el("span", null, "בתור: " + fmtNum(q.queue.length) + (q.exhausted ? "" : "+")),
     q.skipped.length ? el("span", { title: "יוצגו שוב בסוף התור" }, "נדחו לאחר כך: " + fmtNum(q.skipped.length)) : null,
-    el("span", null, "קיצורים: י=אושר · נ=לא שגיאה · ד=לא בכל מקום · ת=תיקון · ע=התעלם · ב=בירור · ק=תוקן · רווח=דלג"));
+    el("span", null, "קיצורים: י=אושר · נ=לא שגיאה · ד=לא בכל מקום · ת=תיקון · ע=התעלם · ב=בירור · ק=תוקן · רווח=דלג")]
+    .filter(Boolean));
   box.replaceChildren();
   if (!r) {
     // "done" only on the server's word — never because the local list ran out
