@@ -245,6 +245,137 @@
       <h2><svg class="ic" aria-hidden="true"><use href="#i-help"/></svg> עזרה — מדריך למשתמש</h2>
       <div id="helpBody">טוען…</div>
     </section>
+    <section id="view-scan" class="view">
+      <h2><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> ניהול סריקה</h2>
+      <div class="scan-grid">
+        <div class="scan-card">
+          <h3>הרצת סריקה</h3>
+          <details id="scanRunSection">
+                <summary>▶ הרצת סריקה חדשה</summary>
+                <div class="scanrun">
+                  <div class="f-group">
+                    <label class="f-title">מקור הסריקה</label>
+                    <div id="scanModes"><span class="empty">טוען…</span></div>
+                  </div>
+                  <div class="f-group" id="scanLibRow">
+                    <label class="f-title" for="scanLibDir">תיקיית ריפו הספרייה (otzaria-library)</label>
+                    <input id="scanLibDir" type="text" dir="ltr" autocomplete="off">
+                  </div>
+                  <div class="f-group" id="scanDbRow">
+                    <label class="f-title" for="scanDbPath">קובץ seforim.db</label>
+                    <input id="scanDbPath" type="text" dir="ltr" autocomplete="off">
+                  </div>
+                  <div class="f-group">
+                    <label class="f-title">שלבים להרצה (ברירת מחדל: הכל)</label>
+                    <div id="scanStages"></div>
+                  </div>
+                  <details id="scanAdvanced">
+                    <summary><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> הגדרות מתקדמות — כל ספי הזיהוי</summary>
+                    <div id="scanFields"></div>
+                  </details>
+                  <div class="scan-run-actions">
+                    <button id="scanStart" class="btn primary">▶ התחל סריקה</button>
+                    <button id="scanCancel" class="btn danger" hidden><svg class="ic" aria-hidden="true"><use href="#i-x-circle"/></svg> בטל סריקה</button>
+                    <button id="scanRefreshAfter" class="btn primary" hidden><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> רענן ממצאים</button>
+                  </div>
+                  <div id="scanStatusPanel" hidden>
+                    <div id="scanStateLine"></div>
+                    <div id="scanProgress" hidden>
+                      <div id="scanStageLine"></div>
+                      <div id="scanBarWrap"><div id="scanBar"></div></div>
+                      <div id="scanBarMeta">
+                        <span id="scanChunkText"></span>
+                        <span id="scanPctText"></span>
+                        <span id="scanElapsed"></span>
+                      </div>
+                      <div id="scanLexiconNote" hidden>שלב בניית המילון הוא הארוך ביותר — ההתקדמות אִטית כאן וזה תקין.</div>
+                    </div>
+                    <pre id="scanLog"></pre>
+                  </div>
+                </div>
+              </details>
+          <details id="bookScanSection">
+                <summary><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg> סריקת ספר בודד — מהירה, על בסיס המילון הקיים</summary>
+                <div class="scanrun">
+                  <p class="bs-intro">
+                    סורק ספר אחד בלבד מול המילון שכבר נבנה — <b>שניות במקום שעה</b>.
+                    המילון אינו נבנה מחדש.
+                    הממצאים <b>מתווספים</b> לממצאים הקיימים; אם הספר כבר נסרק בעבר,
+                    הממצאים שלו מתעדכנים במקומם וההחלטות שכבר קיבלת עליהם נשמרות.
+                  </p>
+                  <div class="f-group">
+                    <label class="f-title">מקור הספר</label>
+                    <div id="bsSources">
+                      <label class="chk-row"><input type="radio" name="bsSource" value="db" checked>
+                        <span>ספר ממסד הנתונים (seforim.db)<span class="mode-desc">בחירה מתוך כל ספרי אוצריא</span></span></label>
+                      <label class="chk-row"><input type="radio" name="bsSource" value="library">
+                        <span>ספר מריפו הספרייה<span class="mode-desc">קובצי otzaria-library המקומיים</span></span></label>
+                      <label class="chk-row"><input type="radio" name="bsSource" value="file">
+                        <span>קובץ מהמחשב<span class="mode-desc">כל קובץ טקסט — גם ספר שאינו בספרייה</span></span></label>
+                    </div>
+                  </div>
+                  <div class="f-group" id="bsPickRow">
+                    <label class="f-title" for="bsSearch">חיפוש ספר</label>
+                    <input id="bsSearch" type="text" placeholder="הקלד חלק משם הספר…" autocomplete="off">
+                    <div id="bsResults"><div class="empty">הקלד כדי לחפש ספר…</div></div>
+                  </div>
+                  <div class="f-group" id="bsFileRow" hidden>
+                    <label class="f-title" for="bsFilePath">נתיב הקובץ</label>
+                    <input id="bsFilePath" type="text" dir="ltr" placeholder="C:\OTZ\...\ספר.txt" autocomplete="off">
+                  </div>
+                  <div id="bsChosen" hidden></div>
+                  <label class="chk-row bs-ctx"><input type="checkbox" id="bsVerifyCtx">
+                    <span>אימות הקשר מול כל המאגר (איטי)
+                      <span class="mode-desc">מאמת כל תיקון מוצעת מול הקורפוס כולו — מדויק יותר, אך
+                        <b>מוסיף כ־10 דקות</b> לסריקה, ללא תלות בגודל הספר.
+                        ללא סימון (מומלץ): האימות נעשה מול הספר עצמו והסריקה נמשכת שניות.</span></span></label>
+                  <div class="scan-run-actions">
+                    <button id="bsStart" class="btn primary"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg> סרוק ספר זה</button>
+                  </div>
+                </div>
+              </details>
+        </div>
+        <div class="scan-card">
+          <h3>נתונים וגיבויים</h3>
+          <div class="scan-row">
+            <button id="scanRefresh" class="btn primary"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> רענן מסריקה חדשה</button>
+            <p>טוען מחדש את הממצאים מ־report.db לאחר הרצה חוזרת של הסריקה. החלטות על ממצאים שעדיין קיימים — נשמרות.</p>
+          </div>
+          <div class="scan-row">
+            <button id="scanImportLegacy" class="btn"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg> ייבוא החלטות ישנות</button>
+            <p>מייבא את ההחלטות מהכלי הישן (decisions.db). פעולה זו אינה אוטומטית — מצב ההתחלה הוא נקי.</p>
+          </div>
+          <h4>גיבויים זמינים</h4>
+          <div id="backupsList">טוען…</div>
+        </div>
+        <div class="scan-card danger-zone">
+          <h3><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg> אזור סכנה</h3>
+          <p class="dz-lead">פעולות שמוחקות החלטות. גיבוי מלא נשמר אוטומטית לפני כל איפוס, וכדי להמשיך צריך להקליד את מילת האישור.</p>
+          <div class="dz-item">
+            <div class="dz-text"><b>אפס החלטות</b>
+              <p>מנקה את כל הסטטוסים, ההערות, התיקונים הידניים, חוקי «בכל מקום» וההיסטוריה בממשק זה. כל הממצאים יחזרו למצב «טרם נבדק».</p></div>
+            <button id="scanResetStatuses" class="btn warn" aria-controls="dzStatuses" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg> אפס החלטות…</button>
+            <div class="dz-confirm" id="dzStatuses" hidden>
+              <label for="dzStatusesInput">להמשך הקלידו <bdi class="dz-word">אפס</bdi></label>
+              <input id="dzStatusesInput" type="text" autocomplete="off">
+              <button id="dzStatusesGo" class="btn danger" disabled>אישור איפוס</button>
+              <button class="btn dz-cancel" data-dz-cancel="dzStatuses">ביטול</button>
+            </div>
+          </div>
+          <div class="dz-item">
+            <div class="dz-text"><b>אפס הכל (כולל decisions.db)</b>
+              <p>בנוסף לניקוי ההחלטות בממשק — מוחק גם את decisions.db, כך שסריקת detect הבאה לא תושפע מהחלטות ניסיוניות קודמות (הרשימה הלבנה). משפיע גם על צינור הסריקה הישן.</p></div>
+            <button id="scanResetAll" class="btn danger" aria-controls="dzAll" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg> אפס הכל…</button>
+            <div class="dz-confirm" id="dzAll" hidden>
+              <label for="dzAllInput">להמשך הקלידו <bdi class="dz-word">אפס הכל</bdi></label>
+              <input id="dzAllInput" type="text" autocomplete="off">
+              <button id="dzAllGo" class="btn danger" disabled>אישור איפוס מלא</button>
+              <button class="btn dz-cancel" data-dz-cancel="dzAll">ביטול</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -257,119 +388,6 @@
   </header>
   <div id="drawerBody"></div>
 </aside>
-
-<!-- scan-management modal -->
-<div id="scanScrim" class="modal-scrim"></div>
-<div id="scanModal" class="modal" role="dialog" aria-modal="true" aria-label="ניהול סריקה">
-  <header>
-    <span><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> ניהול סריקה</span>
-    <button id="scanClose" title="סגירה" aria-label="סגירה"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
-  </header>
-  <div class="modal-body">
-    <details id="scanRunSection">
-      <summary>▶ הרצת סריקה חדשה</summary>
-      <div class="scanrun">
-        <div class="f-group">
-          <label class="f-title">מקור הסריקה</label>
-          <div id="scanModes"><span class="empty">טוען…</span></div>
-        </div>
-        <div class="f-group" id="scanLibRow">
-          <label class="f-title" for="scanLibDir">תיקיית ריפו הספרייה (otzaria-library)</label>
-          <input id="scanLibDir" type="text" dir="ltr" autocomplete="off">
-        </div>
-        <div class="f-group" id="scanDbRow">
-          <label class="f-title" for="scanDbPath">קובץ seforim.db</label>
-          <input id="scanDbPath" type="text" dir="ltr" autocomplete="off">
-        </div>
-        <div class="f-group">
-          <label class="f-title">שלבים להרצה (ברירת מחדל: הכל)</label>
-          <div id="scanStages"></div>
-        </div>
-        <details id="scanAdvanced">
-          <summary><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> הגדרות מתקדמות — כל ספי הזיהוי</summary>
-          <div id="scanFields"></div>
-        </details>
-        <div class="scan-run-actions">
-          <button id="scanStart" class="btn primary">▶ התחל סריקה</button>
-          <button id="scanCancel" class="btn danger" hidden><svg class="ic" aria-hidden="true"><use href="#i-x-circle"/></svg> בטל סריקה</button>
-          <button id="scanRefreshAfter" class="btn primary" hidden><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> רענן ממצאים</button>
-        </div>
-        <div id="scanStatusPanel" hidden>
-          <div id="scanStateLine"></div>
-          <div id="scanProgress" hidden>
-            <div id="scanStageLine"></div>
-            <div id="scanBarWrap"><div id="scanBar"></div></div>
-            <div id="scanBarMeta">
-              <span id="scanChunkText"></span>
-              <span id="scanPctText"></span>
-              <span id="scanElapsed"></span>
-            </div>
-            <div id="scanLexiconNote" hidden>שלב בניית המילון הוא הארוך ביותר — ההתקדמות אִטית כאן וזה תקין.</div>
-          </div>
-          <pre id="scanLog"></pre>
-        </div>
-      </div>
-    </details>
-    <details id="bookScanSection">
-      <summary><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg> סריקת ספר בודד — מהירה, על בסיס המילון הקיים</summary>
-      <div class="scanrun">
-        <p class="bs-intro">
-          סורק ספר אחד בלבד מול המילון שכבר נבנה — <b>שניות במקום שעה</b>.
-          המילון אינו נבנה מחדש.
-          הממצאים <b>מתווספים</b> לממצאים הקיימים; אם הספר כבר נסרק בעבר,
-          הממצאים שלו מתעדכנים במקומם וההחלטות שכבר קיבלת עליהם נשמרות.
-        </p>
-        <div class="f-group">
-          <label class="f-title">מקור הספר</label>
-          <div id="bsSources">
-            <label class="chk-row"><input type="radio" name="bsSource" value="db" checked>
-              <span>ספר ממסד הנתונים (seforim.db)<span class="mode-desc">בחירה מתוך כל ספרי אוצריא</span></span></label>
-            <label class="chk-row"><input type="radio" name="bsSource" value="library">
-              <span>ספר מריפו הספרייה<span class="mode-desc">קובצי otzaria-library המקומיים</span></span></label>
-            <label class="chk-row"><input type="radio" name="bsSource" value="file">
-              <span>קובץ מהמחשב<span class="mode-desc">כל קובץ טקסט — גם ספר שאינו בספרייה</span></span></label>
-          </div>
-        </div>
-        <div class="f-group" id="bsPickRow">
-          <label class="f-title" for="bsSearch">חיפוש ספר</label>
-          <input id="bsSearch" type="text" placeholder="הקלד חלק משם הספר…" autocomplete="off">
-          <div id="bsResults"><div class="empty">הקלד כדי לחפש ספר…</div></div>
-        </div>
-        <div class="f-group" id="bsFileRow" hidden>
-          <label class="f-title" for="bsFilePath">נתיב הקובץ</label>
-          <input id="bsFilePath" type="text" dir="ltr" placeholder="C:\OTZ\...\ספר.txt" autocomplete="off">
-        </div>
-        <div id="bsChosen" hidden></div>
-        <label class="chk-row bs-ctx"><input type="checkbox" id="bsVerifyCtx">
-          <span>אימות הקשר מול כל המאגר (איטי)
-            <span class="mode-desc">מאמת כל תיקון מוצעת מול הקורפוס כולו — מדויק יותר, אך
-              <b>מוסיף כ־10 דקות</b> לסריקה, ללא תלות בגודל הספר.
-              ללא סימון (מומלץ): האימות נעשה מול הספר עצמו והסריקה נמשכת שניות.</span></span></label>
-        <div class="scan-run-actions">
-          <button id="bsStart" class="btn primary"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg> סרוק ספר זה</button>
-        </div>
-      </div>
-    </details>
-    <div class="scan-row">
-      <button id="scanRefresh" class="btn primary"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> רענן מסריקה חדשה</button>
-      <p>טוען מחדש את הממצאים מ־report.db לאחר הרצה חוזרת של הסריקה. החלטות על ממצאים שעדיין קיימים — נשמרות.</p>
-    </div>
-    <div class="scan-row">
-      <button id="scanImportLegacy" class="btn"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg> ייבוא החלטות ישנות</button>
-      <p>מייבא את ההחלטות מהכלי הישן (decisions.db). פעולה זו אינה אוטומטית — מצב ההתחלה הוא נקי.</p>
-    </div>
-    <div class="scan-row danger">
-      <button id="scanResetStatuses" class="btn warn"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg> אפס החלטות (נשמר גיבוי)</button>
-      <p>מנקה את כל הסטטוסים, ההערות וההיסטוריה בממשק זה. גיבוי נשמר אוטומטית לפני האיפוס.</p>
-    </div>
-    <div class="scan-row danger">
-      <button id="scanResetAll" class="btn danger"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg> אפס הכל (כולל decisions.db)</button>
-      <p>בנוסף לניקוי ההחלטות בממשק — מוחק גם את decisions.db, כך שסריקת detect הבאה לא תושפע מהחלטות ניסיוניות קודמות.</p>
-    </div>
-    <h4>גיבויים זמינים</h4>
-    <div id="backupsList">טוען…</div>
-  </div>
-</div>
 
 <!-- floating helpers -->
 <div id="stMenu"></div>

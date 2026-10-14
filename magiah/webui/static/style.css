@@ -1332,25 +1332,29 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: 700; background:
 /* ==================== modals & scan panels ====================
  * Moved out of index.html so all styling lives in one file. */
 /* modal styles (kept next to markup for clarity) */
-.modal-scrim { position: fixed; inset: 0; background: rgba(10,18,28,.4); z-index: 390; display: none; }
-.modal-scrim.visible { display: block; }
-.modal {
-  position: fixed; top: 8vh; inset-inline: 0; margin: 0 auto;
-  width: min(640px, 94vw); max-height: 84vh; overflow: hidden;
-  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
-  box-shadow: var(--shadow-lg); z-index: 400; display: none; flex-direction: column;
-}
-.modal.visible { display: flex; }
-.modal > header { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; border-bottom: 1px solid var(--border); font-weight: 700; }
-.modal > header button { background: none; border: 0; font-size: var(--fs-xl); cursor: pointer; color: var(--muted); }
-.modal-body { padding: 14px 18px; overflow-y: auto; }
+/* ==================== scan screen ==================== */
+#view-scan { max-width: 1100px; }
+#view-scan h2 { margin: 4px 0 14px; }
+.scan-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: var(--sp-4); align-items: start; }
+.scan-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--sp-4); }
+.scan-card > h3 { margin: 0 0 var(--sp-3); font-size: var(--fs-lg); }
+.scan-card h4 { margin: 14px 0 8px; color: var(--muted); }
+.danger-zone { grid-column: 1 / -1; border-color: var(--red); background: color-mix(in srgb, var(--red-soft) 40%, var(--panel)); }
+.danger-zone > h3 { color: var(--red); display: flex; align-items: center; gap: 6px; }
+.dz-lead { margin: 0 0 var(--sp-3); color: var(--muted); font-size: var(--fs-sm); }
+.dz-item { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-2) var(--sp-4); align-items: center; padding: var(--sp-3) 0; border-top: 1px dashed var(--red); }
+.dz-text p { margin: 4px 0 0; color: var(--muted); font-size: var(--fs-xs); line-height: 1.6; }
+.dz-confirm { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); background: var(--panel); border: 1px solid var(--red); border-radius: var(--radius-sm); }
+.dz-confirm[hidden] { display: none; }
+.dz-confirm input { padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); min-width: 160px; }
+.dz-word { font-weight: 700; color: var(--red); }
+@media (max-width: 1000px) { .scan-grid { grid-template-columns: minmax(0, 1fr); } }
 .scan-row { padding: 10px 0; border-bottom: 1px dashed var(--border); }
 .scan-row p { margin: 6px 0 0; color: var(--muted); font-size: var(--fs-xs); line-height: 1.6; }
 .btn.warn { border-color: var(--amber); color: var(--amber); }
 .btn.warn:hover { background: var(--amber-soft); color: var(--amber); }
 .btn.danger { border-color: var(--red); color: var(--red); }
 .btn.danger:hover { background: var(--red-soft); color: var(--red); }
-.modal-body h4 { margin: 14px 0 8px; color: var(--muted); }
 #backupsList .bk-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 2px; border-bottom: 1px solid var(--border); font-size: var(--fs-sm); }
 #backupsList .bk-item code { direction: ltr; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-xs); color: var(--muted); }
 

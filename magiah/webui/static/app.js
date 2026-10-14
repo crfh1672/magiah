@@ -2861,19 +2861,13 @@ function fileUnitNode(pf) {
     btn);
 }
 
-/* ---------------------------------------------------------- scan modal */
-function openScanModal() {
-  $("#scanModal").classList.add("visible");
-  $("#scanScrim").classList.add("visible");
-  openLayer($("#scanModal"), "#moreMenu > summary");
+/* ---------------------------------------------------------- scan view */
+/* scan management is a screen of its own (it used to be a modal) */
+function openScanModal() { showView("scan"); }
+function loadScanView() {
   loadBackups();
   loadScanConfig().catch(e => toast("טעינת הגדרות הסריקה נכשלה: " + e.message, "err"));
   syncScanStatusOnce();
-}
-function closeScanModal() {
-  $("#scanModal").classList.remove("visible");
-  $("#scanScrim").classList.remove("visible");
-  closeLayer($("#scanModal"));
 }
 
 async function loadBackups() {
@@ -2936,8 +2930,6 @@ function bindScanModal() {
   $("#btnScan").addEventListener("click", openScanModal);
   bindScanRun();
   bindBookScan();
-  $("#scanClose").addEventListener("click", closeScanModal);
-  $("#scanScrim").addEventListener("click", closeScanModal);
   $("#scanRefresh").addEventListener("click", refreshFindings);
   $("#scanImportLegacy").addEventListener("click", async () => {
     if (!confirm("לייבא את ההחלטות מהכלי הישן (decisions.db)?\n\nהחלטות accept יהפכו ל«אושר», reject ל«לא שגיאה» (כולל חוקי «בכל מקום»), ignore ל«התעלם». ההחלטות ישויכו לממצאים לפי מילה ומזהה שורה.")) return;
@@ -2947,23 +2939,36 @@ function bindScanModal() {
       afterDataChanged();
     } catch (e) { toast("הייבוא נכשל: " + e.message, "err"); }
   });
-  $("#scanResetStatuses").addEventListener("click", async () => {
-    if (!confirm("לאפס את כל ההחלטות בממשק זה?\n\nיימחקו: כל הסטטוסים, ההערות, התיקונים הידניים, חוקי «בכל מקום» וההיסטוריה.\nגיבוי מלא יישמר אוטומטית לפני האיפוס.")) return;
-    if (!confirm("אישור נוסף: האם אתם בטוחים? כל הממצאים יחזרו למצב «טרם נבדק».")) return;
-    try {
-      const r = await api("/api/reset", { method: "POST", body: { scope: "statuses" } });
-      toast("האיפוס הושלם. " + (r && r.backup ? "גיבוי נשמר: " + r.backup : hebrewResult(r, "")), "ok", 8000);
-      afterDataChanged();
-    } catch (e) { toast("האיפוס נכשל: " + e.message, "err"); }
+  armDanger("Statuses", "אפס", async () => {
+    const r = await api("/api/reset", { method: "POST", body: { scope: "statuses" } });
+    toast("האיפוס הושלם. " + (r && r.backup ? "גיבוי נשמר: " + r.backup : hebrewResult(r, "")), "ok", 8000);
+    afterDataChanged();
   });
-  $("#scanResetAll").addEventListener("click", async () => {
-    if (!confirm("אזהרה! לאפס הכל — כולל decisions.db?\n\nבנוסף לניקוי כל ההחלטות בממשק, יימחקו גם השורות ב־decisions.db, ובכך תבוטל השפעת ההחלטות הקודמות על סריקות detect עתידיות (הרשימה הלבנה).\nגיבוי יישמר לפני המחיקה.")) return;
-    if (!confirm("אישור אחרון: פעולה זו משפיעה גם על צינור הסריקה הישן. להמשיך?")) return;
-    try {
-      const r = await api("/api/reset", { method: "POST", body: { scope: "all" } });
-      toast("האיפוס המלא הושלם. " + (r && r.backup ? "גיבוי נשמר: " + r.backup : hebrewResult(r, "")), "ok", 8000);
-      afterDataChanged();
-    } catch (e) { toast("האיפוס נכשל: " + e.message, "err"); }
+  armDanger("All", "אפס הכל", async () => {
+    const r = await api("/api/reset", { method: "POST", body: { scope: "all" } });
+    toast("האיפוס המלא הושלם. " + (r && r.backup ? "גיבוי נשמר: " + r.backup : hebrewResult(r, "")), "ok", 8000);
+    afterDataChanged();
+  });
+}
+
+/* danger zone: the button only opens a confirm row; the destructive call is
+   enabled once the person types the confirmation word */
+function armDanger(key, word, run) {
+  const btn = $("#scanReset" + key), box = $("#dz" + key), inp = $("#dz" + key + "Input"), go = $("#dz" + key + "Go");
+  const close = () => { box.hidden = true; btn.setAttribute("aria-expanded", "false"); inp.value = ""; go.disabled = true; };
+  btn.addEventListener("click", () => {
+    box.hidden = !box.hidden;
+    btn.setAttribute("aria-expanded", String(!box.hidden));
+    if (!box.hidden) inp.focus();
+  });
+  inp.addEventListener("input", () => { go.disabled = inp.value.trim() !== word; });
+  inp.addEventListener("keydown", ev => { if (ev.key === "Enter" && !go.disabled) go.click(); });
+  box.querySelector("[data-dz-cancel]").addEventListener("click", () => { close(); btn.focus(); });
+  go.addEventListener("click", async () => {
+    if (inp.value.trim() !== word) return;
+    go.disabled = true;
+    try { await run(); close(); }
+    catch (e) { toast("האיפוס נכשל: " + e.message, "err"); go.disabled = inp.value.trim() !== word; }
   });
 }
 
@@ -3445,6 +3450,7 @@ function showView(v, skipHash) {
   S.view = v;
   $$("#viewtabs button[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === v));
   $("#btnHelp").classList.toggle("active", v === "help");
+  $("#btnScan").classList.toggle("active", v === "scan");
   $$("section.view").forEach(s => s.classList.toggle("visible", s.id === "view-" + v));
   if (!skipHash) writeHash();
   renderActiveFilters();
@@ -3458,6 +3464,7 @@ function refreshCurrentView() {
     case "fixer": loadFixerBooks().then(loadFixDoc); break;
     case "stats": loadStats(); break;
     case "help": renderHelp(); break;
+    case "scan": loadScanView(); break;
   }
 }
 
@@ -3485,13 +3492,13 @@ document.addEventListener("keydown", ev => {
     return;
   }
   if (ev.key === "Escape") {
-    closeDrawer(); closeStatusMenu(); closeScanModal(); closeExportMenu();
+    closeDrawer(); closeStatusMenu(); closeExportMenu();
     if (S.cardFixOpen) toggleCardFix(false);
     return;
   }
   const t = ev.target;
   if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
-  if ($("#scanModal").classList.contains("visible") || $("#drawer").classList.contains("visible")) return;
+  if ($("#drawer").classList.contains("visible")) return;
 
   if (S.view === "cards") {
     if (keyIs(ev, "approve")) { ev.preventDefault(); cardAct("approved"); }
