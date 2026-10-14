@@ -25,6 +25,19 @@ function el(tag, attrs, ...children) {
   return n;
 }
 
+/* An icon from the sprite in index.html (<symbol id="i-NAME">). Coloured by
+ * currentColor; decorative, so hidden from screen readers. */
+const SVG_NS = "http://www.w3.org/2000/svg";
+function icon(name, cls) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("class", "ic" + (cls ? " " + cls : ""));
+  svg.setAttribute("aria-hidden", "true");
+  const use = document.createElementNS(SVG_NS, "use");
+  use.setAttribute("href", "#i-" + name);
+  svg.append(use);
+  return svg;
+}
+
 function debounce(fn, ms) {
   let t;
   return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
@@ -1159,7 +1172,8 @@ function renderCard() {
         + " ממצאים פתוחים (ייתכן שעודכנו בחלון אחר). רענון הסינון יציג אותם."
       : "טוען ממצאים…";
     box.append(el("div", { class: "card-done" },
-      el("div", { class: "big" }, st === "done" ? "🎉" : st === "remaining" ? "⚠" : "⏳"), msg));
+      el("div", { class: "big " + (st === "done" ? "ok" : st === "remaining" ? "warn" : "") },
+        icon(st === "done" ? "check-circle" : st === "remaining" ? "alert" : "clock", "ic-lg")), msg));
     return;
   }
   const info = errtypeInfo(r.errtype);
@@ -1176,7 +1190,7 @@ function renderCard() {
     wordDiffNode(r.word || "—", fix || "", "err", "w-err"),
     el("span", { class: "arr" }, "⇦"),
     fix ? wordDiffNode(fix, r.word || "", "fix", "w-fix") : el("bdi", { class: "w-fix" }, "—"));
-  const cp = el("button", { class: "pair-copy", title: "העתקת התיקון" }, "⧉");
+  const cp = el("button", { class: "pair-copy", title: "העתקת התיקון", "aria-label": "העתקת התיקון" }, icon("copy"));
   cp.addEventListener("click", () => copyText(fix || r.word || ""));
   pair.append(cp);
   box.append(pair);
@@ -1184,8 +1198,8 @@ function renderCard() {
   // 3. provenance / confidence, secondary
   box.append(el("div", { class: "card-sub" },
     el("span", { class: "et-tag", title: info.explanation || "" }, info.hebrew),
-    el("span", null, "📖 ", el("bdi", null, r.source || "")),
-    el("span", null, "📍 ", el("bdi", null, r.ref || "")),
+    el("span", { class: "meta-item" }, icon("book"), el("bdi", null, r.source || "")),
+    el("span", { class: "meta-item" }, icon("pin"), el("bdi", null, r.ref || "")),
     el("span", null, "ציון: " + fmtRank(r.rank)),
     r.verified ? el("span", { class: "vbadge" }, "מאומת") : null,
     el("span", { class: "chip st-" + effStatus(r) }, statusInfo(effStatus(r)).icon + " " + statusInfo(effStatus(r)).hebrew)));
@@ -1193,25 +1207,26 @@ function renderCard() {
    * often they are actually used. In triage ~90% of cards end in one of the
    * first two, so those get large, colour-coded primary buttons; the rest stay
    * one click away on a quieter secondary row. Nothing is hidden. */
-  const mkBtn = (label, kbd, fn, cls) => {
+  const mkBtn = (label, kbd, fn, cls, ico) => {
     const b = el("button", { class: cls || null },
+      ico ? icon(ico) : null,
       el("span", { class: "lbl" }, label), kbd ? el("kbd", null, kbd) : null);
     b.addEventListener("click", fn);
     return b;
   };
   box.append(el("div", { class: "card-actions primary-row" },
-    mkBtn("✅ אושר — זו שגיאה", "י", () => cardAct("approved"), "act-approve"),
-    mkBtn("❌ לא שגיאה", "נ", () => cardAct("not_error"), "act-reject"),
-    mkBtn("⏭ דלג", "רווח", () => cardSkip(), "act-skip")));
+    mkBtn("אושר — זו שגיאה", "י", () => cardAct("approved"), "act-approve", "check-circle"),
+    mkBtn("לא שגיאה", "נ", () => cardAct("not_error"), "act-reject", "x-circle"),
+    mkBtn("דלג", "רווח", () => cardSkip(), "act-skip", "skip")));
   box.append(el("div", { class: "card-actions second-row" },
-    mkBtn("❌ לא שגיאה בכל מקום", "ד", () => cardAct("not_error", { scope: "word" })),
+    mkBtn("לא שגיאה בכל מקום", "ד", () => cardAct("not_error", { scope: "word" }), null, "x-circle"),
     // narrower than "everywhere": the word may still be wrong elsewhere
-    mkBtn("❌ תקין בספר זה", "", () => cardAct("not_error", { scope: "book" })),
-    mkBtn("❌ ההצעה שגויה", "", () => cardAct("not_error", { scope: "replacement" })),
-    mkBtn("✏ תיקון ידני", "ת", () => toggleCardFix(true)),
-    mkBtn("🚫 התעלם", "ע", () => cardAct("ignored")),
-    mkBtn("❓ דרוש בירור", "ב", () => cardAct("unsure")),
-    mkBtn("🔧 תוקן בספר", "ק", () => cardAct("fixed"))));
+    mkBtn("תקין בספר זה", "", () => cardAct("not_error", { scope: "book" }), null, "x-circle"),
+    mkBtn("ההצעה שגויה", "", () => cardAct("not_error", { scope: "replacement" }), null, "x-circle"),
+    mkBtn("תיקון ידני", "ת", () => toggleCardFix(true), null, "pencil"),
+    mkBtn("התעלם", "ע", () => cardAct("ignored"), null, "ban"),
+    mkBtn("דרוש בירור", "ב", () => cardAct("unsure"), null, "help"),
+    mkBtn("תוקן בספר", "ק", () => cardAct("fixed"), null, "wrench")));
   const fixRow = el("div", { id: "cardFixRow", class: S.cardFixOpen ? "visible" : "" },
     el("input", { id: "cardFixInput", type: "text", placeholder: "הקלד את התיקון הנכון ולחץ Enter…", dir: "rtl" }),
     el("button", { class: "btn primary" }, "שמור ואשר"));
@@ -3322,7 +3337,7 @@ document.addEventListener("mouseover", ev => {
 /* ---------------------------------------------------------- theme */
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
-  $("#btnTheme").textContent = t === "dark" ? "☀" : "🌙";
+  $("#btnTheme").replaceChildren(icon(t === "dark" ? "sun" : "moon"));
   try { localStorage.setItem("magiah_theme", t); } catch (e) {}
 }
 function initTheme() {
