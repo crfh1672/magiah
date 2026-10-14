@@ -8,20 +8,20 @@
   --border: #dde3ea;
   --border-strong: #c4cdd8;
   --text: #1c2733;
-  --muted: #5c6b7a;
-  --faint: #8a97a5;
+  --muted: #556372;
+  --faint: #5f6d7c;
   --accent: #1a6fb5;
   --accent-strong: #135a95;
   --accent-soft: #e3f0fa;
-  --red: #c0392b;
+  --red: #b13024;
   --red-soft: #fdecea;
-  --green: #1e7e46;
+  --green: #197140;
   --green-soft: #e6f5ec;
-  --amber: #a06a00;
+  --amber: #8a5a00;
   --amber-soft: #fcf3df;
   --blue: #1f5fa8;
   --blue-soft: #e5eefb;
-  --slate: #5a6b7c;
+  --slate: #52626f;
   --slate-soft: #eceff3;
   --shadow: 0 1px 3px rgba(20, 32, 45, .08), 0 4px 14px rgba(20, 32, 45, .06);
   --shadow-lg: 0 6px 28px rgba(20, 32, 45, .18);
@@ -43,7 +43,7 @@
   --sp-4: 16px;
   --sp-5: 24px;
   /* keyboard focus */
-  --focus-ring: 0 0 0 2px var(--panel), 0 0 0 4px var(--accent);
+  --focus-ring: 2px solid var(--accent);
 }
 
 [data-theme="dark"] {
@@ -54,11 +54,11 @@
   --border-strong: #3d4d5f;
   --text: #e4eaf1;
   --muted: #9fadbc;
-  --faint: #6d7c8c;
+  --faint: #919fae;
   --accent: #4d9fdc;
   --accent-strong: #6fb3e6;
   --accent-soft: #1d3348;
-  --red: #e26f61;
+  --red: #e8796b;
   --red-soft: #3a2320;
   --green: #57b97e;
   --green-soft: #1c3527;
@@ -86,6 +86,12 @@ body {
 button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+
+/* -------- keyboard focus: one visible ring everywhere -------- */
+:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+:focus:not(:focus-visible) { outline: none; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offset: 0; }
+#fixDoc:focus-visible { outline-offset: -2px; }
 
 /* -------- word/fix coloring, used everywhere -------- */
 .w-err { color: var(--red); font-weight: 700; }
@@ -121,7 +127,6 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--border);
   border-radius: 20px;
   background: var(--panel-2);
-  outline: none;
   transition: border-color .15s;
 }
 #globalSearch:focus { border-color: var(--accent); }
@@ -218,7 +223,6 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--panel-2);
-  outline: none;
 }
 .f-group select:focus, .f-group input:focus { border-color: var(--accent); }
 #fBookList {
@@ -534,7 +538,6 @@ table.ftable td.refcell { max-width: 140px; overflow: hidden; text-overflow: ell
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--panel-2);
-  outline: none;
   resize: vertical;
 }
 #drawer textarea:focus, #drawer input:focus { border-color: var(--accent); }
@@ -799,7 +802,6 @@ section#view-cards.visible { display: flex; flex-direction: column; }
   border: 1px solid var(--green);
   border-radius: var(--radius-sm);
   background: var(--panel-2);
-  outline: none;
   font-size: var(--fs-lg);
 }
 .card-done { text-align: center; color: var(--muted); padding: 60px 10px; font-size: var(--fs-lg); }
@@ -819,7 +821,7 @@ section#view-cards.visible { display: flex; flex-direction: column; }
   border-radius: var(--radius-sm); background: var(--panel); color: var(--text);
   font-family: inherit; font-size: var(--fs-sm); width: 100%;
 }
-#fixBookSearch:focus { outline: none; border-color: var(--accent); }
+#fixBookSearch:focus { border-color: var(--accent); }
 #fixBook { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); color: var(--text); }
 #fixView { padding: 7px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); color: var(--text); max-width: 220px; }
 #fixerTop label.chk-row { font-size: var(--fs-sm); }
@@ -944,7 +946,6 @@ section#view-cards.visible { display: flex; flex-direction: column; }
      the eye keeps a fixed starting edge and no rivers open up between words */
   text-align: right;
 }
-#fixDoc:focus { outline: 2px solid var(--accent-soft); outline-offset: -2px; }
 .fdoc-line { display: grid; grid-template-columns: 4.5ch 1fr; gap: 10px; padding: 1px 3px; border-radius: var(--radius-sm); }
 .fdoc-line.has-fix { background: var(--amber-soft); }
 .fdoc-line.edited { background: var(--green-soft); }
