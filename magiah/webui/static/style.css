@@ -879,6 +879,7 @@ section#view-cards.visible { display: flex; flex-direction: column; }
   font-size: var(--fs-sm); line-height: 1.7;
   display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
 }
+#fixerBanner[hidden] { display: none; }
 #fixerBanner.err { background: var(--red-soft); border-color: var(--red); }
 #fixerBanner.ok { background: var(--green-soft); border-color: var(--green); }
 #fixerBanner .bn-text { flex: 1 1 260px; }
@@ -945,14 +946,35 @@ section#view-cards.visible { display: flex; flex-direction: column; }
 #fixPickBar .fp-label { color: var(--faint); }
 
 #fixerSplit {
-  display: grid; grid-template-columns: 1.1fr .9fr; gap: 14px;
-  align-items: start; min-height: 0;
+  display: grid; grid-template-columns: 1.1fr .9fr; grid-template-rows: minmax(0, 1fr); gap: 14px;
+  align-items: stretch; flex: 1; min-height: 0;
 }
-@media (max-width: 1150px) { #fixerSplit { grid-template-columns: 1fr; } }
+@media (max-width: 1150px) {
+  #fixerSplit { grid-template-columns: 1fr; grid-template-rows: none; overflow-y: auto; }
+}
+
+/* the fixer fills the pane: only the book text and the worklist scroll */
+#main:has(> #view-fixer.visible) { display: flex; flex-direction: column; padding-bottom: var(--sp-3); overflow-y: hidden; }
+section#view-fixer.visible { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+#fixerTop, #fixerOpts, #fixConflicts, #fixerBanner { flex: 0 0 auto; }
+#fixerOpts { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+#fixerOpts select { padding: 6px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); max-width: 220px; }
+#fixerOpts .menu { min-width: 260px; }
+#fixerOpts .menu .chk-row { padding: 7px 10px; border-radius: 6px; }
+#fixerOpts .menu .chk-row:hover { background: var(--accent-soft); color: inherit; }
+
+/* bottom action bar: what will be written, and the button that writes it */
+#fixActionBar {
+  flex: 0 0 auto; display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
+  margin-top: var(--sp-3); padding: var(--sp-2) var(--sp-3);
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+#fixActionBar #fixPickBar { flex: 1 1 320px; margin: 0; padding: 0; background: none; border: 0; }
 
 #fixDocWrap {
   background: var(--panel); border: 1px solid var(--border);
   border-radius: var(--radius); overflow: hidden; min-width: 0;
+  display: flex; flex-direction: column; min-height: 0;
 }
 #fixDocHead {
   display: flex; justify-content: space-between; align-items: center; gap: 10px;
@@ -965,8 +987,7 @@ section#view-cards.visible { display: flex; flex-direction: column; }
 }
 #fixDocMeta { white-space: nowrap; }
 #fixDoc {
-  max-height: calc(100vh - var(--topbar-h) - 190px);
-  max-height: calc(100dvh - var(--topbar-h) - 190px);
+  flex: 1; min-height: 0;
   overflow: auto; padding: 10px 12px; line-height: 2.15; font-size: var(--fs-lg);
   /* Hebrew body text reads right-aligned; ragged-left (never justified) so
      the eye keeps a fixed starting edge and no rivers open up between words */
@@ -1027,7 +1048,8 @@ section#view-cards.visible { display: flex; flex-direction: column; }
 .fdoc-tok { cursor: pointer; border-radius: 3px; padding: 0 1px; }
 .fdoc-tok:hover { background: var(--accent-soft); outline: 1px solid var(--accent); }
 
-#fixList { display: grid; gap: 8px; align-content: start; max-height: calc(100vh - var(--topbar-h) - 190px); max-height: calc(100dvh - var(--topbar-h) - 190px); overflow-y: auto; }
+#fixList { display: grid; gap: 8px; align-content: start; min-height: 0; overflow-y: auto; }
+@media (max-width: 1150px) { #fixDoc, #fixList { max-height: 60vh; flex: none; } }
 .fix-refgroup {
   font-weight: 700;
   color: var(--accent-strong);

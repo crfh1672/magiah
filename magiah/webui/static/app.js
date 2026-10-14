@@ -2472,7 +2472,7 @@ function updateApplyButton() {
   const editable = !!(S.fixDoc && S.fixDoc.editable) && !S.fixDocStale;
   const n = applicableRows().length;
   btn.disabled = !editable || !n;
-  btn.textContent = n ? "✔ החלה על הקובץ (" + fmtNum(n) + ")" : "✔ החלה על הקובץ";
+  btn.replaceChildren(icon("check"), n ? " החלה על הקובץ (" + fmtNum(n) + ")" : " החלה על הקובץ");
   const undo = $("#fixUndoFile");
   const last = (S.fixEdits || []).find(e => !e.undone_at);
   undo.hidden = !last;

@@ -178,32 +178,42 @@
 
     <!-- ===================== fixer view ===================== -->
     <section id="view-fixer" class="view">
+      <!-- book header: which book, how far along -->
       <div id="fixerTop">
         <div id="fixBookPick">
-          <input id="fixBookSearch" type="search" placeholder="חיפוש ספר — שם או תיקייה…" autocomplete="off">
-          <select id="fixBook" size="1"><option value="">בחר ספר לתיקון…</option></select>
+          <input id="fixBookSearch" type="search" placeholder="חיפוש ספר — שם או תיקייה…" aria-label="חיפוש ספר לתיקון" autocomplete="off">
+          <select id="fixBook" size="1" aria-label="ספר לתיקון"><option value="">בחר ספר לתיקון…</option></select>
         </div>
-        <label class="chk-row"><input type="checkbox" id="fixInclude"> כלול גם «דרוש בירור» ו«טרם נבדק»</label>
-        <label class="chk-row" title="ספרים שנתיב הקובץ שלהם כולל «לא רלוונטי» (או «לא רלונטי») לא יוצגו ברשימה"><input type="checkbox" id="fixHideIrrelevant" checked> הסתר נתיבי «לא רלוונטי»</label>
-        <label class="chk-row" title="ספרים ממסד הנתונים שאינם קובץ טקסט — אפשר רק לייצא את התיקונים שלהם"><input type="checkbox" id="fixHideExportOnly" checked> הסתר ספרים לייצוא בלבד</label>
-        <select id="fixView" title="הצגת סוג מסוים בלבד — הסדר תמיד לפי מספר השורה בספר">
-          <option value="">הכל</option>
-        </select>
-        <div class="seg" id="fixModeWrap" role="group" aria-label="אופן החלת התיקון">
-          <button id="fixModeReplace" class="seg-btn active" data-mode="replace"
-                  data-tip="המילה השגויה מוחלפת בתיקון">החלפה</button>
-          <button id="fixModeBracket" class="seg-btn" data-mode="bracket"
-                  data-tip="נכתב «(תיקון) [שגיאה]» — התיקון בסוגריים עגולים ואחריו המילה המקורית במרובעים">סוגריים</button>
-        </div>
-        <button id="fixApply" class="btn primary" disabled><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg> החלה על הקובץ</button>
-        <button id="fixUndoFile" class="btn" hidden><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg> שחזור מגיבוי</button>
         <div id="fixProgressWrap">
           <div id="fixProgressText"></div>
           <div class="pbar"><div id="fixProgressBar" style="width:0%"></div></div>
         </div>
       </div>
+      <!-- what to show -->
+      <div id="fixerOpts">
+        <label class="chk-row"><input type="checkbox" id="fixInclude"> כלול גם «דרוש בירור» ו«טרם נבדק»</label>
+        <select id="fixView" title="הצגת סוג מסוים בלבד — הסדר תמיד לפי מספר השורה בספר" aria-label="סוג ממצא להצגה">
+          <option value="">הכל</option>
+        </select>
+        <details id="fixOptsMenu" class="menu-wrap">
+          <summary class="btn sm">רשימת הספרים</summary>
+          <div class="menu">
+            <label class="chk-row" title="ספרים שנתיב הקובץ שלהם כולל «לא רלוונטי» (או «לא רלונטי») לא יוצגו ברשימה"><input type="checkbox" id="fixHideIrrelevant" checked> הסתר נתיבי «לא רלוונטי»</label>
+            <label class="chk-row" title="ספרים ממסד הנתונים שאינם קובץ טקסט — אפשר רק לייצא את התיקונים שלהם"><input type="checkbox" id="fixHideExportOnly" checked> הסתר ספרים לייצוא בלבד</label>
+          </div>
+        </details>
+      </div>
       <div id="fixConflicts" hidden></div>
       <div id="fixerBanner" hidden></div>
+      <div id="fixerSplit">
+        <div id="fixDocWrap">
+          <div id="fixDocHead"><span id="fixDocPath"></span><span id="fixDocMeta"></span></div>
+          <div id="fixDoc" tabindex="0" aria-label="טקסט הספר"></div>
+        </div>
+        <div id="fixList"><div class="fixer-empty">בחר ספר מהרשימה — מוצגים רק ספרים שיש בהם ממצאים מאושרים שטרם תוקנו.</div></div>
+      </div>
+      <!-- what will be written: selection + mode + apply, always in view -->
+      <div id="fixActionBar">
       <div id="fixPickBar">
         <span id="fixPickCount"></span>
         <span class="fp-sep"></span>
@@ -213,12 +223,14 @@
         <button data-pick="view" class="fp-btn">הנראים כעת</button>
         <button data-pick="none" class="fp-btn"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg> נקה בחירה</button>
       </div>
-      <div id="fixerSplit">
-        <div id="fixDocWrap">
-          <div id="fixDocHead"><span id="fixDocPath"></span><span id="fixDocMeta"></span></div>
-          <div id="fixDoc" tabindex="0" aria-label="טקסט הספר"></div>
+        <div class="seg" id="fixModeWrap" role="group" aria-label="אופן החלת התיקון">
+          <button id="fixModeReplace" class="seg-btn active" data-mode="replace"
+                  data-tip="המילה השגויה מוחלפת בתיקון">החלפה</button>
+          <button id="fixModeBracket" class="seg-btn" data-mode="bracket"
+                  data-tip="נכתב «(תיקון) [שגיאה]» — התיקון בסוגריים עגולים ואחריו המילה המקורית במרובעים">סוגריים</button>
         </div>
-        <div id="fixList"><div class="fixer-empty">בחר ספר מהרשימה — מוצגים רק ספרים שיש בהם ממצאים מאושרים שטרם תוקנו.</div></div>
+        <button id="fixUndoFile" class="btn" hidden><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg> שחזור מגיבוי</button>
+        <button id="fixApply" class="btn primary lg" disabled><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg> החלה על הקובץ</button>
       </div>
     </section>
 
