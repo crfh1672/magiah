@@ -306,7 +306,7 @@ var SO={pending:0,unsure:1,approved:2,rejected:3,fixed:4,ignored:5};
 var SORTS={'sc-d':function(a,b){return b.sc-a.sc},'sc-a':function(a,b){return a.sc-b.sc},w:function(a,b){return a.w.localeCompare(b.w,'he')||b.sc-a.sc},loc:function(a,b){return a.b-b.b||a.ref.localeCompare(b.ref,'he')||a.id-b.id},t:function(a,b){return T[a.t].localeCompare(T[b.t],'he')||b.sc-a.sc},st:function(a,b){return SO[a.st]-SO[b.st]||b.sc-a.sc}};
 var S={v:'review',m:'list',cur:1,keep:null,fb:null,fc:null,hist:[]};
 function byId(i){return items.filter(function(x){return x.id===i})[0]}
-function filt(){return items.filter(function(it){return(F.book===null||it.b===F.book)&&F.types.has(it.t)&&(F.status==='all'||(F.status==='open'?it.st==='pending':it.st===F.status))&&it.sc>=F.min&&(!F.ver||it.v)}).sort(function(a,b){return SORTS[F.sort](a,b)})}
+function filt(){return items.filter(function(it){return(F.book===null||B[it.b]===F.book)&&F.types.has(it.t)&&(F.status==='all'||(F.status==='open'?it.st==='pending':it.st===F.status))&&it.sc>=F.min&&(!F.ver||it.v)}).sort(function(a,b){return SORTS[F.sort](a,b)})}
 function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove('on')},1800)}
 function snip(it,k){return it.pre+(k==='b'?'<span class="bad">'+it.w+'</span>':k==='g'?'<span class="good">'+it.f+'</span>':'<span class="bad">'+it.w+'</span> <span class="good">'+it.f+'</span>')+it.post}
 var COLS=[['w','המילה השגויה','wd'],['f','תיקון מוצע','wd'],['t','סוג שגיאה','c1'],['b','ספר','c2'],['ref','מראה מקום','c3'],['sc','ציון','c4'],['v','מאומת','c3'],['cx','אימות הקשר','c2'],['rp','חזרות בספר','c2'],['st','סטטוס','c2']];
@@ -405,7 +405,7 @@ if(!e.target.closest('#pop')&&!(el&&el.dataset.a==='pop'))$('#pop').hidden=true;
 if(!e.target.closest('#cpop')&&!(el&&el.dataset.a==='cpop'))$('#cpop').hidden=true;
 if(!el)return;var p=el.dataset.a,i=p.indexOf(':'),n=i<0?p:p.slice(0,i),v=i<0?'':p.slice(i+1);if(A[n])A[n](v)});
 document.addEventListener('keydown',function(e){
-if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('rl'))return A.go(e.target.dataset.a.slice(3));
+if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('rl')){e.preventDefault();return A.go(e.target.dataset.a.slice(3))}
 var tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA')return;
 if(e.key==='Escape'){$('#pop').hidden=true;$('#cpop').hidden=true}
 if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){e.preventDefault();return undo()}
@@ -424,6 +424,7 @@ $('#fs').addEventListener('change',function(e){F.status=e.target.value;render()}
 $('#fm').addEventListener('input',function(e){F.min=+e.target.value;$('#fmv').textContent=F.min;render()});
 $('#fv').addEventListener('change',function(e){F.ver=e.target.checked;render()});
 $('#dz').addEventListener('input',function(e){$('#dzb').disabled=e.target.value.trim()!=='אפס'});
+window.addEventListener('hashchange',function(){var h=location.hash.replace('#/','').split('/');if(['review','fixer','stats','scan','help'].indexOf(h[0])<0)return;if(h[0]==='review')S.m=h[1]==='cards'?'cards':'list';go(h[0])});
 A.tab('run');syncPop();
 var h=location.hash.replace('#/','').split('/');if(['review','fixer','stats','scan','help'].indexOf(h[0])>=0){if(h[1]==='cards')S.m='cards';go(h[0])}else render();
 </script>
