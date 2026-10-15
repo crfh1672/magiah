@@ -188,7 +188,7 @@ const S = {
   // view-wide: hide books whose path says "לא רלוונטי", and DB books that
   // can only be exported (remembered per browser, not in the URL)
   hideIrr: true,
-  hideDb: true,
+  hideDb: false,
   // table presentation, remembered per browser
   density: "comfortable",     // comfortable | compact
   hiddenCols: new Set(),      // column keys the reviewer turned off
