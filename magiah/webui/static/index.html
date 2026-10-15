@@ -10,6 +10,7 @@
 <body>
 <!-- icon sprite: <svg class="ic"><use href="#i-NAME"/></svg>, coloured by currentColor -->
 <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
 <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
@@ -44,11 +45,11 @@
 <header id="topbar">
   <button id="btnSidebar" class="tb-btn" title="סינון" aria-label="סינון"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
   <div class="brand">מַגִּיהַּ<small>סקירת שגיאות דפוס</small></div>
-  <input id="globalSearch" type="search" placeholder="חיפוש חופשי: מילה, תיקון, קטע, מראה מקום…" autocomplete="off">
+  <input id="globalSearch" type="search" placeholder="חיפוש חופשי: מילה, תיקון, קטע, מראה מקום…" aria-label="חיפוש חופשי" autocomplete="off">
   <div id="progressPill" title="התקדמות בסינון הנוכחי">טוען…</div>
   <div class="spacer"></div>
-  <button id="btnUndo" class="tb-btn" title="ביטול הפעולה האחרונה (Ctrl+Z)"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg> ביטול</button>
-  <details id="exportMenu">
+  <button id="btnUndo" class="tb-btn" title="ביטול הפעולה האחרונה (Ctrl+Z)" aria-label="ביטול הפעולה האחרונה"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg> ביטול</button>
+  <details id="exportMenu" class="menu-wrap">
     <summary class="tb-btn"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> ייצוא</summary>
     <div class="menu">
       <button id="expXlsxCurrent">Excel — למאגר הנוכחי</button>
@@ -57,10 +58,15 @@
       <button id="expFixes">ייצוא תיקונים ל־to_send</button>
     </div>
   </details>
-  <button id="btnScan" class="tb-btn" title="ניהול סריקה: רענון, ייבוא, איפוס, גיבויים"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> ניהול סריקה</button>
-  <button id="btnStats" class="tb-btn" data-goview="stats"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> סטטיסטיקה</button>
-  <button id="btnHelp" class="tb-btn" data-goview="help"><svg class="ic" aria-hidden="true"><use href="#i-help"/></svg> עזרה</button>
-  <button id="btnTheme" class="tb-btn" title="מצב כהה / בהיר" aria-label="מצב כהה / בהיר"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg></button>
+  <details id="moreMenu" class="menu-wrap">
+    <summary class="tb-btn" title="עוד" aria-label="עוד"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg></summary>
+    <div class="menu">
+      <button id="btnScan" title="ניהול סריקה: רענון, ייבוא, איפוס, גיבויים"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> ניהול סריקה</button>
+      <button id="btnHelp" data-goview="help"><svg class="ic" aria-hidden="true"><use href="#i-help"/></svg> עזרה</button>
+      <div class="sep"></div>
+      <button id="btnTheme" title="מצב כהה / בהיר"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg> מצב כהה</button>
+    </div>
+  </details>
 </header>
 
 <div id="layout">
@@ -88,9 +94,14 @@
     </div>
 
     <div class="f-group">
-      <label class="chk-row"><input type="checkbox" id="fVerified"> מאומתים בלבד <span class="info-i" data-tip="הצג רק ממצאים ברמת ודאות גבוהה — מומלץ להתחיל מהם">ⓘ</span></label>
-      <label class="chk-row"><input type="checkbox" id="fHideIrr" checked> הסתר נתיבי «לא רלוונטי» <span class="info-i" data-tip="ספרים שנתיב הקובץ שלהם כולל «לא רלוונטי» (או «לא רלונטי») לא יוצגו — בטבלה, בכרטיסים ובמתקן">ⓘ</span></label>
-      <label class="chk-row"><input type="checkbox" id="fHideDb" checked> הסתר ספרים לייצוא בלבד <span class="info-i" data-tip="ספרים ממסד הנתונים שאינם קובץ טקסט — אפשר רק לייצא את התיקונים שלהם">ⓘ</span></label>
+      <label class="chk-row"><input type="checkbox" id="fVerified"> מאומתים בלבד <span class="info-i" tabindex="0" data-tip="הצג רק ממצאים ברמת ודאות גבוהה — מומלץ להתחיל מהם">ⓘ</span></label>
+    </div>
+
+    <details id="fMore" class="f-more">
+      <summary>אפשרויות נוספות</summary>
+    <div class="f-group">
+      <label class="chk-row"><input type="checkbox" id="fHideIrr" checked> הסתר נתיבי «לא רלוונטי» <span class="info-i" tabindex="0" data-tip="ספרים שנתיב הקובץ שלהם כולל «לא רלוונטי» (או «לא רלונטי») לא יוצגו — בטבלה, בכרטיסים ובמתקן">ⓘ</span></label>
+      <label class="chk-row"><input type="checkbox" id="fHideDb" checked> הסתר ספרים לייצוא בלבד <span class="info-i" tabindex="0" data-tip="ספרים ממסד הנתונים שאינם קובץ טקסט — אפשר רק לייצא את התיקונים שלהם">ⓘ</span></label>
     </div>
 
     <div class="f-group">
@@ -111,6 +122,7 @@
         <option value="word:asc">לפי מילה</option>
       </select>
     </div>
+    </details>
 
     <button id="btnClearFilters"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg> ניקוי כל הסינונים</button>
   </aside>
@@ -122,8 +134,10 @@
       <button data-view="table" class="active"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg> תצוגת טבלה</button>
       <button data-view="cards"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg> תצוגת כרטיסים</button>
       <button data-view="fixer"><svg class="ic" aria-hidden="true"><use href="#i-wrench"/></svg> מצב מתקן</button>
+      <button data-view="stats"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> סטטיסטיקה</button>
       <span class="tab-hint" id="sessionCounter"></span>
     </nav>
+    <div id="activeFilters" role="group" aria-label="סינונים פעילים" hidden></div>
 
     <!-- ===================== table view ===================== -->
     <section id="view-table" class="view visible">
@@ -214,7 +228,7 @@
 
 <!-- detail drawer -->
 <div id="drawerScrim"></div>
-<aside id="drawer" aria-label="פרטי ממצא">
+<aside id="drawer" role="dialog" aria-modal="true" aria-label="פרטי ממצא">
   <header>
     <span>פרטי ממצא</span>
     <button id="drawerClose" title="סגירה (Esc)" aria-label="סגירה"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
@@ -224,7 +238,7 @@
 
 <!-- scan-management modal -->
 <div id="scanScrim" class="modal-scrim"></div>
-<div id="scanModal" class="modal" role="dialog" aria-label="ניהול סריקה">
+<div id="scanModal" class="modal" role="dialog" aria-modal="true" aria-label="ניהול סריקה">
   <header>
     <span><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> ניהול סריקה</span>
     <button id="scanClose" title="סגירה" aria-label="סגירה"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>

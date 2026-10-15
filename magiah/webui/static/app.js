@@ -18,12 +18,68 @@ function el(tag, attrs, ...children) {
     else if (k === "text") n.textContent = v;
     else n.setAttribute(k, v);
   }
+  // a tooltip nobody can reach by keyboard is no tooltip
+  if (attrs && attrs.dataset && attrs.dataset.tip && !/^(BUTTON|INPUT|SELECT|TEXTAREA|A)$/.test(n.tagName)) n.tabIndex = 0;
   for (const c of children.flat()) {
     if (c == null) continue;
     n.append(c.nodeType ? c : document.createTextNode(String(c)));
   }
   return n;
 }
+
+/* Make a non-button element usable from the keyboard: focusable, optional
+ * role, Enter / Space activate it. */
+function makeActivatable(node, fn, role) {
+  node.tabIndex = 0;
+  if (role) node.setAttribute("role", role);
+  node.addEventListener("keydown", ev => {
+    if (ev.target !== node) return;
+    if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); fn(ev); }
+  });
+  return node;
+}
+
+/* ---- dialogs (drawer, scan modal): focus moves in, Tab stays inside, focus
+ * goes back to whatever opened the dialog ---- */
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
+const LAYERS = [];
+/* Is this element really on screen? A closed <details> hides its content
+ * without always clearing offsetParent, so check the ancestors too (a
+ * <summary> itself stays visible). */
+function isShown(e) {
+  if (!e || e.offsetParent === null) return false;
+  for (let p = e.parentElement; p; p = p.parentElement) {
+    if (p.tagName === "DETAILS" && !p.open && !(e.tagName === "SUMMARY" && e.parentElement === p)) return false;
+  }
+  return true;
+}
+function openLayer(node, fallbackSel) {
+  if (LAYERS.some(l => l.node === node)) return;
+  LAYERS.push({ node, opener: document.activeElement, fallbackSel });
+  requestAnimationFrame(() => {
+    const first = [...node.querySelectorAll(FOCUSABLE)].find(isShown);
+    if (first) first.focus();
+  });
+}
+function closeLayer(node) {
+  const i = LAYERS.findIndex(l => l.node === node);
+  if (i < 0) return;
+  const [l] = LAYERS.splice(i, 1);
+  // the opener may be gone or hidden (a closed menu item): use the fallback
+  let back = l.opener;
+  if (!back || !document.contains(back) || !isShown(back)) back = l.fallbackSel ? $(l.fallbackSel) : null;
+  if (back && back.focus) back.focus();
+}
+document.addEventListener("keydown", ev => {
+  if (ev.key !== "Tab" || !LAYERS.length) return;
+  const node = LAYERS[LAYERS.length - 1].node;
+  const items = [...node.querySelectorAll(FOCUSABLE)].filter(isShown);
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (!node.contains(document.activeElement)) { ev.preventDefault(); first.focus(); }
+  else if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+  else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+});
 
 /* An icon from the sprite in index.html (<symbol id="i-NAME">). Coloured by
  * currentColor; decorative, so hidden from screen readers. */
@@ -601,7 +657,11 @@ function syncFilterControls() {
   $("#globalSearch").value = f.q;
   $$("#fErrtypes input[type=checkbox]").forEach(c => { c.checked = f.errtypes.includes(c.value); });
   $$("#fStatuses input[type=checkbox]").forEach(c => { c.checked = f.statuses.includes(c.value); });
-  $$("#fBookList .book-item").forEach(b => b.classList.toggle("selected", b.dataset.key === f.book));
+  $$("#fBookList .book-item").forEach(b => {
+    b.classList.toggle("selected", b.dataset.key === f.book);
+    b.setAttribute("aria-pressed", b.dataset.key === f.book ? "true" : "false");
+  });
+  if (f.min_rank || f.sort !== "rank" || f.dir !== "desc" || !S.hideIrr || !S.hideDb) $("#fMore").open = true;
   $("#fixInclude").checked = S.fixInclude;
   if ($("#fixBook")) $("#fixBook").value = S.fixKey;
   syncModeButtons();
@@ -649,7 +709,51 @@ function onStatusFilterChange() {
   S.filters.statuses = $$("#fStatuses input:checked").map(c => c.value);
   filtersChanged();
 }
+/* ---- active filters: what is the list narrowed by, one click to undo each ---- */
+const DEFAULT_FILTERS = () => ({ origin: "", book: "", errtypes: [], statuses: [], verified: false, min_rank: 0, q: "", sort: "rank", dir: "desc" });
+
+function activeFilterChips() {
+  const f = S.filters, chips = [];
+  const add = (label, clear) => chips.push({ label, clear });
+  if (f.q) add("חיפוש: " + f.q, () => { f.q = ""; });
+  if (f.origin) add("מאגר: " + (originInfo(f.origin).hebrew || f.origin), () => { f.origin = ""; });
+  if (f.book) {
+    const b = S.bookList.find(x => (x.key || x.name || x.source) === f.book);
+    add("ספר: " + (b ? (b.name || b.source) : f.book), () => { f.book = ""; });
+  }
+  for (const k of f.errtypes) add(errtypeInfo(k).hebrew || k, () => { f.errtypes = f.errtypes.filter(x => x !== k); });
+  for (const k of f.statuses) add("סטטוס: " + statusInfo(k).hebrew, () => { f.statuses = f.statuses.filter(x => x !== k); });
+  if (f.verified) add("מאומתים בלבד", () => { f.verified = false; });
+  if (f.min_rank) add("ציון מ־" + fmtRank(f.min_rank), () => { f.min_rank = 0; });
+  return chips;
+}
+
+function renderActiveFilters() {
+  const box = $("#activeFilters");
+  if (!box) return;
+  const chips = (S.view === "table" || S.view === "cards") ? activeFilterChips() : [];
+  box.hidden = !chips.length;
+  box.replaceChildren(...chips.map(c => {
+    const b = el("button", { type: "button", class: "fchip", "aria-label": "הסר סינון: " + c.label },
+      el("span", null, c.label), icon("x"));
+    b.addEventListener("click", () => {
+      c.clear();
+      $("#fBookSearch").value = "";
+      syncFilterControls();
+      loadBooks();
+      filtersChanged();
+    });
+    return b;
+  }));
+  if (chips.length > 1) {
+    const all = el("button", { type: "button", class: "fchip-clear" }, "נקה הכל");
+    all.addEventListener("click", () => $("#btnClearFilters").click());
+    box.append(all);
+  }
+}
+
 function filtersChanged() {
+  renderActiveFilters();
   S.page = 1;
   S.sel.clear();
   S.cardStale = true;
@@ -670,6 +774,7 @@ const loadBooks = debounce(async function () {
     const resp = await api("/api/books?" + p);
     const books = Array.isArray(resp) ? resp : (resp.books || resp.rows || []);
     S.bookList = books;
+    renderActiveFilters();
     const box = $("#fBookList");
     box.replaceChildren();
     if (!books.length) { box.append(el("div", { class: "empty" }, "לא נמצאו ספרים")); return; }
@@ -686,11 +791,14 @@ const loadBooks = debounce(async function () {
       const item = el("div", { class: "book-item" + (S.filters.book === key ? " selected" : ""), dataset: { key } },
         el("span", { class: "bname", title: label }, el("bdi", null, label)),
         el("span", { class: "bcount" }, cnt));
-      item.addEventListener("click", () => {
+      const pick = () => {
         S.filters.book = S.filters.book === key ? "" : key;
         syncFilterControls();
         filtersChanged();
-      });
+      };
+      item.addEventListener("click", pick);
+      makeActivatable(item, pick, "button");
+      item.setAttribute("aria-pressed", S.filters.book === key ? "true" : "false");
       box.append(item);
     }
   } catch (e) {
@@ -741,7 +849,7 @@ function renderTableHead() {
 function statusChip(row) {
   const st = effStatus(row);
   const info = statusInfo(st);
-  const chip = el("span", { class: "chip st-" + st, title: "לחיצה לשינוי סטטוס" }, (info.icon ? info.icon + " " : "") + info.hebrew);
+  const chip = el("button", { type: "button", class: "chip st-" + st, title: "לחיצה לשינוי סטטוס", "aria-haspopup": "menu" }, (info.icon ? info.icon + " " : "") + info.hebrew);
   chip.addEventListener("click", ev => {
     ev.stopPropagation();
     openStatusMenu(ev.currentTarget, sKey => setStatus([row.id], sKey).catch(() => {}));
@@ -780,6 +888,8 @@ function renderTableRows() {
     tr.append(el("td", { class: "snip" }, renderSnippet(r.snippet, r.word, null, effFix(r))));
     tr.append(el("td", null, statusChip(r)));
     tr.addEventListener("click", () => openDrawer(r.id));
+    makeActivatable(tr, () => openDrawer(r.id));
+    tr.setAttribute("aria-haspopup", "dialog");
     tb.append(tr);
   }
 }
@@ -860,19 +970,48 @@ function openStatusMenu(anchor, onPick) {
     b.addEventListener("click", () => { closeStatusMenu(); onPick(s.key); });
     menu.append(b);
   }
+  menu.setAttribute("role", "menu");
+  menu._anchor = anchor;
   const r = anchor.getBoundingClientRect();
   menu.style.display = "block";
   const mw = 180;
   menu.style.top = Math.min(window.innerHeight - 250, r.bottom + 4) + "px";
   menu.style.left = Math.max(8, Math.min(window.innerWidth - mw - 8, r.left)) + "px";
+  for (const b of menu.children) b.setAttribute("role", "menuitem");
+  if (menu.firstElementChild) menu.firstElementChild.focus();
   setTimeout(() => document.addEventListener("click", closeStatusMenu, { once: true }), 0);
 }
-function closeStatusMenu() { $("#stMenu").style.display = "none"; }
+function closeStatusMenu() {
+  const menu = $("#stMenu");
+  const wasOpen = menu.style.display === "block";
+  menu.style.display = "none";
+  const a = menu._anchor;
+  menu._anchor = null;
+  if (wasOpen && a && document.contains(a) && menu.contains(document.activeElement)) a.focus();
+}
+$("#stMenu").addEventListener("keydown", ev => {
+  const items = [...$("#stMenu").children];
+  const i = items.indexOf(document.activeElement);
+  if (ev.key === "ArrowDown") { ev.preventDefault(); items[(i + 1) % items.length].focus(); }
+  else if (ev.key === "ArrowUp") { ev.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  else if (ev.key === "Escape") { ev.preventDefault(); closeStatusMenu(); }
+  else if (ev.key === "Tab") {
+    // dismiss, then continue from the chip that opened the menu: the menu
+    // is not in the page's tab order, so the browser could not do it itself
+    const anchor = $("#stMenu")._anchor;
+    const order = () => [...document.querySelectorAll(FOCUSABLE)].filter(e => isShown(e) && !$("#stMenu").contains(e));
+    closeStatusMenu();
+    const list = order(), at = list.indexOf(anchor);
+    const next = at < 0 ? null : list[at + (ev.shiftKey ? -1 : 1)];
+    if (next) { ev.preventDefault(); next.focus(); }
+  }
+});
 
 /* ---------------------------------------------------------- drawer */
 async function openDrawer(id) {
   $("#drawer").classList.add("visible");
   $("#drawerScrim").classList.add("visible");
+  openLayer($("#drawer"), "#viewtabs button.active");
   const body = $("#drawerBody");
   body.replaceChildren(el("div", { class: "loading-row" }, "טוען…"));
   let resp;
@@ -1100,6 +1239,7 @@ function renderDrawer(r, history) {
 function closeDrawer() {
   $("#drawer").classList.remove("visible");
   $("#drawerScrim").classList.remove("visible");
+  closeLayer($("#drawer"));
 }
 
 /* ---------------------------------------------------------- card view */
@@ -1163,7 +1303,7 @@ function renderCard() {
   meta.replaceChildren(...[
     el("span", null, "בתור: " + fmtNum(q.queue.length) + (q.exhausted ? "" : "+")),
     q.skipped.length ? el("span", { title: "יוצגו שוב בסוף התור" }, "נדחו לאחר כך: " + fmtNum(q.skipped.length)) : null,
-    el("span", null, "קיצורים: י=אושר · נ=לא שגיאה · ד=לא בכל מקום · ת=תיקון · ע=התעלם · ב=בירור · ק=תוקן · רווח=דלג")]
+    shortcutsMenu()]
     .filter(Boolean));
   box.replaceChildren();
   if (!r) {
@@ -1220,15 +1360,27 @@ function renderCard() {
     mkBtn("אושר — זו שגיאה", "י", () => cardAct("approved"), "act-approve", "check-circle"),
     mkBtn("לא שגיאה", "נ", () => cardAct("not_error"), "act-reject", "x-circle"),
     mkBtn("דלג", "רווח", () => cardSkip(), "act-skip", "skip")));
-  box.append(el("div", { class: "card-actions second-row" },
-    mkBtn("לא שגיאה בכל מקום", "ד", () => cardAct("not_error", { scope: "word" }), null, "x-circle"),
-    // narrower than "everywhere": the word may still be wrong elsewhere
-    mkBtn("תקין בספר זה", "", () => cardAct("not_error", { scope: "book" }), null, "x-circle"),
-    mkBtn("ההצעה שגויה", "", () => cardAct("not_error", { scope: "replacement" }), null, "x-circle"),
-    mkBtn("תיקון ידני", "ת", () => toggleCardFix(true), null, "pencil"),
-    mkBtn("התעלם", "ע", () => cardAct("ignored"), null, "ban"),
-    mkBtn("דרוש בירור", "ב", () => cardAct("unsure"), null, "help"),
-    mkBtn("תוקן בספר", "ק", () => cardAct("fixed"), null, "wrench")));
+  // The rarer decisions live in one menu (same actions, same shortcuts), so
+  // the card shows three buttons instead of ten.
+  const item = (label, kbd, fn, ico) => {
+    const b = el("button", { type: "button" }, icon(ico), el("span", null, label), kbd ? el("kbd", null, kbd) : null);
+    b.addEventListener("click", fn);
+    return b;
+  };
+  box.append(el("div", { class: "card-more-row" },
+    el("details", { class: "menu-wrap card-more" },
+      el("summary", { class: "btn" }, "עוד פעולות", icon("more")),
+      el("div", { class: "menu" },
+        el("div", { class: "menu-title" }, "לא שגיאה…"),
+        item("בכל מקום", "ד", () => cardAct("not_error", { scope: "word" }), "x-circle"),
+        // narrower than "everywhere": the word may still be wrong elsewhere
+        item("תקין בספר זה", "", () => cardAct("not_error", { scope: "book" }), "x-circle"),
+        item("ההצעה שגויה", "", () => cardAct("not_error", { scope: "replacement" }), "x-circle"),
+        el("div", { class: "sep" }),
+        item("תיקון ידני", "ת", () => toggleCardFix(true), "pencil"),
+        item("דרוש בירור", "ב", () => cardAct("unsure"), "help"),
+        item("התעלם", "ע", () => cardAct("ignored"), "ban"),
+        item("תוקן בספר", "ק", () => cardAct("fixed"), "wrench")))));
   const fixRow = el("div", { id: "cardFixRow", class: S.cardFixOpen ? "visible" : "" },
     el("input", { id: "cardFixInput", type: "text", placeholder: "הקלד את התיקון הנכון ולחץ Enter…", dir: "rtl" }),
     el("button", { class: "btn primary" }, "שמור ואשר"));
@@ -1240,6 +1392,19 @@ function renderCard() {
   });
   box.append(fixRow);
   if (S.cardFixOpen) setTimeout(() => { const i = $("#cardFixInput"); if (i) { i.value = effFix(r); i.focus(); i.select(); } }, 0);
+}
+
+/* Keyboard shortcuts, kept one click away instead of a sentence on every card. */
+const CARD_SHORTCUTS = [
+  ["י", "אושר — זו שגיאה"], ["נ", "לא שגיאה (מופע זה)"], ["ד", "לא שגיאה בכל מקום"],
+  ["ת", "תיקון ידני"], ["ע", "התעלם"], ["ב", "דרוש בירור"], ["ק", "תוקן בספר"],
+  ["רווח", "דלג"], ["Ctrl+Z", "ביטול הפעולה האחרונה"],
+];
+function shortcutsMenu() {
+  return el("details", { class: "menu-wrap" },
+    el("summary", { class: "btn sm" }, icon("help"), "קיצורי מקלדת"),
+    el("div", { class: "menu sc-menu" },
+      CARD_SHORTCUTS.map(([k, label]) => el("div", { class: "sc-row" }, el("kbd", null, k), el("span", null, label)))));
 }
 
 function toggleCardFix(open) {
@@ -2652,6 +2817,7 @@ function fileUnitNode(pf) {
 function openScanModal() {
   $("#scanModal").classList.add("visible");
   $("#scanScrim").classList.add("visible");
+  openLayer($("#scanModal"), "#moreMenu > summary");
   loadBackups();
   loadScanConfig().catch(e => toast("טעינת הגדרות הסריקה נכשלה: " + e.message, "err"));
   syncScanStatusOnce();
@@ -2659,6 +2825,7 @@ function openScanModal() {
 function closeScanModal() {
   $("#scanModal").classList.remove("visible");
   $("#scanScrim").classList.remove("visible");
+  closeLayer($("#scanModal"));
 }
 
 async function loadBackups() {
@@ -3101,11 +3268,15 @@ async function bsSearch() {
       el("span", { class: "bs-ttl" }, b.title,
         dir ? el("span", { class: "bs-path" }, dir) : null),
       el("span", { class: "bs-org" }, b.origin || ""));
-    row.addEventListener("click", () => {
-      $$("#bsResults .bs-item").forEach(x => x.classList.remove("on"));
+    const choose = () => {
+      $$("#bsResults .bs-item").forEach(x => { x.classList.remove("on"); x.setAttribute("aria-pressed", "false"); });
       row.classList.add("on");
+      row.setAttribute("aria-pressed", "true");
       bsSetChosen(b);
-    });
+    };
+    row.addEventListener("click", choose);
+    makeActivatable(row, choose, "button");
+    row.setAttribute("aria-pressed", "false");
     return row;
   }));
 }
@@ -3197,7 +3368,7 @@ function bindExports() {
     await runExport("/api/export/fixes", {}, "ייצוא תיקונים ל־to_send");
   });
 }
-function closeExportMenu() { $("#exportMenu").removeAttribute("open"); }
+function closeExportMenu() { $$("details.menu-wrap").forEach(d => d.removeAttribute("open")); }
 
 async function runExport(path, body, label) {
   toast(label + " — מתבצע, נא להמתין…");
@@ -3225,10 +3396,10 @@ async function runExport(path, body, label) {
 function showView(v, skipHash) {
   S.view = v;
   $$("#viewtabs button[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === v));
-  $("#btnStats").classList.toggle("active", v === "stats");
   $("#btnHelp").classList.toggle("active", v === "help");
   $$("section.view").forEach(s => s.classList.toggle("visible", s.id === "view-" + v));
   if (!skipHash) writeHash();
+  renderActiveFilters();
   refreshCurrentView();
 }
 
@@ -3273,6 +3444,8 @@ document.addEventListener("keydown", ev => {
   const t = ev.target;
   if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
   if ($("#scanModal").classList.contains("visible") || $("#drawer").classList.contains("visible")) return;
+  // Space on a focused button / summary / link belongs to that control
+  if ((ev.code === "Space" || ev.key === " ") && t && t.closest && t.closest("button, summary, a[href], [role=button], [role=menuitem]")) return;
 
   if (S.view === "cards") {
     if (keyIs(ev, "approve")) { ev.preventDefault(); cardAct("approved"); }
@@ -3320,8 +3493,7 @@ document.addEventListener("keydown", ev => {
 });
 
 /* ---------------------------------------------------------- tooltips */
-document.addEventListener("mouseover", ev => {
-  const t = ev.target.closest && ev.target.closest("[data-tip]");
+function showTip(t) {
   const tip = $("#tooltip");
   if (!t) { tip.style.display = "none"; return; }
   tip.textContent = t.dataset.tip;
@@ -3334,12 +3506,16 @@ document.addEventListener("mouseover", ev => {
   if (y + tip.offsetHeight > window.innerHeight - 8) y = r.top - tip.offsetHeight - 7;
   tip.style.left = x + "px";
   tip.style.top = y + "px";
-});
+}
+const tipTarget = ev => ev.target.closest && ev.target.closest("[data-tip]");
+document.addEventListener("mouseover", ev => showTip(tipTarget(ev)));
+document.addEventListener("focusin", ev => showTip(tipTarget(ev)));
+document.addEventListener("focusout", () => showTip(null));
 
 /* ---------------------------------------------------------- theme */
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
-  $("#btnTheme").replaceChildren(icon(t === "dark" ? "sun" : "moon"));
+  $("#btnTheme").replaceChildren(icon(t === "dark" ? "sun" : "moon"), t === "dark" ? " מצב בהיר" : " מצב כהה");
   try { localStorage.setItem("magiah_theme", t); } catch (e) {}
 }
 function initTheme() {
@@ -3376,7 +3552,7 @@ function bindControls() {
     filtersChanged();
   });
   $("#btnClearFilters").addEventListener("click", () => {
-    S.filters = { origin: "", book: "", errtypes: [], statuses: [], verified: false, min_rank: 0, q: "", sort: "rank", dir: "desc" };
+    S.filters = DEFAULT_FILTERS();
     $("#fBookSearch").value = "";
     syncFilterControls();
     loadBooks();
@@ -3443,9 +3619,11 @@ function bindControls() {
   $("#fixModeBracket").addEventListener("click", () => setFixMode("bracket"));
   $("#fixApply").addEventListener("click", applyFixes);
   $("#fixUndoFile").addEventListener("click", undoFileEdit);
+  // dropdown menus close on an outside click, and after an item is chosen
   document.addEventListener("click", ev => {
-    const em = $("#exportMenu");
-    if (em.hasAttribute("open") && !em.contains(ev.target)) em.removeAttribute("open");
+    for (const d of $$("details.menu-wrap[open]")) {
+      if (!d.contains(ev.target) || ev.target.closest(".menu button")) d.removeAttribute("open");
+    }
   });
   bindExports();
   bindScanModal();
