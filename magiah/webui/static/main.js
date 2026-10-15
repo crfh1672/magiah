@@ -83,8 +83,8 @@ function keyIs(ev, action) {
 }
 
 document.addEventListener("keydown", ev => {
-  // Ctrl+Z anywhere
-  if ((ev.ctrlKey || ev.metaKey) && (ev.code === "KeyZ" || ev.key === "z" || ev.key === "Z")) {
+  // Ctrl+Z anywhere — except while typing, where it undoes the text edit
+  if (!isTextField(ev.target) && (ev.ctrlKey || ev.metaKey) && (ev.code === "KeyZ" || ev.key === "z" || ev.key === "Z")) {
     ev.preventDefault();
     doUndo();
     return;
@@ -98,7 +98,7 @@ document.addEventListener("keydown", ev => {
   if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
   if ($("#drawer").classList.contains("visible")) return;
   // Space on a focused button / summary / link belongs to that control
-  if ((ev.code === "Space" || ev.key === " ") && t && t.closest && t.closest("button, summary, a[href], [role=button], [role=menuitem]")) return;
+  if ((ev.code === "Space" || ev.key === " ") && isControl(t)) return;
 
   if (S.view === "cards") {
     if (keyIs(ev, "approve")) { ev.preventDefault(); cardAct("approved"); }
@@ -114,7 +114,8 @@ document.addEventListener("keydown", ev => {
     if ((ev.ctrlKey || ev.metaKey) && (ev.code === "KeyS" || ev.key === "s")) {
       ev.preventDefault();                       // beats the browser's Save
       applyFixes();
-    } else if (ev.key === "Enter" || keyIs(ev, "fixedBook")) {
+    } else if ((ev.key === "Enter" && !isControl(t)) || keyIs(ev, "fixedBook")) {
+      // Enter on a focused button (Apply, a mode toggle…) activates it
       ev.preventDefault(); if (cur) markFixed(cur);
     } else if (ev.code === "ArrowDown") {
       ev.preventDefault(); moveFixSelection(1);
@@ -254,9 +255,11 @@ function bindControls() {
     if (ev.key !== "Enter") return;
     ev.preventDefault();
     const sel = $("#fixBook");
-    const opts = [...sel.children].filter(o => o.value);
+    // count real matches only: the open book is kept in the list even when it
+    // does not match, which must not stop a single match from being chosen
+    const opts = fixBookHits($("#fixBookSearch").value.trim());
     if (opts.length === 1) {
-      sel.value = opts[0].value;
+      sel.value = opts[0].key;
       S.fixKey = sel.value;
       writeHash();
       loadFixDoc();

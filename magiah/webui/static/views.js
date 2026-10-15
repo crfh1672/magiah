@@ -17,7 +17,7 @@ function normalizeMatrix(data) {
   if (Array.isArray(data)) {
     for (const item of data) {
       if (item == null) continue;
-      const label = item.hebrew || item.origin || item.errtype || item.book || item.source || item.name || item.label || item.key || "";
+      const label = item.hebrew || item.errtype || item.book || item.source || item.name || item.label || item.key || item.origin || "";
       const e = get(String(label));
       if (item.statuses && typeof item.statuses === "object") {
         Object.assign(e.counts, item.statuses);
@@ -142,7 +142,7 @@ function renderHelp() {
     el("tr", null, el("td", null, kbd("1")), el("td", null, "סטטוסים 1‑6: אושר / לא שגיאה / בירור / התעלם / תוקן / טרם נבדק"), el("td", null, "מצב מתקן")),
     el("tr", null, el("td", null, kbd("ס")), el("td", null, "החלפת מצב הכתיבה של התיקון הנוכחי (החלפה ⇄ סוגריים)"), el("td", null, "מצב מתקן")),
     el("tr", null, el("td", null, kbd("פ")), el("td", null, "סימון / ביטול סימון התיקון להחלה"), el("td", null, "מצב מתקן")),
-    el("tr", null, el("td", null, kbd("Home")), el("td", null, "מעבר לממצא הראשון / האחרון ברשימה"), el("td", null, "מצב מתקן")),
+    el("tr", null, el("td", null, kbd("Home / End")), el("td", null, "מעבר לממצא הראשון / האחרון ברשימה"), el("td", null, "מצב מתקן")),
     el("tr", null, el("td", null, kbd("Ctrl+S")), el("td", null, "החלת התיקונים המסומנים על הקובץ"), el("td", null, "מצב מתקן")),
     el("tr", null, el("td", null, kbd("Ctrl+Z")), el("td", null, "ביטול הפעולה האחרונה"), el("td", null, "בכל מקום")),
     el("tr", null, el("td", null, kbd("Esc")), el("td", null, "סגירת חלונית / תפריט"), el("td", null, "בכל מקום")));
@@ -262,11 +262,15 @@ function parseFileUnit(unit) {
   return { rel: body.slice(0, i), lineno: parseInt(ln, 10), abs: abs };
 }
 
+/* Windows paths (a drive letter or a backslash) keep backslashes; anything
+   else, such as an absolute POSIX path, keeps its slashes as they are */
+const isWinPath = p => /^[A-Za-z]:|\\/.test(p || "");
 function fileUnitFullPath(rel, abs) {
-  const winRel = rel.replace(/\//g, "\\");
-  if (abs) return winRel;                       // already an absolute path
+  if (abs) return isWinPath(rel) ? rel.replace(/\//g, "\\") : rel;   // already absolute
   const root = SCAN.cfg && SCAN.cfg.corpus && SCAN.cfg.corpus.library_dir;
-  return root ? root.replace(/[\\\/]+$/, "") + "\\" + winRel : winRel;
+  if (!root) return isWinPath(rel) ? rel.replace(/\//g, "\\") : rel;
+  const sep = isWinPath(root) ? "\\" : "/";
+  return root.replace(/[\\\/]+$/, "") + sep + rel.replace(/[\\\/]/g, sep);
 }
 
 async function copyFilePath(rel, abs) {

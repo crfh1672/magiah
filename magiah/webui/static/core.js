@@ -39,6 +39,17 @@ function makeActivatable(node, fn, role) {
   return node;
 }
 
+/* a field where keys edit text (so app shortcuts such as Ctrl+Z must not fire) */
+function isTextField(t) {
+  if (!t) return false;
+  if (t.isContentEditable || t.tagName === "TEXTAREA") return true;
+  return t.tagName === "INPUT" && !/^(checkbox|radio|button|submit|reset|file|range|color)$/i.test(t.type || "text");
+}
+/* a focused control that owns Enter / Space itself */
+function isControl(t) {
+  return !!(t && t.closest && t.closest("button, summary, a[href], [role=button], [role=menuitem]"));
+}
+
 /* ---- dialogs (drawer, scan modal): focus moves in, Tab stays inside, focus
  * goes back to whatever opened the dialog ---- */
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';

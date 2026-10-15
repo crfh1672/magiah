@@ -71,7 +71,11 @@ jobs:
           python - <<'EOF'
           import glob, sys, zipfile
           names = set(zipfile.ZipFile(glob.glob('dist/*.whl')[0]).namelist())
-          need = {f'magiah/webui/static/{f}' for f in ('index.html', 'core.js', 'main.js', 'style.css')}
+          import re
+          html = zipfile.ZipFile(glob.glob('dist/*.whl')[0]).read('magiah/webui/static/index.html').decode('utf-8')
+          scripts = re.findall(r'<script src="/static/([\w.-]+)"></script>', html)
+          assert scripts, 'index.html loads no scripts'
+          need = {f'magiah/webui/static/{f}' for f in ['index.html', 'style.css', *scripts]}
           missing = sorted(need - names)
           if missing:
               sys.exit(f'wheel is missing: {missing}')

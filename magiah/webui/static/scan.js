@@ -377,6 +377,7 @@ function bindScanRun() {
     if (!confirm("להתחיל סריקה חדשה?\n\nשלבים: " + req.stages.map(stageHebrew).join(", ") + "\nהסריקה עשויה להימשך זמן רב; אפשר לעקוב אחרי ההתקדמות ביומן." + allowUnreadNote(req))) return;
     try {
       const r = await api("/api/scan/start", { method: "POST", body: req });
+      SCAN.statusSeq++;     // a status read still in flight predates this start
       clearAllowUnread();
       toast((r && r.message) || "הסריקה הופעלה", "ok");
       $("#scanRunSection").setAttribute("open", "");
@@ -484,6 +485,16 @@ function bindBookScan() {
     bsSearch();
   }));
   $("#bsSearch").addEventListener("input", debounce(bsSearch, 300));
+  // the book list comes from the corpus named in the full-scan panel; when
+  // that changes, the chosen book may no longer exist there, or may be a
+  // different book under the same id — drop it and search again
+  const corpusChanged = () => {
+    if (!BS.chosen && !$("#bsSearch").value.trim()) return;
+    bsSetChosen(null);
+    bsSearch();
+  };
+  ["#scanLibDir", "#scanDbPath"].forEach(sel => $(sel).addEventListener("change", corpusChanged));
+  $("#scanModes").addEventListener("change", corpusChanged);
   bsUpdateRows();
 
   $("#bsStart").addEventListener("click", async () => {
@@ -507,11 +518,18 @@ function bindBookScan() {
                  "\n\nממצאים קודמים של ספר זה יוחלפו; ההחלטות שלך עליהם יישמרו." +
                  allowUnreadNote(req))) return;
     try {
+      // the book source is chosen apart from the full scan's corpus mode, but
+      // the server derives the paths it uses from that mode: "library" has no
+      // database and "sqlite" no library folder. "hybrid" carries both.
+      const corpus = Object.assign({}, req.corpus);
+      if ((src === "db" && corpus.mode === "library") ||
+          (src === "library" && corpus.mode === "sqlite")) corpus.mode = "hybrid";
       const r = await api("/api/scan/book", {
         method: "POST",
         body: { source: src, book: key, verify_ctx: verify,
-                config: req.config, corpus: req.corpus },
+                config: req.config, corpus },
       });
+      SCAN.statusSeq++;     // a status read still in flight predates this start
       clearAllowUnread();
       toast((r && r.message) || "סריקת הספר הופעלה", "ok");
       $("#scanRunSection").setAttribute("open", "");
@@ -536,7 +554,7 @@ async function reloadAfterBookScan() {
 }
 
 async function afterDataChanged() {
-  closeScanModal();
+  // the scan screen is a regular view now; there is no modal to close
   S.lastActions = [];
   S.sel.clear();
   S.cardStale = true;

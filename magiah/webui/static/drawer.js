@@ -4,26 +4,48 @@
 "use strict";
 
 /* ---------------------------------------------------------- drawer */
+/* bumped on every open and close, so a response for an earlier opening can
+   never replace what the drawer shows now */
+let DRAWER_SEQ = 0;
+
 async function openDrawer(id) {
+  const seq = ++DRAWER_SEQ;
   $("#drawer").classList.add("visible");
   $("#drawerScrim").classList.add("visible");
   openLayer($("#drawer"), "#viewtabs button.active");
   const body = $("#drawerBody");
   body.replaceChildren(el("div", { class: "loading-row" }, "טוען…"));
+  await loadDrawer(id, seq, true);
+}
+
+/* fetch the finding and its history, then draw them — unless the drawer has
+   been closed or reopened on another finding in the meantime */
+async function loadDrawer(id, seq, showErrors) {
   let resp;
   try {
     resp = await api("/api/finding/" + id);
   } catch (e) {
-    body.replaceChildren(el("div", { class: "loading-row" }, "הטעינה נכשלה: " + e.message));
-    toast(e.message, "err");
+    if (seq !== DRAWER_SEQ) return;
+    if (showErrors) {
+      $("#drawerBody").replaceChildren(el("div", { class: "loading-row" }, "הטעינה נכשלה: " + e.message));
+      toast(e.message, "err");
+    }
     return;
   }
+  if (seq !== DRAWER_SEQ) return;
   const r = resp.finding || resp.row || resp;
   const history = resp.history || r.history || [];
   // keep local caches in sync if this row is on screen
   const local = localRowsById([r.id])[0];
   if (local) { r.effective_status = effStatus(r) || effStatus(local); }
   renderDrawer(r, history);
+}
+
+/* after a change made from the drawer: draw it at once, then refetch so the
+   history shows the action that was just recorded */
+function drawerChanged(r, history) {
+  renderDrawer(r, history);
+  loadDrawer(r.id, DRAWER_SEQ, false);
 }
 
 // Each candidate correction with the evidence behind it: the detector's, and
@@ -141,7 +163,7 @@ function renderDrawer(r, history) {
       try {
         await setStatus([r.id], s.key);
         r.effective_status = s.key;
-        renderDrawer(r, history);
+        drawerChanged(r, history);
       } catch (e) {}
     });
     acts.append(b);
@@ -159,7 +181,7 @@ function renderDrawer(r, history) {
       await setStatus([r.id], "approved", { custom_suggestion: v });
       r.custom_suggestion = v; r.effective_status = "approved";
       toast("התיקון נשמר והממצא אושר", "ok");
-      renderDrawer(r, history);
+      drawerChanged(r, history);
     } catch (e) {}
   });
   fixSec.append(fixIn, fixBtn);
@@ -172,6 +194,7 @@ function renderDrawer(r, history) {
   noteBtn.addEventListener("click", async () => {
     try {
       await setStatus([r.id], effStatus(r), { note: noteIn.value });
+      r.note = noteIn.value;   // a later re-render must show what was just saved
       toast("ההערה נשמרה", "ok");
     } catch (e) {}
   });
@@ -188,8 +211,8 @@ function renderDrawer(r, history) {
   };
   addField("errtype", errtypeInfo(r.errtype).hebrew);
   addField("origin", originInfo(r.origin).hebrew || r.origin);
-  addField("source", el("bdi", null, r.source || ""));
-  addField("ref", el("bdi", null, r.ref || ""));
+  if (r.source) addField("source", el("bdi", null, r.source));
+  if (r.ref) addField("ref", el("bdi", null, r.ref));
   const pfu = parseFileUnit(r.unit);
   if (pfu) addField("unit", fileUnitNode(pfu));
   else addField("unit", r.unit != null ? String(r.unit) : "");
@@ -233,6 +256,7 @@ function renderDrawer(r, history) {
 }
 
 function closeDrawer() {
+  DRAWER_SEQ++;
   $("#drawer").classList.remove("visible");
   $("#drawerScrim").classList.remove("visible");
   closeLayer($("#drawer"));

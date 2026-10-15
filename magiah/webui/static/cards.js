@@ -18,10 +18,19 @@ function cardQueue() {
       countRemaining: async () =>
         totalOf(await api("/api/findings?" + filterParams({ statuses: remainingStatuses(), page: 1, page_size: 1 }))),
       // the cards a rule may just have decided, as they stand now
-      fetchRows: (ids, recheck) => {
-        const p = filterParams({ page: 1, page_size: 500, statuses: recheck ? remainingStatuses() : S.filters.statuses });
-        p.set("ids", ids.join(","));
-        return api("/api/findings?" + p);
+      // in batches: one request is capped at 500 rows, and a word with more
+      // cached findings would come back truncated — settle() reads a missing
+      // id as "left the filter" and would drop cards that are still open
+      fetchRows: async (ids, recheck) => {
+        const BATCH = 200;
+        const batches = [];
+        for (let i = 0; i < ids.length; i += BATCH) batches.push(ids.slice(i, i + BATCH));
+        const pages = await Promise.all(batches.map(chunk => {
+          const p = filterParams({ page: 1, page_size: BATCH, statuses: recheck ? remainingStatuses() : S.filters.statuses });
+          p.set("ids", chunk.join(","));
+          return api("/api/findings?" + p);
+        }));
+        return { rows: pages.flatMap(pg => (pg && pg.rows) || []) };
       },
       save: (row, status, opts) => setStatus([row.id], status, Object.assign({ expect_status: effStatus(row) }, opts)),
     });

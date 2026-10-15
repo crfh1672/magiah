@@ -48,16 +48,21 @@ function fixBookHidden(b) {
  * a corrector hunting for one book among hundreds should not wait for a round
  * trip on every keystroke. The book currently open always stays listed, so
  * typing can never make the selection silently vanish. */
+/* the books the search matches (hidden ones excluded); the open book is only
+   ever added to the list on top of this, never counted */
+function fixBookHits(q) {
+  const books = (S.fixBooks || []).filter(b => !fixBookHidden(b));
+  return q
+    ? books.filter(b => (b.title || "").indexOf(q) >= 0 ||
+                        (b.folder || "").indexOf(q) >= 0)
+    : books;
+}
 function renderFixBookOptions() {
   const sel = $("#fixBook");
   if (!sel) return;
   const q = ($("#fixBookSearch") ? $("#fixBookSearch").value : "").trim();
   const all = S.fixBooks || [];
-  const books = all.filter(b => !fixBookHidden(b));
-  const hits = q
-    ? books.filter(b => (b.title || "").indexOf(q) >= 0 ||
-                        (b.folder || "").indexOf(q) >= 0)
-    : books;
+  const hits = fixBookHits(q);
   // the open book stays listed even when it does not match, so typing can
   // never make the current selection disappear — but it is not counted as a
   // search result, which would be a lie
@@ -116,8 +121,12 @@ async function loadFixDoc() {
   // rebuilds the rows from the server, so carry those choices across
   const manual = new Map((S.fixRows || [])
     .filter(r => r.explicit).map(r => [r.id, r.explicit]));
+  const requested = S.fixKey;
   try {
     const resp = await api("/api/fixer/doc?" + p);
+    // a slow answer for a book that is no longer the open one must not
+    // overwrite the rows and document of the current book
+    if (requested !== S.fixKey) return;
     S.fixDoc = resp;
     S.fixRows = resp.items || [];
     for (const r of S.fixRows) {
@@ -132,6 +141,7 @@ async function loadFixDoc() {
         r.explicit = e;
         r.anchor = { ok: true, start: e.start, end: e.end,
                      confidence: "manual",
+                     needs_vocalization: VOCALIZED_RE.test(txt.slice(e.start, e.end)),
                      spans_markup: txt.slice(e.start, e.end).indexOf("<") >= 0 };
       }
     }
@@ -160,6 +170,7 @@ async function loadFixDoc() {
       showBlockedBanner();
     }
   } catch (e) {
+    if (requested !== S.fixKey) return;
     S.fixDoc = null;
     S.fixRows = [];
     list.replaceChildren(el("div", { class: "fixer-empty" }, "הטעינה נכשלה: " + e.message));
@@ -238,7 +249,10 @@ function moveFixSelection(delta) {
 
 /* a row can be written only when the server managed to anchor it */
 function canApply(r) {
-  return !!(r && r.anchor && r.anchor.ok && (r.correction || effFix(r)) &&
+  // a word split by markup is refused by the server, and one such row would
+  // abort the whole batch — so it is never offered or pre-selected
+  return !!(r && r.anchor && r.anchor.ok && !r.anchor.spans_markup &&
+            (r.correction || effFix(r)) &&
             effStatus(r) !== "fixed" && !needsVocalization(r));
 }
 
@@ -422,6 +436,7 @@ function resolveOccurrence(row, start, end) {
   const picked = lineText.slice(start, end);
   row.explicit = { start, end, lineno: row.lineno };
   row.anchor = { ok: true, start, end, confidence: "manual",
+                 needs_vocalization: VOCALIZED_RE.test(picked),
                  spans_markup: picked.indexOf("<") >= 0 };
   // Pointing at a word says WHERE, not WHETHER. Arming an undecided finding
   // on a locational click would write into a book something nobody judged.
@@ -867,6 +882,8 @@ async function fixAct(r, status, opts) {
     // toast already shown; setStatus's own catch already repainted the row
     // with the rolled-back status, so undo the pick-set change to match.
     if (wasPicked) S.fixPicked.add(r.id); else S.fixPicked.delete(r.id);
+    // setStatus repainted the row before the pick was restored: paint again
+    repaintStatuses([r.id]);
   }
   updateApplyButton();
 }
@@ -881,10 +898,15 @@ function scrollFixCurrent() {
  * VISIBLE list, so a filtered view does not jump to a finding off screen. */
 async function markFixed(r) {
   if (!r || effStatus(r) === "fixed") return;
+  // under a status filter the row leaves the visible list once it is fixed,
+  // so its position has to be taken before the change
+  const at = visibleFixRows().findIndex(x => x.id === r.id);
   await fixAct(r, "fixed");
+  if (effStatus(r) !== "fixed") return;           // the save failed: stay put
   const view = visibleFixRows();
-  const at = view.findIndex(x => x.id === r.id);
-  const next = view.slice(at + 1).find(x => effStatus(x) !== "fixed");
+  const atAfter = view.findIndex(x => x.id === r.id);
+  const next = view.slice(atAfter >= 0 ? atAfter + 1 : Math.max(0, at))
+    .find(x => effStatus(x) !== "fixed");
   if (next) selectFixRowById(next.id);
 }
 

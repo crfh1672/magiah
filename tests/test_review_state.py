@@ -1041,6 +1041,16 @@ class TestR2CardQueueJs(ServerCase):
         res = self.run_js('restore_dup')
         self.assertEqual(res['copies'], 1)
 
+    def test_confirmed_cards_that_stay_in_the_filter_are_not_remaining(self):
+        res = self.run_js('approved_filter')
+        self.assertEqual(res['visited'], 5)
+        self.assertEqual(res['state'], 'done')
+        self.assertEqual(res['remaining'], 0)
+
+    def test_save_finishing_after_a_queue_reset_leaves_no_stale_card(self):
+        res = self.run_js('reset_during_save')
+        self.assertEqual(res['ids'], [2, 3])
+
     def test_noop_write_is_not_an_undo_step(self):
         res = self.run_js('noop_changed')
         self.assertEqual(res['first'], True)
