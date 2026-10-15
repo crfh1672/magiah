@@ -126,6 +126,12 @@ async function main() {
     out.visited = seen.size;
     out.state = fq.state();
     out.remaining = fq.remaining;
+    // later: those five left the filter and two new findings entered it. The
+    // earlier pass's list of confirmed-but-still-open cards must not be
+    // subtracted from this new count
+    rows.splice(0, rows.length, ...[6, 7].map(id => ({ id, word: "w" + id, effective_status: "approved" })));
+    await fq.fill();
+    out.after_new = fq.queue.map(r => r.id);
     process.stdout.write(JSON.stringify(out));
     return;
   } else if (scenario === "reset_during_save") {

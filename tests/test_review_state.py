@@ -1046,6 +1046,7 @@ class TestR2CardQueueJs(ServerCase):
         self.assertEqual(res['visited'], 5)
         self.assertEqual(res['state'], 'done')
         self.assertEqual(res['remaining'], 0)
+        self.assertEqual(res['after_new'], [6, 7])
 
     def test_save_finishing_after_a_queue_reset_leaves_no_stale_card(self):
         res = self.run_js('reset_during_save')

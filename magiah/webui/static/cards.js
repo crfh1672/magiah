@@ -25,11 +25,16 @@ function cardQueue() {
         const BATCH = 200;
         const batches = [];
         for (let i = 0; i < ids.length; i += BATCH) batches.push(ids.slice(i, i + BATCH));
-        const pages = await Promise.all(batches.map(chunk => {
-          const p = filterParams({ page: 1, page_size: BATCH, statuses: recheck ? remainingStatuses() : S.filters.statuses });
-          p.set("ids", chunk.join(","));
-          return api("/api/findings?" + p);
-        }));
+        // a few at a time: a large word group means many batches
+        const pages = [];
+        for (let i = 0; i < batches.length; i += 4) {
+          const group = await Promise.all(batches.slice(i, i + 4).map(chunk => {
+            const p = filterParams({ page: 1, page_size: BATCH, statuses: recheck ? remainingStatuses() : S.filters.statuses });
+            p.set("ids", chunk.join(","));
+            return api("/api/findings?" + p);
+          }));
+          pages.push(...group);
+        }
         return { rows: pages.flatMap(pg => (pg && pg.rows) || []) };
       },
       save: (row, status, opts) => setStatus([row.id], status, Object.assign({ expect_status: effStatus(row) }, opts)),

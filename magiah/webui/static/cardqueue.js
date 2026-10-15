@@ -70,8 +70,12 @@
 
     async _fill() {
       const gen = this.gen;
+      // what is still open is judged afresh on every fill: decided cards the
+      // server keeps in the filter are only known from a pass made now, so an
+      // earlier fill's list must not be subtracted from a newer count
+      this.openDone = new Set();
+      let passed = false;
       for (;;) {
-        let added = 0;
         while (this.queue.length < this.min && !this.exhausted) {
           const page = await this.io.fetchPage(this.cursor, this.recheck);
           if (gen !== this.gen) return;
@@ -87,7 +91,6 @@
             if (this.seen.has(r.id)) continue;
             this.seen.add(r.id);
             this.queue.push(r);
-            added++;
           }
           this.cursor = (page && page.next_cursor) || "";
           if (!this.cursor) this.exhausted = true;
@@ -104,7 +107,8 @@
         this.remaining = Math.max(0, remaining - this.openDone.size);
         // one more pass over whatever the server still counts as open; a
         // pass that brings nothing new ends the session
-        if (this.remaining > 0 && (!this.recheck || added > 0)) {
+        if (remaining > 0 && !passed) {
+          passed = true;
           this.recheck = true;
           this.cursor = "";
           this.exhausted = false;

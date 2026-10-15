@@ -17,8 +17,12 @@ function normalizeMatrix(data) {
   if (Array.isArray(data)) {
     for (const item of data) {
       if (item == null) continue;
-      const label = item.hebrew || item.errtype || item.book || item.source || item.name || item.label || item.key || item.origin || "";
-      const e = get(String(label));
+      let label = String(item.hebrew || item.errtype || item.book || item.source || item.name || item.label || item.key || item.origin || "");
+      // one row per book: two books that share a name or origin must not
+      // share a bar, or the later one's counts overwrite the first's
+      if (item.key != null && out.has(label) && out.get(label).key !== item.key) label += " · " + item.key;
+      const e = get(label);
+      if (item.key != null) e.key = item.key;
       if (item.statuses && typeof item.statuses === "object") {
         Object.assign(e.counts, item.statuses);
       } else if (item.status != null && item.count != null) {
