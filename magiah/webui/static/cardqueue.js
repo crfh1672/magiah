@@ -32,6 +32,9 @@
       this.queue = [];
       this.seen = new Set();
       this.done = new Set();     // ids decided in this session
+      this.doneStatus = new Map(); // id -> the status this session gave it
+      this.openDone = new Set(); // decided ids the server still counts as open
+                                 // (the filter keeps them, e.g. approved → approved)
       this.skipped = [];         // "later" pile, explicit and never lost
       this.cursor = "";
       this.exhausted = false;
@@ -67,16 +70,27 @@
 
     async _fill() {
       const gen = this.gen;
+      // what is still open is judged afresh on every fill: decided cards the
+      // server keeps in the filter are only known from a pass made now, so an
+      // earlier fill's list must not be subtracted from a newer count
+      this.openDone = new Set();
+      let passed = false;
       for (;;) {
-        let added = 0;
         while (this.queue.length < this.min && !this.exhausted) {
           const page = await this.io.fetchPage(this.cursor, this.recheck);
           if (gen !== this.gen) return;
           for (const r of (page && page.rows) || []) {
-            if (this.seen.has(r.id) || this.done.has(r.id)) continue;
+            if (this.done.has(r.id)) {
+              // decided here but still inside the filter: the server's count
+              // includes it, the person has nothing left to do with it
+              // — but only while it still holds what was decided; a card
+              // someone re-opened since is open work again
+              if (this.recheck && r.effective_status === this.doneStatus.get(r.id)) this.openDone.add(r.id);
+              continue;
+            }
+            if (this.seen.has(r.id)) continue;
             this.seen.add(r.id);
             this.queue.push(r);
-            added++;
           }
           this.cursor = (page && page.next_cursor) || "";
           if (!this.cursor) this.exhausted = true;
@@ -90,14 +104,16 @@
         }
         const remaining = await this.io.countRemaining();
         if (gen !== this.gen) return;
-        this.remaining = remaining;
+        this.remaining = Math.max(0, remaining - this.openDone.size);
         // one more pass over whatever the server still counts as open; a
         // pass that brings nothing new ends the session
-        if (remaining > 0 && (!this.recheck || added > 0)) {
+        if (remaining > 0 && !passed) {
+          passed = true;
           this.recheck = true;
           this.cursor = "";
           this.exhausted = false;
           this.seen = new Set();
+          this.openDone = new Set();
           continue;
         }
         this.finished = true;
@@ -126,9 +142,12 @@
           }
           throw e;
         }
-        const i = this.queue.indexOf(r);
-        if (i >= 0) this.queue.splice(i, 1);
+        // by id, not by object: a filter change during the save may have
+        // reset the queue and reloaded this finding as a new object
+        this.queue = this.queue.filter(c => c.id !== r.id);
+        this.skipped = this.skipped.filter(c => c.id !== r.id);
         this.done.add(r.id);
+        this.doneStatus.set(r.id, status);
         // a rule decides the word's other cards too; acting on one of them
         // as if it were still open would only meet a conflict
         if (RULE_SCOPES.has(opts.scope)) await this.settle(this.sameWord(r, false));
@@ -182,6 +201,8 @@
     /* Undo put this finding back: show it first again. */
     restore(row) {
       this.done.delete(row.id);
+      this.openDone.delete(row.id);
+      this.doneStatus.delete(row.id);
       this.skipped = this.skipped.filter(r => r.id !== row.id);
       this.queue = this.queue.filter(r => r.id !== row.id);
       this.queue.unshift(row);

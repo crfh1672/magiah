@@ -3,7 +3,7 @@
 
 One-file build, console KEPT (so startup errors are visible; a --noconsole
 windowed build can come later). Bundles the whole magiah package plus the
-webui static SPA files (index.html / app.js / style.css) at
+webui static SPA files (index.html / the *.js scripts / style.css) at
 magiah/webui/static so server.py finds them when frozen.
 
 Build:  python -X utf8 -m PyInstaller magiah.spec --noconfirm
