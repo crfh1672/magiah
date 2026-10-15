@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מגיה — אב-טיפוס פריסה חדשה</title>
+<style>
+:root{--s1:#fff;--s2:#f4f4f1;--bd:rgba(0,0,0,.12);--bd2:rgba(0,0,0,.26);--tx:#1f1f1d;--tx2:#5f5e5a;--tx3:#8a8983;--ac:#185fa5;--acbg:#e6f1fb;--acbd:#85b7eb;--ok:#3b6d11;--okbg:#eaf3de;--no:#a32d2d;--nobg:#fcebeb;--wn:#854f0b;--wnbg:#faeeda;--ui:"Segoe UI",Assistant,Arial,sans-serif;--serif:"Frank Ruhl Libre",David,Narkisim,"Times New Roman",serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--s1:#1e1e1c;--s2:#2a2a27;--bd:rgba(255,255,255,.14);--bd2:rgba(255,255,255,.3);--tx:#f1efe8;--tx2:#b4b2a9;--tx3:#888780;--ac:#85b7eb;--acbg:#0c2a4a;--acbd:#378add;--ok:#97c459;--okbg:#27500a;--no:#f09595;--nobg:#501313;--wn:#fac775;--wnbg:#412402}}
+:root[data-theme="dark"]{--s1:#1e1e1c;--s2:#2a2a27;--bd:rgba(255,255,255,.14);--bd2:rgba(255,255,255,.3);--tx:#f1efe8;--tx2:#b4b2a9;--tx3:#888780;--ac:#85b7eb;--acbg:#0c2a4a;--acbd:#378add;--ok:#97c459;--okbg:#27500a;--no:#f09595;--nobg:#501313;--wn:#fac775;--wnbg:#412402}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:14px/1.5 var(--ui);color:var(--tx);background:var(--s1)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.ic{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+#app{display:flex;flex-direction:column;height:100%}
+.top{display:grid;grid-template-columns:1fr minmax(0,380px) 1fr;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--bd)}
+.tr{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.brand{font:500 17px var(--serif)}
+.srch{flex:1;max-width:380px;display:flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--bd);border-radius:8px;color:var(--tx3);font-size:12px}
+.srch .k{margin-inline-start:auto}
+.sp{flex:1}
+.ib{background:none;border:none;color:var(--tx2);cursor:pointer;padding:4px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;font-size:12px}
+.ib:hover{color:var(--tx)}
+.k{font-size:11px;border:1px solid var(--bd2);border-radius:5px;padding:0 6px;background:var(--s2);color:var(--tx2);font-family:var(--ui);line-height:1.5}
+.strip{display:flex;align-items:center;gap:6px;padding:5px 14px;background:var(--wnbg);color:var(--wn);font-size:12px;border-bottom:1px solid var(--bd)}
+.strip a{margin-inline-start:auto;text-decoration:underline;cursor:pointer}
+.sdet{padding:5px 14px 7px;background:var(--wnbg);color:var(--wn);font-size:12px;border-bottom:1px solid var(--bd)}
+.body{flex:1;display:flex;min-height:0}
+.rail{width:62px;flex:none;border-inline-end:1px solid var(--bd);display:flex;flex-direction:column;padding:6px 0}
+.rl{display:flex;flex-direction:column;align-items:center;gap:3px;margin:3px 7px;padding:9px 0;font-size:11px;color:var(--tx2);cursor:pointer;border-radius:10px;user-select:none}
+.rl .ic{font-size:21px}
+.rl:hover{color:var(--tx)}
+.rl.on{color:var(--ac);background:var(--acbg)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.scr{display:none;flex:1;min-height:0;flex-direction:column}
+.scr.on{display:flex}
+.hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--bd);position:relative}
+.ch{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--bd);background:var(--s2);color:var(--tx2);white-space:nowrap}
+.ch.on{background:var(--acbg);color:var(--ac);border-color:var(--acbd)}
+.ch.f{font-size:12px;padding:3px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.ch.x{cursor:pointer}
+.sg{display:inline-flex;border:1px solid var(--bd);border-radius:999px;overflow:hidden;font-size:12px;user-select:none}
+.sg span{padding:3px 13px;color:var(--tx2);cursor:pointer}
+.sg span.on{background:var(--acbg);color:var(--ac)}
+.pop{position:absolute;top:100%;inset-inline-start:12px;margin-top:4px;width:260px;z-index:5;padding:10px 12px;background:var(--s1);border:1px solid var(--bd2);border-radius:12px}
+.pop[hidden]{display:none}
+.pr{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px}
+.pr>label{width:82px;flex:none;color:var(--tx2);font-size:12px}
+.pr select{flex:1;border:1px solid var(--bd);border-radius:8px;background:var(--s1);padding:3px 6px}
+.pr input[type=range]{flex:1}
+.pt{align-items:flex-start}
+.pt .tl{flex:1;display:flex;flex-direction:column;gap:4px}
+.pt .tl label{display:flex;align-items:center;gap:6px;width:auto;color:var(--tx);font-size:13px}
+.pt .tl small{margin-inline-start:auto;color:var(--tx3);font-size:11px}
+.lnk{color:var(--ac);cursor:pointer;font-size:12px;margin-inline-start:auto}
+.lst{flex:1;min-height:0;display:flex}
+.books{width:132px;flex:none;background:var(--s2);border-inline-end:1px solid var(--bd);overflow:auto}
+.lh{font-size:11px;color:var(--tx3);padding:8px 12px 4px}
+.bk{padding:8px 12px;border-bottom:1px solid var(--bd);cursor:pointer;font-size:13px}
+.bk small{display:block;color:var(--tx2);font-size:11px}
+.bk.sel{background:var(--acbg)}
+.bk.sel b{font-weight:500}
+.queue{flex:1;min-width:0;overflow:auto;border-inline-end:1px solid var(--bd)}
+.rw{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--bd);cursor:pointer}
+.rw.sel{background:var(--acbg)}
+.rw .ch{margin-inline-start:auto}
+.qi{min-width:100%;width:max-content}
+.rh{display:flex;align-items:center;gap:8px;padding:5px 12px;border-bottom:1px solid var(--bd);background:var(--s2);font-size:11px;color:var(--tx3);position:sticky;top:0;z-index:1}
+.rh>span,.rw>.c{flex:none;white-space:nowrap}
+.c.wd{flex:0 0 150px}
+.c.c1{width:110px}.c.c2{width:96px}.c.c3{width:64px}.c.c4{width:56px}
+.cp2{display:flex;flex-direction:column;gap:5px;padding-top:4px}
+#fsort{border:none;background:transparent;font-size:12px;color:var(--tx);cursor:pointer;padding:0;max-width:160px}
+.w{font:17px var(--serif)}
+.bad{color:var(--no);text-decoration:line-through}
+.good{color:var(--ok);font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bd2);flex:none}
+.dot.approved,.dot.fixed{background:var(--ok)}
+.dot.rejected{background:var(--no)}
+.dot.unsure{background:var(--wn)}
+.focus{width:250px;flex:none;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.rf{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sn{font:15px/1.9 var(--serif);background:var(--s2);border-radius:8px;padding:8px 10px}
+.ab{display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:1px solid var(--bd2);border-radius:8px;background:var(--s1);cursor:pointer;font-size:13px}
+.ab .k{margin-inline-start:auto}
+.ab.ok{background:var(--okbg);color:var(--ok);border-color:var(--ok);font-weight:500}
+.ab.sm{width:auto;padding:4px 10px;font-size:12px;color:var(--tx2);border-color:var(--bd)}
+.crd{flex:1;min-height:0;overflow:auto;padding:16px 20px}
+.cp{max-width:540px;margin:0 auto 12px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx2)}
+.bar{height:5px;background:var(--s2);border-radius:3px;overflow:hidden;flex:1}
+.bar i{display:block;height:100%;background:var(--ok)}
+.card{max-width:540px;margin:0 auto;border:1px solid var(--bd);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.cl{font:21px/1.7 var(--serif);padding:6px 12px;border-radius:8px}
+.cl.b{background:var(--nobg)}
+.cl.g{background:var(--okbg)}
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mt{background:var(--s2);border-radius:8px;padding:8px 12px}
+.mt span{display:block;font-size:12px;color:var(--tx2)}
+.mt b{font-size:20px;font-weight:500}
+.ar{display:flex;gap:8px}
+.nx{text-align:center;font-size:12px;color:var(--tx3);margin-top:10px}
+.emp{padding:30px 16px;text-align:center;color:var(--tx2);display:flex;flex-direction:column;align-items:center;gap:10px}
+.fx{flex:1;min-height:0;display:flex}
+.fl{width:260px;flex:none;border-inline-end:1px solid var(--bd);overflow:auto}
+.fr{flex:1;min-width:0;overflow:auto}
+.fp{padding:6px 12px;font-size:11px;color:var(--tx3);border-bottom:1px solid var(--bd);direction:ltr;text-align:right}
+.ln{display:flex;gap:10px;padding:3px 12px;font:15px/1.9 var(--serif)}
+.ln em{font:11px var(--ui);color:var(--tx3);width:28px;flex:none;font-style:normal}
+.ln.hl{background:var(--nobg)}
+.fb{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--bd);font-size:12px;color:var(--tx2);flex-wrap:wrap}
+.pg{padding:14px 16px;overflow:auto}
+.pg>*{max-width:920px;width:100%;margin-inline:auto}
+.fr .ln{max-width:860px}
+.sh{font-size:14px;font-weight:500;margin:20px auto 8px}
+.sh:first-child{margin-top:0}
+.tw{overflow-x:auto;border:1px solid var(--bd);border-radius:8px}
+.stt{border-collapse:collapse;width:100%;font-size:13px}
+.stt th,.stt td{padding:6px 10px;border-bottom:1px solid var(--bd);text-align:start;white-space:nowrap}
+.stt th{font-weight:500;font-size:12px;color:var(--tx2);background:var(--s2)}
+.stt tr:last-child td{border-bottom:none}
+.stt .n{text-align:center;font-variant-numeric:tabular-nums}
+.stt .z{color:var(--tx3)}
+.stt .tt{font-weight:500}
+.dot.ignored{background:var(--tx3)}
+.sb{display:flex;flex:1;height:8px;background:var(--s2);border-radius:4px;overflow:hidden}
+.sb i{display:block;height:100%}
+.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--tx2);padding:2px 0 8px}
+.lg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:5px}
+.mm{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.two{display:flex;gap:16px;flex-wrap:wrap}
+.pb{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px}
+.pb span:first-child{width:90px}
+.nb{border:1px solid var(--bd);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;flex:1;min-width:190px}
+.cs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cs div{border:1px solid var(--bd);border-radius:12px;padding:10px 12px;font-size:12px;color:var(--tx2)}
+.cs div.on{border-color:var(--ac);background:var(--acbg)}
+.cs b{display:block;font-size:14px;font-weight:500;color:var(--tx)}
+.fi{border:1px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:13px;direction:ltr;text-align:left;width:100%;background:var(--s1)}
+.dz{border:1px solid var(--no);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.dz b{color:var(--no);font-weight:500}
+.hlp{display:flex;flex:1;min-height:0}
+.hn{width:150px;flex:none;background:var(--s2);border-inline-end:1px solid var(--bd)}
+.hn div{padding:8px 12px;border-bottom:1px solid var(--bd);font-size:13px}
+.hn .sel{background:var(--acbg);color:var(--ac)}
+.hc{flex:1;padding:14px 28px;overflow:auto;line-height:1.8}
+.hc>*{max-width:70ch}
+.hc h3{font-size:15px;font-weight:500;margin:12px 0 2px}
+.hc table{border-collapse:collapse;font-size:13px}
+.hc td{padding:3px 14px 3px 0}
+#toast{position:fixed;bottom:18px;inset-inline-start:50%;transform:translateX(50%);background:var(--tx);color:var(--s1);padding:7px 14px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .15s}
+#toast.on{opacity:1}
+@media(max-width:820px){.books{display:none}.lst{flex-direction:column;overflow:auto}.queue{overflow:visible;border:none}.focus{width:auto;border-top:1px solid var(--bd)}.srch{display:none}.top{display:flex}.tr{margin-inline-start:auto}.rail{width:52px}.fx{flex-direction:column}.fl{width:auto;border:none}}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9M13 17V5M8 17v-3"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></symbol>
+</svg>
+<div id="app">
+  <header class="top">
+    <span class="brand">מַגִּיהַּ</span>
+    <div class="srch"><svg class="ic"><use href="#i-search"/></svg>חיפוש חופשי או פקודה<span class="k">Ctrl K</span></div>
+    <div class="tr">
+    <span class="ch" id="prog"></span>
+    <button class="ib" data-a="undo" title="ביטול (Ctrl+Z)"><svg class="ic"><use href="#i-undo"/></svg>ביטול</button>
+    <button class="ib" data-a="export" title="ייצוא"><svg class="ic"><use href="#i-download"/></svg>ייצוא</button>
+    </div>
+  </header>
+  <div class="strip" role="status"><svg class="ic"><use href="#i-alert"/></svg>הממצאים מהסריקה הקודמת — הסריקה האחרונה נכשלה<a data-a="det">פרטים</a></div>
+  <div class="sdet" id="sdet" hidden>הסריקה נעצרה בשלב ההתאמה למקום. מוצגות תוצאות מהסריקה המלאה הקודמת, ולכן ייתכן שחלקן אינן עדכניות. מה לעשות: להריץ סריקה מחדש בתחנת הסריקה.</div>
+  <div class="body">
+    <nav class="rail" aria-label="ניווט ראשי">
+      <div class="rl on" role="button" tabindex="0" data-a="go:review"><svg class="ic"><use href="#i-list"/></svg>סקירה</div>
+      <div class="rl" role="button" tabindex="0" data-a="go:fixer"><svg class="ic"><use href="#i-pencil"/></svg>תיקון</div>
+      <div class="rl" role="button" tabindex="0" data-a="go:stats"><svg class="ic"><use href="#i-chart"/></svg>התקדמות</div>
+      <div class="rl" role="button" tabindex="0" data-a="go:scan"><svg class="ic"><use href="#i-refresh"/></svg>סריקה</div>
+      <div class="sp"></div>
+      <div class="rl" role="button" tabindex="0" data-a="go:help"><svg class="ic"><use href="#i-help"/></svg>עזרה</div>
+    </nav>
+    <main class="main">
+
+      <section class="scr on" id="v-review">
+        <div class="hd">
+          <div class="sg"><span id="m-list" data-a="mode:list">רשימה</span><span id="m-cards" data-a="mode:cards">כרטיסים</span></div>
+          <span class="ch f on" data-a="pop"><svg class="ic"><use href="#i-filter"/></svg><span id="fcount"></span><svg class="ic"><use href="#i-down"/></svg></span>
+          <span id="chips" class="rf"></span>
+          <span class="sp"></span><label class="ch f" style="gap:6px">סדר:<select id="fsort" aria-label="סדר מיון"><option value="sc-d">ציון, מהגבוה לנמוך</option><option value="sc-a">ציון, מהנמוך לגבוה</option><option value="w">המילה (א-ת)</option><option value="loc">ספר ומראה מקום</option><option value="t">סוג שגיאה</option><option value="st">סטטוס</option></select></label><span class="ch f" data-a="cpop"><svg class="ic"><use href="#i-list"/></svg>עמודות<svg class="ic"><use href="#i-down"/></svg></span>
+          <div class="pop" id="cpop" hidden style="inset-inline-start:auto;inset-inline-end:12px;width:230px"></div>
+          <div class="pop" id="pop" hidden>
+            <div class="pr"><b style="font-weight:500">סינון</b><a class="lnk" data-a="clear">נקה הכל</a></div>
+            <div class="pr"><label>מאגר</label><select disabled title="בדוגמה יש מאגר אחד"><option>ספריא</option></select></div>
+            <div class="pr pt"><label>סוג שגיאה</label><div class="tl" id="ptypes"></div></div>
+            <div class="pr"><label>סטטוס</label><select id="fs"><option value="open">פתוח</option><option value="all">הכל</option><option value="approved">אושרו</option><option value="rejected">לא שגיאה</option><option value="ignored">התעלם</option><option value="fixed">תוקנו</option><option value="unsure">דרוש בירור</option></select></div>
+            <div class="pr"><label>ציון מינימלי</label><input type="range" id="fm" min="0" max="13" step="0.5"><b id="fmv" style="font-weight:500;width:26px"></b></div>
+            <div class="pr"><label>מאומתים בלבד</label><input type="checkbox" id="fv"></div>
+          </div>
+        </div>
+        <div class="lst" id="lst">
+          <div class="books"><div style="padding:8px"><input id="bq" class="fi" placeholder="חיפוש ספר…" aria-label="חיפוש ספר" style="direction:rtl;text-align:right;padding:5px 8px;font-size:12px"></div><div id="bl"></div></div>
+          <div class="queue" id="queue"></div>
+          <div class="focus" id="focus"></div>
+        </div>
+        <div class="crd" id="crd" hidden></div>
+      </section>
+
+      <section class="scr" id="v-fixer">
+        <div class="hd">
+          <span class="ch f on" data-a="fbook"><svg class="ic"><use href="#i-book"/></svg><span id="fbn"></span><svg class="ic"><use href="#i-down"/></svg></span>
+          <span class="ch">מאושרים בלבד</span>
+          <span class="sp"></span><span id="fprog" style="font-size:12px;color:var(--tx2)"></span>
+          <div class="bar" style="flex:none;width:140px"><i id="fbar" style="width:0"></i></div>
+        </div>
+        <div class="fx"><div class="fl" id="fl"></div><div class="fr" id="frd"></div></div>
+        <div class="fb"><span id="fsel"></span>
+          <div class="sg"><span class="on" id="mr" data-a="fmode:r">החלפה</span><span id="mb" data-a="fmode:b">סוגריים</span></div>
+          <span class="sp"></span>
+          <button class="ab sm" data-a="toast:בדוגמה אין קבצים לשחזר"><svg class="ic"><use href="#i-undo"/></svg>שחזור מגיבוי</button>
+          <button class="ab sm" style="background:var(--acbg);color:var(--ac);border-color:var(--acbd)" data-a="toast:בדוגמה הקובץ לא שונה">החל על הקובץ</button>
+        </div>
+      </section>
+
+      <section class="scr" id="v-stats">
+        <div class="hd"><span style="font-size:12px;color:var(--tx2)">פילוח לפי:</span><div class="sg" id="sbseg"><span data-a="sb:all">הכל</span><span data-a="sb:origin">מאגר</span><span data-a="sb:type">סוג שגיאה</span><span data-a="sb:book">ספר</span><span data-a="sb:actor">מקבל ההחלטה</span></div></div>
+        <div class="pg" id="stats"></div>
+      </section>
+
+      <section class="scr" id="v-scan">
+        <div class="hd"><div class="sg"><span class="on" id="t-run" data-a="tab:run">הרצה</span><span id="t-data" data-a="tab:data">נתונים וגיבויים</span><span id="t-danger" data-a="tab:danger">אזור סכנה</span></div></div>
+        <div class="pg">
+          <div id="p-run" style="display:flex;flex-direction:column;gap:12px">
+            <div class="cs"><div class="on"><b>היברידי</b>ריפו הספרייה וגם ספריא ממסד הנתונים</div><div><b>מסד נתונים</b>seforim.db בלבד</div><div><b>תיקיית טקסט</b>כל תיקייה של קבצי txt</div></div>
+            <input class="fi" value="C:\OTZ\otzaria-library" aria-label="נתיב הספרייה">
+            <div class="rf"><button class="ab sm"><svg class="ic"><use href="#i-pencil"/></svg>הגדרות מתקדמות</button><span class="sp"></span><button class="ab sm" style="background:var(--acbg);color:var(--ac);border-color:var(--acbd)" data-a="toast:בדוגמה אין סריקה">התחל סריקה</button></div>
+            <div class="nb" style="flex:none"><b style="font-weight:500">סריקת ספר בודד</b><span style="color:var(--tx2);font-size:13px">שניות במקום שעה, מול המילון הקיים</span></div>
+          </div>
+          <div id="p-data" hidden style="flex-direction:column;gap:10px">
+            <div class="rf"><button class="ab sm" style="background:var(--acbg);color:var(--ac)">רענן מסריקה חדשה</button><button class="ab sm">ייבוא החלטות ישנות</button></div>
+            <div class="lh" style="padding:6px 0 0">גיבויים זמינים</div>
+            <div class="rw" style="cursor:default">ui_backup_2026-10-14_21-05<span class="ch">שחזור</span></div>
+            <div class="rw" style="cursor:default">ui_backup_2026-10-02_09-40<span class="ch">שחזור</span></div>
+          </div>
+          <div id="p-danger" hidden style="flex-direction:column;gap:12px">
+            <div class="dz"><b>אפס החלטות</b><span style="color:var(--tx2);font-size:13px">מנקה סטטוסים, הערות והיסטוריה. גיבוי נשמר אוטומטית.</span>
+              <div class="rf"><input class="fi" id="dz" placeholder="הקלידו: אפס" style="direction:rtl;text-align:right;flex:1;width:auto" aria-label="מילת אישור"><button class="ab sm" id="dzb" disabled style="color:var(--no);border-color:var(--no)" data-a="toast:בדוגמה לא נמחק דבר">אישור איפוס</button></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="scr" id="v-help">
+        <div class="hlp"><div class="hn"><div class="sel">סוגי שגיאה</div><div>עמודות</div><div>סטטוסים</div><div>מקשי קיצור</div><div>סדר עבודה</div><div>ייצוא</div></div>
+          <div class="hc">
+            <h3 style="margin-top:0">סוגי שגיאה</h3>
+            <p><b>רווח חסר:</b> שתי מילים נדבקו יחד. <span class="w bad">אתהשמים</span> ← <span class="w good">את השמים</span></p>
+            <p><b>רווח מיותר:</b> מילה אחת נחתכה לשתיים. <span class="w bad">הימ נו</span> ← <span class="w good">הימנו</span></p>
+            <p><b>אות סופית:</b> אות סופית באמצע מילה, או אות רגילה בסוף מילה.</p>
+            <p><b>גרשיים חסרים:</b> ראשי תיבות שאיבדו את הגרשיים.</p>
+            <h3>מקשי קיצור</h3>
+            <table><tr><td>י</td><td>אשר תיקון</td></tr><tr><td>נ</td><td>לא שגיאה</td></tr><tr><td>ב</td><td>דרוש בירור</td></tr><tr><td>רווח</td><td>דלג</td></tr><tr><td>ק / Enter</td><td>תוקן (בתחנת תיקון)</td></tr><tr><td>Ctrl+Z</td><td>ביטול</td></tr></table>
+            <p style="color:var(--tx2)">המקשים פועלים גם בפריסת מקלדת אנגלית.</p>
+          </div></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+<script>
+var $=function(s){return document.querySelector(s)};
+var I=function(n){return '<svg class="ic"><use href="#i-'+n+'"/></svg>'};
+var B=['בראשית רבה','תוספתא','ברטנורא'];
+var T={missing:'רווח חסר',extra:'רווח מיותר',final:'אות סופית',quotes:'גרשיים חסרים',sub:'החלפת אות',plene:'כתיב מלא וחסר'};
+var D=[
+[0,'missing','אתהשמים','את השמים',12.4,1,'א, ב','בראשית ברא אלהים ',' ואת הארץ'],
+[0,'extra','הימ נו','הימנו',10.1,1,'ב, ג','ולא יסור ',' מעתה'],
+[0,'final','שלוםעליכם','שלום עליכם',9.6,1,'ג, א','ואמרו להם ',' ויצאו'],
+[0,'final','אדמ','אדם',9.3,0,'ג, ד','ויהי ',' בארץ'],
+[0,'quotes','רמבם','רמב"ם',8.8,1,'ד, א','וכתב ה',' בהלכות'],
+[0,'sub','היעמנו','הימנו',7.2,0,'ד, ז','ולא ירחק ',' דבר'],
+[1,'missing','כלהעם','כל העם',11.2,1,'א, ה','ויצא ',' אל המחנה'],
+[1,'plene','חבותיו','חובותיו',5.1,0,'ב, ב','ונשא את ',' עליו'],
+[1,'sub','דגש','רגש',6.4,0,'ב, ט','ויתעורר ',' גדול'],
+[1,'extra','הת ורה','התורה',10.7,1,'ג, א','ובמצות ',' נאמר'],
+[2,'quotes','חזל','חז"ל',8.1,1,'א, א','ודברי ',' ידועים'],
+[2,'missing','עלפני','על פני',9.9,1,'א, ב','ורוח אלהים מרחפת ',' המים']];
+var items=D.map(function(d,i){return{id:i+1,b:d[0],t:d[1],w:d[2],f:d[3],sc:d[4],v:d[5],ref:d[6],pre:d[7],post:d[8],st:'pending'}});
+items[3].st='approved';items[5].st='approved';items[7].st='fixed';
+items.forEach(function(x){x.o=['ספריא','אוריתא','דיקטה'][x.b];x.ac=null});items[3].ac='agent';items[5].ac='unknown';items[7].ac='human';
+var F={book:null,types:new Set(['missing','extra','final','quotes']),status:'open',min:8,ver:true,sort:'sc-d'};
+var SO={pending:0,unsure:1,approved:2,rejected:3,fixed:4,ignored:5};
+var SORTS={'sc-d':function(a,b){return b.sc-a.sc},'sc-a':function(a,b){return a.sc-b.sc},w:function(a,b){return a.w.localeCompare(b.w,'he')||b.sc-a.sc},loc:function(a,b){return a.b-b.b||a.ref.localeCompare(b.ref,'he')||a.id-b.id},t:function(a,b){return T[a.t].localeCompare(T[b.t],'he')||b.sc-a.sc},st:function(a,b){return SO[a.st]-SO[b.st]||b.sc-a.sc}};
+var S={v:'review',m:'list',cur:1,keep:null,fb:null,fc:null,hist:[]};
+function byId(i){return items.filter(function(x){return x.id===i})[0]}
+function filt(){return items.filter(function(it){return(F.book===null||it.b===F.book)&&F.types.has(it.t)&&(F.status==='all'||(F.status==='open'?it.st==='pending':it.st===F.status))&&it.sc>=F.min&&(!F.ver||it.v)}).sort(function(a,b){return SORTS[F.sort](a,b)})}
+function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove('on')},1800)}
+function snip(it,k){return it.pre+(k==='b'?'<span class="bad">'+it.w+'</span>':k==='g'?'<span class="good">'+it.f+'</span>':'<span class="bad">'+it.w+'</span> <span class="good">'+it.f+'</span>')+it.post}
+var COLS=[['w','המילה השגויה','wd'],['f','תיקון מוצע','wd'],['t','סוג שגיאה','c1'],['b','ספר','c2'],['ref','מראה מקום','c3'],['sc','ציון','c4'],['v','מאומת','c3'],['cx','אימות הקשר','c2'],['rp','חזרות בספר','c2'],['st','סטטוס','c2']];
+var STN={pending:'טרם נבדק',approved:'אושר',rejected:'לא שגיאה',unsure:'דרוש בירור',fixed:'תוקן',ignored:'התעלם'};
+var CV=new Set(['w','f','t']);
+try{var sv=JSON.parse(localStorage.getItem('mgCols')||'null');if(sv&&sv.length)CV=new Set(sv)}catch(e){}
+function saveCols(){try{localStorage.setItem('mgCols',JSON.stringify(Array.from(CV)))}catch(e){}}
+function vcols(){return COLS.filter(function(c){return CV.has(c[0])})}
+function cell(it,k){var c=COLS.filter(function(x){return x[0]===k})[0][2];
+var h={w:'<span class="w bad">'+it.w+'</span>',f:'<span class="w good">'+it.f+'</span>',t:'<span class="ch">'+T[it.t]+'</span>',b:B[it.b],ref:it.ref,sc:it.sc,v:it.v?'כן':'לא',cx:it.v?Math.round(it.sc*1.2):0,rp:0,st:STN[it.st]}[k];
+return '<span class="c '+c+'">'+h+'</span>'}
+function rh(){return '<div class="rh"><span style="width:8px"></span>'+vcols().map(function(c){return '<span class="c '+c[2]+'">'+c[1]+'</span>'}).join('')+'</div>'}
+function colsHtml(){return '<div class="pr"><b style="font-weight:500">עמודות בטבלה</b><a class="lnk" data-a="colreset">ברירת מחדל</a></div><div class="cp2">'+COLS.map(function(c){return '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="'+c[0]+'"'+(CV.has(c[0])?' checked':'')+'>'+c[1]+'</label>'}).join('')+'</div>'}
+function rw(it){return '<div class="rw'+(it.id===S.cur?' sel':'')+'" data-a="pick:'+it.id+'"><i class="dot '+it.st+'"></i>'+vcols().map(function(c){return cell(it,c[0])}).join('')+'</div>'}
+function focusHtml(it){if(!it)return '<div class="emp">בחרו ממצא מהרשימה</div>';
+return '<div class="rf"><span class="ch">'+T[it.t]+'</span>'+(it.v?'<span class="ch on">מאומת</span>':'')+'</div><div style="font-size:12px;color:var(--tx2)">'+B[it.b]+' · '+it.ref+'</div><div class="sn">'+snip(it)+'</div>'
++'<button class="ab ok" data-a="set:approved">'+I('check')+'אשר תיקון<span class="k">י</span></button><button class="ab" data-a="set:rejected">לא שגיאה<span class="k">נ</span></button><button class="ab" data-a="set:unsure">דרוש בירור<span class="k">ב</span></button><span class="lnk" style="margin:0" data-a="toast:תיקון ידני, בכל מקום והתעלם — בגרסה המלאה">עוד פעולות…</span>'}
+function renderReview(){var L=filt();
+if(S.cur===null||(!L.some(function(x){return x.id===S.cur})&&S.keep!==S.cur))S.cur=L[0]?L[0].id:null;
+var it=S.cur?byId(S.cur):null;
+$('#m-list').className=S.m==='list'?'on':'';$('#m-cards').className=S.m==='cards'?'on':'';
+$('#lst').hidden=S.m!=='list';$('#lst').style.display=S.m==='list'?'':'none';$('#crd').hidden=S.m!=='cards';
+var open=function(b){return items.filter(function(x){return x.b===b&&x.st==='pending'}).length};
+$('#bl').innerHTML='<div class="lh">ספרים</div><div class="bk'+(F.book===null?' sel':'')+'" data-a="book:-1"><b>כל הספרים</b><small>'+items.filter(function(x){return x.st==='pending'}).length+' פתוחים</small></div>'+(function(){var q=(S.bq||'').replace(/\s+/g,''),r=B.map(function(n,i){return[n,i]}).filter(function(p){return !q||p[0].replace(/\s+/g,'').indexOf(q)>=0});return r.length?r.map(function(p){return '<div class="bk'+(F.book===p[0]?' sel':'')+'" data-a="book:'+p[1]+'"><b>'+p[0]+'</b><small>'+open(p[1])+' פתוחים</small></div>'}).join(''):'<div class="lh">לא נמצא ספר</div>'})();
+var emp='<div class="emp">אין ממצאים בסינון הנוכחי<button class="ab sm" data-a="clear">נקה סינון</button></div>';
+$('#queue').innerHTML=L.length?'<div class="qi">'+rh()+L.map(rw).join('')+'</div>':emp;
+$('#focus').innerHTML=focusHtml(it);
+if(S.m==='cards'){var i=L.findIndex(function(x){return x.id===S.cur}),nx=L[i+1];
+$('#crd').innerHTML=!it?emp:'<div class="cp"><span>ממצא '+(i<0?'—':i+1)+' מתוך '+L.length+' · '+B[it.b]+'</span><div class="bar"><i style="width:'+(i<0?0:(i+1)/L.length*100)+'%"></i></div></div><div class="card"><div class="rf"><span class="ch">'+T[it.t]+'</span>'+(it.v?'<span class="ch on">מאומת</span>':'')+'<span style="margin-inline-start:auto;font-size:12px;color:var(--tx2)">'+B[it.b]+' · '+it.ref+'</span></div><div class="cl b">'+snip(it,'b')+'</div><div class="cl g">'+snip(it,'g')+'</div><div class="mg"><div class="mt"><span>ציון</span><b>'+it.sc+'</b></div><div class="mt"><span>אימות הקשר</span><b>'+(it.v?Math.round(it.sc*1.2):0)+'</b></div><div class="mt"><span>חזרות בספר</span><b>0</b></div></div><div class="ar"><button class="ab ok" data-a="set:approved">אשר תיקון<span class="k">י</span></button><button class="ab" data-a="set:rejected">לא שגיאה<span class="k">נ</span></button><button class="ab" data-a="set:unsure">דרוש בירור<span class="k">ב</span></button></div><div class="rf"><button class="ab sm" data-a="toast:בגרסה המלאה">הקלדת תיקון<span class="k">ת</span></button><button class="ab sm" data-a="toast:בגרסה המלאה">בכל מקום<span class="k">ד</span></button><button class="ab sm" data-a="set:ignored">התעלם<span class="k">ע</span></button><button class="ab sm" data-a="skip">דלג<span class="k">רווח</span></button></div></div>'+(nx?'<div class="nx">הבא: '+nx.w+' ← '+nx.f+'</div>':'')}}
+function renderChips(){var c=[],n=0;
+if(F.book!==null)c.push(['book','ספר: '+F.book]);
+if(F.types.size<6){n++;c.push(['types','סוג: '+F.types.size])}
+if(F.status!=='all'){n++;c.push(['status','סטטוס: '+$('#fs').selectedOptions[0].text])}
+if(F.min>0){n++;c.push(['min','ציון ≥ '+F.min])}
+if(F.ver){n++;c.push(['ver','מאומתים'])}
+$('#fcount').textContent='סינון · '+n;
+$('#chips').innerHTML=c.map(function(x){return '<span class="ch x" data-a="rm:'+x[0]+'">'+x[1]+' ×</span>'}).join('')}
+function renderFixer(){var A=items.filter(function(x){return(x.st==='approved'||x.st==='fixed')&&(S.fb===null||x.b===S.fb)});
+$('#fbn').textContent=S.fb===null?'כל הספרים':B[S.fb];
+var done=A.filter(function(x){return x.st==='fixed'}).length;
+$('#fprog').textContent='תוקנו '+done+' מתוך '+A.length;$('#fbar').style.width=(A.length?done/A.length*100:0)+'%';
+var cur=A.filter(function(x){return x.id===S.fc})[0]||A.filter(function(x){return x.st==='approved'})[0]||null;S.fc=cur?cur.id:null;
+$('#fl').innerHTML=A.length?A.map(function(x){return '<div class="rw'+(x.id===S.fc?' sel':'')+'" data-a="fsel:'+x.id+'"><span class="w bad">'+x.w+'</span><span class="w good">'+x.f+'</span><span class="sp"></span><span class="ib" data-a="copy:'+x.id+'" title="העתק">'+I('copy')+'</span><span class="ib" data-a="fix:'+x.id+'" title="תוקן" style="color:'+(x.st==='fixed'?'var(--ok)':'var(--tx3)')+'">'+I('check')+'</span></div>'}).join(''):'<div class="emp">אין ממצאים מאושרים.<br>אשרו ממצאים בתחנת הסקירה.</div>';
+$('#frd').innerHTML=cur?'<div class="fp">Sefaria\\'+B[cur.b]+'.txt · שורה '+(100+cur.id*7)+'</div><div class="ln"><em>'+(99+cur.id*7)+'</em>והארץ היתה תהו ובהו וחשך על פני תהום</div><div class="ln hl"><em>'+(100+cur.id*7)+'</em><span>'+snip(cur,'b')+'</span></div><div class="ln"><em>'+(101+cur.id*7)+'</em>ויאמר אלהים יהי אור ויהי אור</div>':'<div class="emp">בחרו ממצא מהרשימה</div>';
+$('#fsel').textContent='נבחרו '+A.filter(function(x){return x.st==='approved'}).length}
+var ST6=[['pending','טרם נבדק','var(--bd2)'],['approved','אושר','var(--ok)'],['fixed','תוקן','var(--ok)'],['rejected','לא שגיאה','var(--no)'],['unsure','דרוש בירור','var(--wn)'],['ignored','התעלם','var(--tx3)']];
+var ACT={human:'אדם',agent:'סוכן',unknown:'לא ידוע (לפני תיעוד)'};
+function matrix(title,first,keyf,order,lab){var g={},o=[];
+items.forEach(function(x){var k=keyf(x);if(k==null)return;if(!g[k]){g[k]=[];o.push(k)}g[k].push(x)});
+if(order)o=order.filter(function(k){return g[k]});
+var th='<tr><th>'+first+'</th>'+ST6.map(function(s){return '<th class="n"><i class="dot" style="background:'+s[2]+';display:inline-block;margin-inline-end:5px"></i>'+s[1]+'</th>'}).join('')+'<th class="n">סה״כ</th></tr>';
+var tb=o.map(function(k){var a=g[k];return '<tr><td class="tt"><bdi>'+(lab?lab[k]:k)+'</bdi></td>'+ST6.map(function(s){var n=a.filter(function(x){return x.st===s[0]}).length;return '<td class="n'+(n?'':' z')+'">'+(n||'·')+'</td>'}).join('')+'<td class="n tt">'+a.length+'</td></tr>'}).join('');
+return '<h3 class="sh">'+title+'</h3><div class="tw"><table class="stt"><thead>'+th+'</thead><tbody>'+tb+'</tbody></table></div>'}
+function bookBars(){return '<h3 class="sh">התקדמות לפי ספר</h3>'+B.map(function(n,i){var a=items.filter(function(x){return x.b===i}),t=a.length,d=a.filter(function(x){return x.st!=='pending'}).length,p=t?Math.round(d*100/t):0;return '<div class="pb"><span style="width:110px">'+n+'</span><div class="bar"><i style="width:'+p+'%"></i></div><span style="width:120px;font-size:12px;color:var(--tx2)">'+d+' / '+t+' ('+p+'%)</span></div>'}).join('')}
+function renderStats(){var k=S.sb||'all';
+document.querySelectorAll('#sbseg span').forEach(function(e){e.className=e.dataset.a==='sb:'+k?'on':''});
+var h='';
+if(k==='all'||k==='origin')h+=matrix('לפי מאגר','מאגר',function(x){return x.o});
+if(k==='all'||k==='type')h+=matrix('לפי סוג שגיאה','סוג שגיאה',function(x){return T[x.t]});
+if(k==='all'||k==='book')h+=bookBars();
+if(k==='all'||k==='actor')h+=matrix('לפי מקבל ההחלטה','הוחלט ע״י',function(x){return x.ac},['human','agent','unknown'],ACT);
+$('#stats').innerHTML=h}
+function render(){$('#prog').textContent='טופלו '+items.filter(function(x){return x.st!=='pending'}).length+' / '+items.length;renderChips();renderReview();renderFixer();renderStats()}
+function setSt(st){if(S.cur===null)return;var L=filt(),i=L.findIndex(function(x){return x.id===S.cur}),it=byId(S.cur);
+S.hist.push({id:it.id,prev:it.st,pa:it.ac});it.st=st;it.ac='human';var nl=filt();
+var n=L[i+1];S.cur=(n&&nl.indexOf(n)>=0)?n.id:(nl.length?nl[Math.min(Math.max(i,0),nl.length-1)].id:null);S.keep=null;render()}
+function skip(){var L=filt();if(!L.length)return;var i=L.findIndex(function(x){return x.id===S.cur});S.cur=L[(i+1)%L.length].id;render()}
+function undo(){var h=S.hist.pop();if(!h){toast('אין מה לבטל');return}byId(h.id).st=h.prev;byId(h.id).ac=h.pa;S.cur=h.id;S.keep=h.id;render();toast('הפעולה בוטלה')}
+function fixCur(){var it=byId(S.fc);if(!it)return;it.st=it.st==='fixed'?'approved':'fixed';it.ac='human';var A=items.filter(function(x){return x.st==='approved'&&(S.fb===null||x.b===S.fb)});if(it.st==='fixed'&&A.length)S.fc=A[0].id;render()}
+function go(v){S.v=v;document.querySelectorAll('.scr').forEach(function(e){e.classList.toggle('on',e.id==='v-'+v)});document.querySelectorAll('.rl').forEach(function(e){e.classList.toggle('on',e.dataset.a==='go:'+v)});$('#pop').hidden=true;location.hash='#/'+v+(v==='review'&&S.m==='cards'?'/cards':'');render()}
+function syncPop(){$('#fs').value=F.status;$('#fm').value=F.min;$('#fmv').textContent=F.min;$('#fv').checked=F.ver;
+$('#ptypes').innerHTML=Object.keys(T).map(function(k){return '<label><input type="checkbox" value="'+k+'"'+(F.types.has(k)?' checked':'')+'>'+T[k]+'<small>'+items.filter(function(x){return x.t===k}).length+'</small></label>'}).join('')}
+var A={
+go:function(v){go(v)},
+mode:function(m){S.m=m;go('review')},
+sb:function(k){S.sb=k;render()},
+pop:function(){var p=$('#pop');p.hidden=!p.hidden;$('#cpop').hidden=true},
+cpop:function(){var p=$('#cpop');p.hidden=!p.hidden;$('#pop').hidden=true;if(!p.hidden)p.innerHTML=colsHtml()},
+colreset:function(){CV=new Set(['w','f','t']);saveCols();$('#cpop').innerHTML=colsHtml();render()},
+book:function(i){F.book=i<0?null:B[+i];S.cur=null;render()},
+pick:function(i){S.cur=+i;S.keep=null;render()},
+set:function(s){setSt(s)},skip:skip,undo:undo,
+clear:function(){F.book=null;F.types=new Set(Object.keys(T));F.status='all';F.min=0;F.ver=false;syncPop();render()},
+rm:function(k){if(k==='book')F.book=null;if(k==='types')F.types=new Set(Object.keys(T));if(k==='status')F.status='all';if(k==='min')F.min=0;if(k==='ver')F.ver=false;syncPop();render()},
+fbook:function(){S.fb=S.fb===null?0:(S.fb>=B.length-1?null:S.fb+1);S.fc=null;render()},
+fsel:function(i){S.fc=+i;render()},
+fix:function(i){S.fc=+i;fixCur()},
+copy:function(i){var t=byId(+i).f;try{navigator.clipboard.writeText(t).then(function(){toast('הועתק: '+t)},function(){toast('ההעתקה נחסמה בדפדפן')})}catch(e){toast('ההעתקה נחסמה בדפדפן')}},
+fmode:function(m){$('#mr').className=m==='r'?'on':'';$('#mb').className=m==='b'?'on':''},
+tofix:function(i){S.fb=+i;S.fc=null;go('fixer')},
+tab:function(t){['run','data','danger'].forEach(function(k){$('#p-'+k).hidden=k!==t;$('#p-'+k).style.display=k===t?'flex':'none';$('#t-'+k).className=k===t?'on':''})},
+toast:function(m){toast(m)},export:function(){toast('בדוגמה הייצוא לא מבוצע')},
+det:function(){var d=$('#sdet');d.hidden=!d.hidden}};
+document.addEventListener('click',function(e){var el=e.target.closest('[data-a]');
+if(!e.target.closest('#pop')&&!(el&&el.dataset.a==='pop'))$('#pop').hidden=true;
+if(!e.target.closest('#cpop')&&!(el&&el.dataset.a==='cpop'))$('#cpop').hidden=true;
+if(!el)return;var p=el.dataset.a,i=p.indexOf(':'),n=i<0?p:p.slice(0,i),v=i<0?'':p.slice(i+1);if(A[n])A[n](v)});
+document.addEventListener('keydown',function(e){
+if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('rl'))return A.go(e.target.dataset.a.slice(3));
+var tg=e.target.tagName;if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA')return;
+if(e.key==='Escape'){$('#pop').hidden=true;$('#cpop').hidden=true}
+if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){e.preventDefault();return undo()}
+if((e.ctrlKey||e.metaKey)&&e.code==='KeyK'){e.preventDefault();return toast('פלטת הפקודות — בגרסה המלאה')}
+if(S.v==='review'){var km={KeyH:'approved',KeyB:'rejected',KeyC:'unsure',KeyG:'ignored'},kc={'י':'approved','נ':'rejected','ב':'unsure','ע':'ignored'};
+var a=km[e.code]||kc[e.key];if(a){e.preventDefault();return setSt(a)}
+if(e.code==='Space'){e.preventDefault();return skip()}}
+if(S.v==='fixer'&&(e.code==='KeyE'||e.key==='ק'||e.key==='Enter')){e.preventDefault();fixCur()}});
+$('#ptypes').addEventListener('change',function(e){var c=e.target;if(c.checked)F.types.add(c.value);else F.types.delete(c.value);render()});
+$('#cpop').addEventListener('change',function(e){var c=e.target;if(!c.checked&&CV.size===1){c.checked=true;toast('נדרשת לפחות עמודה אחת');return}if(c.checked)CV.add(c.value);else CV.delete(c.value);saveCols();render()});
+$('#bq').addEventListener('input',function(e){S.bq=e.target.value;renderReview()});
+$('#bq').addEventListener('keydown',function(e){if(e.key==='Escape'){e.target.value='';S.bq='';renderReview()}
+if(e.key==='Enter'){var q=(S.bq||'').replace(/\s+/g,''),f=B.filter(function(n){return !q||n.replace(/\s+/g,'').indexOf(q)>=0})[0];if(f){F.book=f;S.cur=null;render()}else toast('לא נמצא ספר')}});
+$('#fsort').addEventListener('change',function(e){F.sort=e.target.value;render()});
+$('#fs').addEventListener('change',function(e){F.status=e.target.value;render()});
+$('#fm').addEventListener('input',function(e){F.min=+e.target.value;$('#fmv').textContent=F.min;render()});
+$('#fv').addEventListener('change',function(e){F.ver=e.target.checked;render()});
+$('#dz').addEventListener('input',function(e){$('#dzb').disabled=e.target.value.trim()!=='אפס'});
+A.tab('run');syncPop();
+var h=location.hash.replace('#/','').split('/');if(['review','fixer','stats','scan','help'].indexOf(h[0])>=0){if(h[1]==='cards')S.m='cards';go(h[0])}else render();
+</script>
+</body>
+</html>
