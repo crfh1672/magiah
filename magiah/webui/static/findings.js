@@ -333,7 +333,7 @@ function syncFilterControls() {
     b.classList.toggle("selected", b.dataset.key === f.book);
     b.setAttribute("aria-pressed", b.dataset.key === f.book ? "true" : "false");
   });
-  if (f.min_rank || f.sort !== "rank" || f.dir !== "desc" || !S.hideIrr || !S.hideDb) $("#fMore").open = true;
+  if (f.min_rank || f.sort !== "rank" || f.dir !== "desc" || !S.hideIrr || S.hideDb) $("#fMore").open = true;
   $("#fixInclude").checked = S.fixInclude;
   if ($("#fixBook")) $("#fixBook").value = S.fixKey;
   syncModeButtons();
