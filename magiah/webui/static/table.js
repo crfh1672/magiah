@@ -147,18 +147,23 @@ function renderTableRows() {
   }
 }
 
+let tableSeq = 0;
 async function loadTable() {
   const tb = $("#tblBody");
   tb.replaceChildren(el("tr", null, el("td", { class: "loading-row", colspan: String(TABLE_COLS.length + 1) }, "טוען ממצאים…")));
   renderTableHead();
+  // two quick filter changes send two requests; only the last one may draw
+  const seq = ++tableSeq;
   try {
     const resp = await api("/api/findings?" + filterParams());
+    if (seq !== tableSeq) return;
     S.tableRows = rowsOf(resp);
     S.tableTotal = totalOf(resp);
     renderTableRows();
     renderPager();
     updateBulkBar();
   } catch (e) {
+    if (seq !== tableSeq) return;
     tb.replaceChildren(el("tr", null, el("td", { class: "empty-row", colspan: String(TABLE_COLS.length + 1) }, "הטעינה נכשלה: " + e.message)));
     toast(e.message, "err");
   }
