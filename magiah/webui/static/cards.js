@@ -82,6 +82,8 @@ function renderCard() {
     .filter(Boolean));
   box.replaceChildren();
   if (!r) {
+    // nothing matches the filters at all: say so and offer the way back
+    if (facetsTotal() === 0) { box.append(emptyFilterState()); return; }
     // "done" only on the server's word — never because the local list ran out
     const st = q.state();
     const msg = st === "done" ? "אין עוד ממצאים בסינון הנוכחי — כל הכבוד!"

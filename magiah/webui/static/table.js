@@ -110,7 +110,7 @@ function renderTableRows() {
   tb.replaceChildren();
   const cols = visibleCols();
   if (!S.tableRows.length) {
-    tb.append(el("tr", null, el("td", { class: "empty-row", colspan: String(cols.length + 1) }, "אין ממצאים בסינון הנוכחי")));
+    tb.append(el("tr", null, el("td", { class: "empty-row", colspan: String(cols.length + 1) }, emptyFilterState())));
     return;
   }
   for (const r of S.tableRows) {
