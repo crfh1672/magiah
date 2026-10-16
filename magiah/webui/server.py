@@ -56,6 +56,11 @@ _STATIC_TYPES = {
     '.woff2': 'font/woff2',
 }
 
+# the query parameters that narrow the findings list; /api/findings and
+# /api/facets read the same set, so the counts cannot drift from the list
+_LIST_FILTERS = ('origin', 'book', 'book_key', 'errtype', 'status',
+                 'verified', 'min_rank', 'q', 'ids', 'hide_irr', 'hide_db')
+
 PLACEHOLDER = '''<!DOCTYPE html>
 <html lang="he" dir="rtl"><head><meta charset="utf-8">
 <title>מגיה — ממשק סקירה</title></head>
@@ -217,15 +222,20 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/meta':
             self._json(db.get_meta(con, self.outdir))
         elif path == '/api/books':
-            books = db.get_books(con, q.get('origin'), q.get('q'),
-                                 hide={k: q.get(k)
-                                       for k in ('hide_irr', 'hide_db')})
-            self._json({'books': books, 'rows': books, 'total': len(books)})
-        elif path == '/api/findings':
+            # `q` is the book-title search here; the free-text search of the
+            # list travels as `search`
             filters = {k: q.get(k) for k in
-                       ('origin', 'book', 'book_key', 'errtype', 'status',
-                        'verified', 'min_rank', 'q', 'ids',
+                       ('errtype', 'status', 'verified', 'min_rank',
                         'hide_irr', 'hide_db')}
+            filters['q'] = q.get('search')
+            books = db.get_books(con, q.get('origin'), q.get('q'),
+                                 filters=filters)
+            self._json({'books': books, 'rows': books, 'total': len(books)})
+        elif path == '/api/facets':
+            self._json(db.get_facets(con, {k: q.get(k) for k in
+                                           _LIST_FILTERS}))
+        elif path == '/api/findings':
+            filters = {k: q.get(k) for k in _LIST_FILTERS}
             if 'cursor' in q:
                 # keyset paging (card queue): stable under status changes
                 rows, total, nxt = db.query_findings_page(
