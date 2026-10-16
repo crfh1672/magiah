@@ -1791,11 +1791,12 @@ def get_meta(con, outdir=None):
     whether the findings are those of the latest scan (result_status.py)."""
     origins = []
     for raw, cnt, done in con.execute(f'''
-            SELECT f.origin, COUNT(*),
+            SELECT {ORIGIN_KEY}, COUNT(*),
                    SUM(CASE WHEN {EFF} != 'pending' THEN 1 ELSE 0 END)
             FROM findings f {JOINS}
-            GROUP BY f.origin ORDER BY COUNT(*) DESC'''):
-        origins.append({'name': raw or '', 'hebrew': hebrew.origin_hebrew(raw),
+            GROUP BY {ORIGIN_KEY} ORDER BY COUNT(*) DESC'''):
+        origins.append({'name': raw,
+                        'hebrew': hebrew.origin_hebrew(plain_origin(raw)),
                         'count': cnt, 'done_count': done or 0})
     et_counts = {}
     for et, cnt, pend in con.execute(f'''
@@ -1839,6 +1840,19 @@ def get_meta(con, outdir=None):
                               if outdir else None)}
 
 
+# Findings whose origin could not be resolved have NULL or '' there. The API
+# names that group NO_ORIGIN, so it can be told apart from "no origin filter"
+# (an empty value) and chosen like any other origin.
+NO_ORIGIN = '__none__'
+ORIGIN_KEY = f"COALESCE(NULLIF(f.origin, ''), '{NO_ORIGIN}')"
+
+
+def plain_origin(v):
+    """An origin parameter for the queries that match the stored value
+    itself (fixer, export): NO_ORIGIN there means what '' always meant."""
+    return '' if v == NO_ORIGIN else v
+
+
 # "not relevant" in a book's path, in both common spellings; LIKE's `_`
 # also covers a space, underscore or hyphen between the words
 _IRRELEVANT_SQL = ("NOT (COALESCE(f.unit, '') || '|' || COALESCE(f.doc, '') "
@@ -1862,17 +1876,27 @@ def _hide_where(filters):
     return where
 
 
-def get_books(con, origin=None, q=None, hide=None):
+def get_books(con, origin=None, q=None, hide=None, filters=None):
     """Books by stable key (doc). Two books with one title stay two
-    entries; `source` is the title to display, `key` is what to filter on."""
-    where, params = _hide_where(hide or {}), []
+    entries; `source` is the title to display, `key` is what to filter on.
+
+    `q` searches the book's title. `filters` (the same mapping as
+    query_findings) narrows the counts exactly as it narrows the list:
+    every filter applies except the book itself, so the books on offer stay
+    visible and the number beside one is what choosing it would show."""
+    f = dict(filters or {})
+    for k, v in (hide or {}).items():
+        if v is not None:
+            f[k] = v
     if origin:
-        where.append('f.origin = ?')
-        params.append(origin)
+        f['origin'] = origin
+    for k in ('book_key', 'book'):
+        f.pop(k, None)
+    wsql, params = _findings_where(f)
     if q:
-        where.append("f.source LIKE '%' || ? || '%'")
+        wsql += (' AND ' if wsql else 'WHERE ') + \
+            "f.source LIKE '%' || ? || '%'"
         params.append(q)
-    wsql = ('WHERE ' + ' AND '.join(where)) if where else ''
     rows = con.execute(f'''
         SELECT {BOOKKEY} AS bkey, MIN(f.source), COUNT(*) AS count,
                SUM(CASE WHEN {EFF} = 'pending' THEN 1 ELSE 0 END) AS pending,
@@ -1898,7 +1922,9 @@ def _book_key_where(key):
 
 def _findings_where(filters):
     where, params = _hide_where(filters), []
-    if filters.get('origin'):
+    if filters.get('origin') == NO_ORIGIN:
+        where.append("(f.origin IS NULL OR f.origin = '')")
+    elif filters.get('origin'):
         where.append('f.origin = ?')
         params.append(filters['origin'])
     if filters.get('ids'):
@@ -1966,6 +1992,57 @@ def _count(con, filters, wsql, params):
     joins = JOINS if filters.get('status') else ''
     return con.execute(f'SELECT COUNT(*) FROM findings f {joins} {wsql}',
                        params).fetchone()[0]
+
+
+_FACET_KEYS = {'origin': ('origin',), 'errtype': ('errtype',),
+               'status': ('status',)}
+
+
+def get_facets(con, filters):
+    """Counts for the filter window, from the very WHERE the list uses.
+
+    Each group is counted under every filter except its own, so choosing one
+    of its entries shows exactly the count printed beside it (a group
+    counted under its own selection would show 0 for everything else, and
+    the reviewer could never widen the choice). `total` is the list's own
+    total under all filters; `pending_count` is how many of `count` are
+    still undecided. Books come from get_books(..., filters=...)."""
+    def where(drop):
+        f = dict(filters or {})
+        for k in _FACET_KEYS[drop]:
+            f.pop(k, None)
+        return _findings_where(f)
+
+    wsql, params = _findings_where(filters or {})
+    total = _count(con, filters or {}, wsql, params)
+    pend = f"SUM(CASE WHEN {EFF} = 'pending' THEN 1 ELSE 0 END)"
+
+    wsql, params = where('origin')
+    origins = [{'name': r[0],
+                'hebrew': hebrew.origin_hebrew(plain_origin(r[0])),
+                'count': r[1], 'pending_count': r[2] or 0}
+               for r in con.execute(
+                   f'SELECT {ORIGIN_KEY}, COUNT(*), {pend} FROM findings f '
+                   f'{JOINS} {wsql} GROUP BY {ORIGIN_KEY} '
+                   'ORDER BY COUNT(*) DESC', params)]
+
+    wsql, params = where('errtype')
+    seen = {r[0]: (r[1], r[2] or 0) for r in con.execute(
+        f'SELECT f.errtype, COUNT(*), {pend} FROM findings f {JOINS} {wsql} '
+        'GROUP BY f.errtype', params)}
+    errtypes = [{'key': k, 'count': seen.get(k, (0, 0))[0],
+                 'pending_count': seen.get(k, (0, 0))[1]}
+                for k in hebrew.ERRTYPE_ORDER
+                + sorted(set(seen) - set(hebrew.ERRTYPE_ORDER))]
+
+    wsql, params = where('status')
+    by_status = {r[0]: r[1] for r in con.execute(
+        f'SELECT {EFF}, COUNT(*) FROM findings f {JOINS} {wsql} '
+        f'GROUP BY {EFF}', params)}
+    statuses = [{'key': k, 'count': by_status.get(k, 0)}
+                for k in hebrew.STATUS_ORDER]
+    return {'total': total, 'origins': origins, 'errtypes': errtypes,
+            'statuses': statuses}
 
 
 def query_findings(con, filters, sort='rank', direction='desc',

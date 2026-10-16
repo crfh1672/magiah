@@ -348,14 +348,56 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
   height: calc(100vh - var(--topbar-h));
   height: calc(100dvh - var(--topbar-h));
 }
+/* The filter window: a panel on the right edge at every width (the drawer sits
+   on the left). Closed it is visibility:hidden, so it is out of the tab order. */
+#filterScrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 18, 28, .35);
+  z-index: 90;
+  display: none;
+}
+#filterScrim.visible { display: block; }
 #sidebar {
-  width: 268px;
-  flex: 0 0 268px;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: min(440px, 94vw);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
   background: var(--panel);
-  border-inline-start: none;
-  border-inline-end: 1px solid var(--border);
-  overflow-y: auto;
-  padding: var(--sp-3) var(--sp-3) var(--sp-5);
+  border-inline-start: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(105%);
+  visibility: hidden;
+  transition: transform var(--t-slow), visibility 0s .25s;
+}
+#sidebar.visible { transform: translateX(0); visibility: visible; transition-delay: 0s; }
+#filterHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+#filterHead h2 { margin: 0; font-size: var(--fs-lg); font-weight: var(--fw-bold); }
+#filterResults { color: var(--muted); font-size: var(--fs-sm); margin-inline-end: auto; }
+#filterHead .icon-btn { background: none; border: 0; cursor: pointer; color: var(--muted); padding: var(--sp-1); border-radius: var(--radius-sm); }
+#filterHead .icon-btn:hover { color: var(--text); background: var(--accent-soft); }
+#filterBody { flex: 1 1 auto; overflow-y: auto; padding: var(--sp-4); }
+#filterFoot {
+  display: flex;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+#filterFoot .btn { flex: 1; justify-content: center; }
+@media (prefers-reduced-motion: reduce) {
+  #sidebar { transition: none; }
 }
 #main {
   flex: 1;
@@ -390,7 +432,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 }
 .f-group select:focus, .f-group input:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
 #fBookList {
-  max-height: 190px;
+  max-height: 240px;
   overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -426,13 +468,14 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 }
 .chk-row input { cursor: pointer; accent-color: var(--accent); }
 .chk-row .cnt { color: var(--faint); font-size: var(--fs-xs); margin-inline-start: auto; }
+.chk-row .cnt.zero { opacity: .75; }
 .chk-row:hover { color: var(--accent); }
 
 #fMinRankRow { display: flex; align-items: center; gap: 8px; }
 #fMinRank { flex: 1; accent-color: var(--accent); }
 #fMinRankVal { width: 66px; }
 
-#btnClearFilters { width: 100%; border-style: dashed; background: none; color: var(--muted); }
+#btnClearFilters { background: none; color: var(--muted); }
 #btnClearFilters:hover { color: var(--red); border-color: var(--red); background: var(--red-soft); }
 
 /* ==================== view tabs ==================== */
@@ -473,10 +516,16 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 .fchip-clear { border: 0; background: none; color: var(--muted); font: inherit; font-size: var(--fs-xs); cursor: pointer; text-decoration: underline; padding: 3px var(--sp-2); }
 .fchip-clear:hover { color: var(--red); }
 
-/* secondary sidebar filters live behind one disclosure */
-.f-more { margin-bottom: var(--sp-4); }
-.f-more > summary { cursor: pointer; font-weight: 700; font-size: var(--fs-sm); color: var(--muted); padding: var(--sp-1) 0 var(--sp-2); }
-.f-more > summary:hover { color: var(--accent); }
+/* ---- the empty list: why it is empty, and the way out ---- */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-6) var(--sp-4); text-align: center; color: var(--muted);
+}
+.empty-state .ic-lg { font-size: 32px; color: var(--muted); }
+.empty-state p { margin: 0; color: var(--text); font-weight: var(--fw-semibold); }
+.empty-state .es-hint { color: var(--muted); font-weight: 400; font-size: var(--fs-sm); }
+.empty-state .es-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: center; }
+#filterBtnCount:not(:empty)::before { content: " · "; white-space: pre; }
 
 section.view { display: none; }
 section.view.visible { display: block; animation: view-in var(--t-base); }
@@ -1413,20 +1462,7 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 }
 
 /* ==================== responsive ==================== */
-#btnSidebar { display: none; }
 @media (max-width: 1100px) {
-  #btnSidebar { display: inline-block; }
-  #sidebar {
-    position: fixed;
-    top: var(--topbar-h);
-    bottom: 0;
-    right: 0;
-    z-index: 80;
-    transform: translateX(105%);
-    transition: transform var(--t-slow);
-    box-shadow: var(--shadow-lg);
-  }
-  #sidebar.open { transform: translateX(0); }
   #globalSearch { flex-basis: 170px; }
   #topbar .brand small { display: none; }
   table.ftable td.snip { max-width: 180px; }
@@ -1584,3 +1620,17 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 #bsChosen { margin: var(--sp-3) 0 4px; padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm); background: var(--accent-soft); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
 .bs-ctx { margin-top: var(--sp-3); align-items: flex-start; }
 #scanLog { direction: ltr; text-align: left; unicode-bidi: plaintext; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); max-height: 220px; overflow: auto; font-family: var(--font-mono); font-size: 11.5px; line-height: var(--lh-normal); white-space: pre-wrap; word-break: break-all; margin: 0; }
+
+/* narrow screens: the filter button keeps its icon and the number, not the word */
+@media (max-width: 760px) {
+  #btnSidebar { position: relative; }
+  #btnSidebar .tb-word { display: none; }
+  #filterBtnCount:not(:empty)::before { content: none; }
+  /* the number sits on the icon as a badge, so the top bar does not grow */
+  #filterBtnCount:not(:empty) {
+    position: absolute; top: -4px; inset-inline-start: -4px;
+    min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box;
+    border-radius: 9px; background: var(--accent); color: var(--on-accent);
+    font-size: var(--fs-xs); font-weight: var(--fw-bold); line-height: 18px; text-align: center;
+  }
+}
