@@ -96,6 +96,16 @@ class FilterChipsTest(unittest.TestCase):
         self.assertEqual((res[0]['hideIrr'], res[0]['hideDb']), (False, True))
         self.assertEqual((res[1]['hideIrr'], res[1]['hideDb']), (True, False))
 
+    def test_clear_filters_resets_every_filter_but_keeps_the_hide_switches(self):
+        (r,) = self.run_cases({'op': 'clearAll', 'state': {
+            'filters': dict(ALL, sort='word', dir='asc'),
+            'hideIrr': True, 'hideDb': True}})
+        self.assertEqual(r['filters'], {
+            'origin': '', 'book': '', 'errtypes': [], 'statuses': [],
+            'verified': False, 'min_rank': 0, 'q': '', 'sort': 'rank',
+            'dir': 'desc'})
+        self.assertEqual((r['hideIrr'], r['hideDb']), (True, True))
+
     def test_the_counts_query_is_the_lists_without_paging_and_sorting(self):
         (r,) = self.run_cases({'op': 'query', 'state': {
             'filters': dict(ALL, sort='word', dir='asc'), 'page': 3,
