@@ -517,7 +517,8 @@ const loadFacets = debounce(async function () {
 function renderFacetCounts() {
   const body = $("#filterBody");
   if (!body) return;
-  const f = S.facets, fresh = facetsFresh();
+  // counts of an older query are not shown while the new ones are on the way
+  const fresh = facetsFresh(), f = fresh ? S.facets : null;
   body.setAttribute("aria-busy", fresh ? "false" : "true");
   body.classList.toggle("stale", !fresh);
   const origins = new Map(), errs = new Map(), sts = new Map();
@@ -613,6 +614,7 @@ function emptyFilterState() {
 }
 
 /* books list */
+let bookSeq = 0;
 const loadBooks = debounce(async function () {
   const q = $("#fBookSearch").value.trim();
   // the list's own filters, so a book's count is what choosing it shows
@@ -624,8 +626,11 @@ const loadBooks = debounce(async function () {
   p.delete("q");
   if (free) p.set("search", free);
   if (q) p.set("q", q);
+  // a slower answer to an older request must not replace a newer one
+  const seq = ++bookSeq;
   try {
     const resp = await api("/api/books?" + p);
+    if (seq !== bookSeq) return;
     let books = Array.isArray(resp) ? resp : (resp.books || resp.rows || []);
     for (const b of books) BOOK_NAMES.set(b.key || b.name || b.source, b.source || b.name || b.key);
     // the chosen book stays on the list, with its 0, so it can be unchosen there
@@ -664,6 +669,7 @@ const loadBooks = debounce(async function () {
       box.append(el("div", { class: "empty" }, "מוצגים 300 הראשונים מתוך " + fmtNum(books.length) + " — צמצם בחיפוש"));
     }
   } catch (e) {
+    if (seq !== bookSeq) return;
     $("#fBookList").replaceChildren(el("div", { class: "empty" }, "טעינת הספרים נכשלה: " + e.message));
   }
 }, 250);
