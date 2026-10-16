@@ -12,6 +12,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
 <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
 <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
 <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
@@ -43,7 +44,7 @@
 </svg>
 
 <header id="topbar">
-  <button id="btnSidebar" class="tb-btn" title="סינון" aria-label="סינון"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
+  <button id="btnSidebar" class="tb-btn" title="סינון הממצאים" aria-haspopup="dialog" aria-expanded="false" aria-controls="sidebar"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg> <span class="tb-word">סינון</span><span id="filterBtnCount"></span></button>
   <div class="brand">מַגִּיהַּ<small>סקירת שגיאות דפוס</small></div>
   <input id="globalSearch" type="search" placeholder="חיפוש חופשי: מילה, תיקון, קטע, מראה מקום…" aria-label="חיפוש חופשי" autocomplete="off">
   <div id="progressPill" title="התקדמות בסינון הנוכחי">טוען…</div>
@@ -71,7 +72,15 @@
 
 <div id="layout">
 
-  <aside id="sidebar">
+  <div id="filterScrim"></div>
+  <aside id="sidebar" role="dialog" aria-modal="true" aria-labelledby="filterTitle">
+    <header id="filterHead">
+      <h2 id="filterTitle">סינון</h2>
+      <span id="filterResults" role="status" aria-live="polite"></span>
+      <button id="filterClose" type="button" class="icon-btn" aria-label="סגירת חלון הסינון"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </header>
+
+    <div id="filterBody">
     <div class="f-group">
       <label class="f-title" for="fOrigin">מאגר</label>
       <select id="fOrigin"><option value="">כל המאגרים</option></select>
@@ -97,8 +106,7 @@
       <label class="chk-row"><input type="checkbox" id="fVerified"> מאומתים בלבד <span class="info-i" tabindex="0" data-tip="הצג רק ממצאים ברמת ודאות גבוהה — מומלץ להתחיל מהם">ⓘ</span></label>
     </div>
 
-    <details id="fMore" class="f-more">
-      <summary>אפשרויות נוספות</summary>
+    <div id="fMore">
     <div class="f-group">
       <label class="chk-row"><input type="checkbox" id="fHideIrr" checked> הסתר נתיבי «לא רלוונטי» <span class="info-i" tabindex="0" data-tip="ספרים שנתיב הקובץ שלהם כולל «לא רלוונטי» (או «לא רלונטי») לא יוצגו — בטבלה, בכרטיסים ובמתקן">ⓘ</span></label>
       <label class="chk-row"><input type="checkbox" id="fHideDb"> הסתר ספרים לייצוא בלבד <span class="info-i" tabindex="0" data-tip="ספרים ממסד הנתונים שאינם קובץ טקסט — אפשר רק לייצא את התיקונים שלהם">ⓘ</span></label>
@@ -107,8 +115,8 @@
     <div class="f-group">
       <label class="f-title" for="fMinRank">ציון מינימלי</label>
       <div id="fMinRankRow">
-        <input id="fMinRank" type="range" min="0" max="30" step="0.5" value="0">
-        <input id="fMinRankVal" type="number" min="0" step="0.5" value="0">
+        <input id="fMinRank" type="range" min="0" max="30" step="0.5" value="0" aria-label="ציון מינימלי (מחוון)">
+        <input id="fMinRankVal" type="number" min="0" step="0.5" value="0" aria-label="ציון מינימלי (מספר)">
       </div>
     </div>
 
@@ -122,9 +130,13 @@
         <option value="word:asc">לפי מילה</option>
       </select>
     </div>
-    </details>
+    </div>
+    </div>
 
-    <button id="btnClearFilters"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg> ניקוי כל הסינונים</button>
+    <footer id="filterFoot">
+      <button id="btnClearFilters" type="button" class="btn" title="מסיר את המסננים; מתגי ההסתרה נשארים כפי שהם">נקה סינון</button>
+      <button id="filterDone" type="button" class="btn primary">הצג ממצאים</button>
+    </footer>
   </aside>
 
   <main id="main">
