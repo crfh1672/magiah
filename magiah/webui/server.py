@@ -270,7 +270,8 @@ class Handler(BaseHTTPRequestHandler):
         elif path == '/api/stats':
             self._json(db.get_stats(con))
         elif path == '/api/fixlist':
-            self._json(db.get_fixlist(con, q.get('book'), q.get('origin'),
+            self._json(db.get_fixlist(con, q.get('book'),
+                                      db.plain_origin(q.get('origin')),
                                       q.get('statuses'), q.get('book_key')))
         elif path == '/api/backups':
             self._json({'backups': db.list_backups(self.outdir)})
@@ -384,7 +385,8 @@ class Handler(BaseHTTPRequestHandler):
                         'file_untouched']
                 self._json({'ok': True, **res})
         elif path == '/api/export/xlsx':
-            paths = export.export_xlsx(con, self.outdir, body.get('origin'))
+            paths = export.export_xlsx(con, self.outdir,
+                                       db.plain_origin(body.get('origin')))
             self._json({'ok': True, 'files': paths,
                         'message': hebrew.MESSAGES['export_done']})
         elif path == '/api/export/fixes':

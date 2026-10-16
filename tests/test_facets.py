@@ -38,11 +38,14 @@ ROWS = [
     (6, 'דבר', 'edit1_sub', 'o2', 'd.txt', 'file:d.txt:9', 6.5, 0),
     (7, 'ספר', 'missing_space', 'o1', '2', '200', 3.0, 1),
     (8, 'ספר', 'edit1_sub', 'o1', 'd.txt', 'file:d.txt:2', 10.0, 1),
+    # origin unknown: NULL and '' are one group
+    (9, 'בית', 'edit1_sub', None, '3', '300', 5.5, 1),
+    (10, 'דבר', 'missing_space', '', '3', '301', 6.5, 0),
 ]
 DECIDED = {'approved': [1, 4], 'not_error': [3, 6], 'unsure': [8]}
 
 FILTER_AXES = {
-    'origin': ['', 'o1'],
+    'origin': ['', 'o1', db.NO_ORIGIN],
     'errtype': ['', 'edit1_sub', 'edit1_sub,missing_space'],
     'status': ['', 'pending', 'approved,not_error'],
     'verified': ['', '1'],
@@ -127,6 +130,20 @@ class TestCountsMatchList(FacetCase):
         self.assertEqual(sorted(b['key'] for b in books),
                          ['2', 'a/b.txt', 'לא רלוונטי/c.txt'])
 
+    def test_unknown_origin_is_one_choosable_group(self):
+        fac = db.get_facets(self.con, {})
+        none = [o for o in fac['origins'] if o['name'] == db.NO_ORIGIN]
+        self.assertEqual(len(none), 1)                     # NULL + ''
+        self.assertEqual(none[0]['count'], 2)
+        self.assertEqual(self.listing({'origin': db.NO_ORIGIN})[1], 2)
+        self.assertNotIn('', [o['name'] for o in fac['origins']])
+        meta = [o for o in db.get_meta(self.con)['origins']
+                if o['name'] == db.NO_ORIGIN]
+        self.assertEqual([o['count'] for o in meta], [2])
+        # the queries that match the stored value read the token as "all"
+        self.assertEqual(db.plain_origin(db.NO_ORIGIN), '')
+        self.assertEqual(db.plain_origin('o1'), 'o1')
+
     def test_a_chosen_book_does_not_hide_the_others(self):
         # the book group is counted without its own selection
         books = db.get_books(self.con, filters={'book_key': '1'})
@@ -169,15 +186,19 @@ class TestHttp(FacetCase):
         fac = self.get('/api/facets', **params)
         lst = self.get('/api/findings', **params)
         self.assertEqual(fac['total'], lst['total'])
-        self.assertEqual({o['name'] for o in fac['origins']}, {'o1'})
+        # the origin group is counted without its own filter: the unknown
+        # origin's verified edit1_sub finding shows beside o1's
+        self.assertEqual({o['name'] for o in fac['origins']},
+                         {'o1', db.NO_ORIGIN})
 
     def test_books_endpoint_takes_the_filters_and_keeps_q_for_titles(self):
         # `q` is the title search, `search` the list's free-text search
         by_title = self.get('/api/books', q='a/b')
         self.assertEqual([b['key'] for b in by_title['books']], ['a/b.txt'])
         by_word = self.get('/api/books', search='בית')
-        self.assertEqual([b['key'] for b in by_word['books']], ['1'])
-        self.assertEqual(by_word['books'][0]['count'], 2)
+        self.assertEqual(sorted(b['key'] for b in by_word['books']), ['1', '3'])
+        self.assertEqual({b['key']: b['count'] for b in by_word['books']},
+                         {'1': 2, '3': 1})
         narrowed = self.get('/api/books', errtype='missing_space',
                             status='pending', verified='1')
         lst = self.get('/api/findings', errtype='missing_space',

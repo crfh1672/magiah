@@ -8,6 +8,8 @@ function bindExports() {
   $("#expXlsxCurrent").addEventListener("click", async () => {
     closeExportMenu();
     if (!S.filters.origin) { toast("בחרו מאגר בסינון תחילה, או השתמשו ב«כל המאגרים»", "err"); return; }
+    // findings of no known origin are one group in the filter, but not a workbook of their own
+    if (S.filters.origin === NO_ORIGIN) { toast("אין ייצוא נפרד לממצאים ללא מאגר — השתמשו ב«כל המאגרים»", "err"); return; }
     await runExport("/api/export/xlsx", { origin: S.filters.origin }, "ייצוא Excel למאגר " + (originInfo(S.filters.origin).hebrew || S.filters.origin));
   });
   $("#expXlsxAll").addEventListener("click", async () => {

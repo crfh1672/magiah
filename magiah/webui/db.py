@@ -1791,11 +1791,12 @@ def get_meta(con, outdir=None):
     whether the findings are those of the latest scan (result_status.py)."""
     origins = []
     for raw, cnt, done in con.execute(f'''
-            SELECT f.origin, COUNT(*),
+            SELECT {ORIGIN_KEY}, COUNT(*),
                    SUM(CASE WHEN {EFF} != 'pending' THEN 1 ELSE 0 END)
             FROM findings f {JOINS}
-            GROUP BY f.origin ORDER BY COUNT(*) DESC'''):
-        origins.append({'name': raw or '', 'hebrew': hebrew.origin_hebrew(raw),
+            GROUP BY {ORIGIN_KEY} ORDER BY COUNT(*) DESC'''):
+        origins.append({'name': raw,
+                        'hebrew': hebrew.origin_hebrew(plain_origin(raw)),
                         'count': cnt, 'done_count': done or 0})
     et_counts = {}
     for et, cnt, pend in con.execute(f'''
@@ -1837,6 +1838,19 @@ def get_meta(con, outdir=None):
             'last_import': last_import[0] if last_import else None,
             'result_status': (result_status.build(con, outdir)
                               if outdir else None)}
+
+
+# Findings whose origin could not be resolved have NULL or '' there. The API
+# names that group NO_ORIGIN, so it can be told apart from "no origin filter"
+# (an empty value) and chosen like any other origin.
+NO_ORIGIN = '__none__'
+ORIGIN_KEY = f"COALESCE(NULLIF(f.origin, ''), '{NO_ORIGIN}')"
+
+
+def plain_origin(v):
+    """An origin parameter for the queries that match the stored value
+    itself (fixer, export): NO_ORIGIN there means what '' always meant."""
+    return '' if v == NO_ORIGIN else v
 
 
 # "not relevant" in a book's path, in both common spellings; LIKE's `_`
@@ -1908,7 +1922,9 @@ def _book_key_where(key):
 
 def _findings_where(filters):
     where, params = _hide_where(filters), []
-    if filters.get('origin'):
+    if filters.get('origin') == NO_ORIGIN:
+        where.append("(f.origin IS NULL OR f.origin = '')")
+    elif filters.get('origin'):
         where.append('f.origin = ?')
         params.append(filters['origin'])
     if filters.get('ids'):
@@ -2002,11 +2018,12 @@ def get_facets(con, filters):
     pend = f"SUM(CASE WHEN {EFF} = 'pending' THEN 1 ELSE 0 END)"
 
     wsql, params = where('origin')
-    origins = [{'name': r[0] or '', 'hebrew': hebrew.origin_hebrew(r[0]),
+    origins = [{'name': r[0],
+                'hebrew': hebrew.origin_hebrew(plain_origin(r[0])),
                 'count': r[1], 'pending_count': r[2] or 0}
                for r in con.execute(
-                   f'SELECT f.origin, COUNT(*), {pend} FROM findings f '
-                   f'{JOINS} {wsql} GROUP BY f.origin '
+                   f'SELECT {ORIGIN_KEY}, COUNT(*), {pend} FROM findings f '
+                   f'{JOINS} {wsql} GROUP BY {ORIGIN_KEY} '
                    'ORDER BY COUNT(*) DESC', params)]
 
     wsql, params = where('errtype')

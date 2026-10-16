@@ -229,7 +229,7 @@ def _conflicts(outdir, path):
 
 def books(con, outdir, q):
     lib = _library_dir(outdir)
-    out = db.get_fixer_books(con, origin=q.get('origin'),
+    out = db.get_fixer_books(con, origin=db.plain_origin(q.get('origin')),
                              statuses=_statuses(q.get('statuses')),
                              query=q.get('q'))
     for b in out:
@@ -260,7 +260,7 @@ def doc(con, outdir, q):
         raise ValueError(hebrew.MESSAGES['bad_request'])
     statuses = _statuses(q.get('statuses'))
     items = db.get_fixer_items(con, key, statuses=statuses,
-                               origin=q.get('origin'))
+                               origin=db.plain_origin(q.get('origin')))
 
     if key.startswith('db:'):
         # a book with no file (its units name no file, so no item matches
