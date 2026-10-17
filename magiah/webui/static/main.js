@@ -46,11 +46,26 @@ async function runExport(path, body, label) {
 }
 
 /* ---------------------------------------------------------- views */
+const isReviewView = v => v === "table" || v === "cards";
 function showView(v, skipHash) {
   S.view = v;
-  $$("#viewtabs button[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === v));
-  $("#btnHelp").classList.toggle("active", v === "help");
-  $("#btnScan").classList.toggle("active", v === "scan");
+  if (isReviewView(v)) S.reviewView = v;
+  // the rail names the station; table/cards is a switch inside the review station
+  const station = isReviewView(v) ? "review" : v;
+  $$("#rail .rail-btn[data-station], #rail .rail-btn[data-goview]").forEach(b => {
+    const on = (b.dataset.goview || b.dataset.station) === station;
+    b.classList.toggle("active", on);
+    if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
+  $("#viewtabs").hidden = !isReviewView(v);
+  $$("#viewtabs button[data-view]").forEach(b => {
+    const on = b.dataset.view === v;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
+  // the filter window only filters the table and the cards
+  $("#btnSidebar").hidden = !isReviewView(v);
+  if (!isReviewView(v)) closeFilterDialog();
   $$("section.view").forEach(s => s.classList.toggle("visible", s.id === "view-" + v));
   if (!skipHash) writeHash();
   renderActiveFilters();
@@ -171,7 +186,7 @@ document.addEventListener("focusout", () => showTip(null));
 /* ---------------------------------------------------------- theme */
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
-  $("#btnTheme").replaceChildren(icon(t === "dark" ? "sun" : "moon"), t === "dark" ? " מצב בהיר" : " מצב כהה");
+  $("#btnTheme").replaceChildren(icon(t === "dark" ? "sun" : "moon"), el("span", null, t === "dark" ? "מצב בהיר" : "מצב כהה"));
   try { localStorage.setItem("magiah_theme", t); } catch (e) {}
 }
 function initTheme() {
@@ -213,7 +228,8 @@ function bindControls() {
     filtersChanged();
   }, 350));
   $("#btnUndo").addEventListener("click", doUndo);
-  $$("#topbar [data-goview]").forEach(b => b.addEventListener("click", () => showView(b.dataset.goview)));
+  $$("#rail [data-goview]").forEach(b => b.addEventListener("click", () => showView(b.dataset.goview)));
+  $("#btnReview").addEventListener("click", () => showView(S.reviewView || "table"));
   $$("#viewtabs button[data-view]").forEach(b => b.addEventListener("click", () => showView(b.dataset.view)));
   $("#drawerClose").addEventListener("click", closeDrawer);
   $("#drawerScrim").addEventListener("click", closeDrawer);
