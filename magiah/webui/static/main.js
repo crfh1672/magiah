@@ -57,7 +57,8 @@ function showView(v, skipHash) {
     b.classList.toggle("active", on);
     if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
   });
-  $("#viewtabs").hidden = !isReviewView(v);
+  $("#reviewBar").hidden = !isReviewView(v);
+  $("#tblOnlyTools").hidden = v !== "table";   // columns and density belong to the table
   $$("#viewtabs button[data-view]").forEach(b => {
     const on = b.dataset.view === v;
     b.classList.toggle("active", on);
@@ -210,6 +211,20 @@ function bindControls() {
     filtersChanged();
   });
   $("#fBookSearch").addEventListener("input", loadBooks);
+  $("#fBookSearch").addEventListener("keydown", async ev => {
+    if (ev.key === "Escape" && ev.target.value) {   // first Escape clears; the next closes the window
+      ev.preventDefault(); ev.stopPropagation();
+      ev.target.value = ""; loadBooks();
+    } else if (ev.key === "Enter") {
+      ev.preventDefault();
+      await loadBooksNow();
+      const b = (S.bookList || [])[0];
+      if (!b || !ev.target.value.trim()) { if (ev.target.value.trim()) toast("לא נמצא ספר"); return; }
+      S.filters.book = b.key || b.name || b.source;
+      syncFilterControls();
+      filtersChanged();
+    }
+  });
   $("#fVerified").addEventListener("change", () => { S.filters.verified = $("#fVerified").checked; filtersChanged(); });
   const mrSync = v => {
     S.filters.min_rank = parseFloat(v) || 0;

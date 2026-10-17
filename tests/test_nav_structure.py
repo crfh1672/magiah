@@ -113,6 +113,24 @@ class TestNav(unittest.TestCase):
         self.assertRegex(core, r'p\.set\("v",\s*S\.view\)')
         self.assertTrue(re.search(r'S\.view\s*=\s*p\.get\("v"\)\s*\|\|\s*"table"', core))
 
+    def test_review_toolbar_holds_view_sort_columns_and_density(self):
+        # one row of tools; sort moved out of the filter window, nothing dropped
+        where = {a['id']: anc for _, a, anc in self.nodes if 'id' in a}
+        for i in ('viewtabs', 'fSort', 'colsMenu', 'densitySeg', 'sessionCounter'):
+            self.assertIn('reviewBar', where[i], i)
+        self.assertNotIn('sidebar', where['fSort'])
+        self.assertNotIn('tblTools', self.ids)
+        opts = [a for tag, a, anc in self.nodes
+                if tag == 'option' and 'fSort' in anc]
+        self.assertEqual([o['value'] for o in opts],
+                         ['rank:desc', 'rank:asc', 'random:desc',
+                          'source:asc', 'word:asc'])
+
+    def test_sort_select_has_a_label(self):
+        labels = [a for tag, a, anc in self.nodes
+                  if tag == 'label' and a.get('for') == 'fSort']
+        self.assertEqual(len(labels), 1)
+
 
 if __name__ == '__main__':
     unittest.main()

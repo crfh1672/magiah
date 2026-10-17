@@ -615,7 +615,7 @@ function emptyFilterState() {
 
 /* books list */
 let bookSeq = 0;
-const loadBooks = debounce(async function () {
+async function loadBooksNow() {
   const q = $("#fBookSearch").value.trim();
   // the list's own filters, so a book's count is what choosing it shows
   // (the server leaves the book filter itself out). `q` there is the title
@@ -672,4 +672,5 @@ const loadBooks = debounce(async function () {
     if (seq !== bookSeq) return;
     $("#fBookList").replaceChildren(el("div", { class: "empty" }, "טעינת הספרים נכשלה: " + e.message));
   }
-}, 250);
+}
+const loadBooks = debounce(loadBooksNow, 250);

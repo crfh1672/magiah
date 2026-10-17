@@ -522,13 +522,19 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 #btnClearFilters { background: none; color: var(--muted); }
 #btnClearFilters:hover { color: var(--red); border-color: var(--red); background: var(--red-soft); }
 
-/* ==================== view tabs ==================== */
-#viewtabs {
-  display: flex;
-  gap: var(--sp-2);
+/* ==================== review toolbar: view, sort, columns, density ==================== */
+#reviewBar {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
   margin-bottom: var(--sp-3);
-  flex-wrap: wrap;
   flex: 0 0 auto;   /* never stretch when #main is a flex column (table view) */
+}
+#viewtabs { display: flex; gap: var(--sp-2); }
+.rb-sort { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--muted); }
+.rb-sort select {
+  max-width: 190px; padding: 5px 8px;
+  color: var(--text); background: var(--panel);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
 }
 #viewtabs button {
   display: inline-flex; align-items: center; gap: var(--sp-2);
@@ -544,7 +550,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 }
 #viewtabs button:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 #viewtabs button.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); box-shadow: var(--shadow); }
-#viewtabs .tab-hint { margin-inline-start: auto; align-self: center; color: var(--faint); font-size: var(--fs-xs); }
+#reviewBar .tab-hint { margin-inline-start: auto; align-self: center; color: var(--faint); font-size: var(--fs-xs); }
 
 /* ---- active filter chips ---- */
 #activeFilters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); flex: 0 0 auto; }
@@ -586,10 +592,10 @@ section.view.visible { display: block; animation: view-in var(--t-base); }
   box-shadow: var(--shadow);
 }
 
-#tblTools { display: flex; justify-content: flex-end; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-2); flex: 0 0 auto; }
-#tblTools .menu { min-width: 190px; }
-#tblTools .menu .chk-row { padding: 6px 10px; border-radius: 6px; }
-#tblTools .menu .chk-row:hover { background: var(--accent-soft); color: inherit; }
+#tblOnlyTools { display: flex; align-items: center; gap: var(--sp-3); }
+#tblOnlyTools .menu { min-width: 190px; }
+#tblOnlyTools .menu .chk-row { padding: 6px 10px; border-radius: 6px; }
+#tblOnlyTools .menu .chk-row:hover { background: var(--accent-soft); color: inherit; }
 /* compact density: more rows per screen */
 #tblWrap.compact table.ftable td { padding-top: 2px; padding-bottom: 2px; font-size: var(--fs-xs); }
 #tblWrap.compact table.ftable th { padding-top: 6px; padding-bottom: 6px; }
