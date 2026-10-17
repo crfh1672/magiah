@@ -45,6 +45,28 @@ async function runExport(path, body, label) {
   }
 }
 
+/* Enter in a book search picks the first match; the first Escape clears the
+ * text (the next one closes the window). Used by both search boxes. */
+async function bookSearchKeydown(ev) {
+  const inp = ev.target;
+  if (ev.key === "Escape" && inp.value) {
+    ev.preventDefault(); ev.stopPropagation();
+    setBookQuery(""); loadBooks();
+  } else if (ev.key === "Enter") {
+    ev.preventDefault();
+    loadBooks.cancel();                       // the typed text is searched now, not in 250ms
+    const q = inp.value.trim();
+    if (!q) return;
+    const books = await loadBooksNow();       // never pick from an older list
+    if (books === undefined || inp.value.trim() !== q) return;   // replaced / typing went on
+    if (!books) { toast("חיפוש הספרים נכשל", "err"); return; }
+    if (!books.length) { toast("לא נמצא ספר"); return; }
+    S.filters.book = books[0].key || books[0].name || books[0].source;
+    syncFilterControls();
+    filtersChanged();
+  }
+}
+
 /* ---------------------------------------------------------- views */
 const isReviewView = v => v === "table" || v === "cards";
 function showView(v, skipHash) {
@@ -77,7 +99,7 @@ function showView(v, skipHash) {
 
 function refreshCurrentView() {
   switch (S.view) {
-    case "table": loadTable(); break;
+    case "table": loadTable(); if (bookPaneShown()) loadBooks(); break;
     case "cards": loadFacets(); if (S.cardStale) resetCardQueue(); else { renderCard(); ensureCardQueue(); } break;
     case "fixer": loadFixerBooks().then(loadFixDoc); break;
     case "stats": loadStats(); break;
@@ -210,25 +232,11 @@ function bindControls() {
     loadBooks();
     filtersChanged();
   });
-  $("#fBookSearch").addEventListener("input", loadBooks);
-  $("#fBookSearch").addEventListener("keydown", async ev => {
-    if (ev.key === "Escape" && ev.target.value) {   // first Escape clears; the next closes the window
-      ev.preventDefault(); ev.stopPropagation();
-      ev.target.value = ""; loadBooks();
-    } else if (ev.key === "Enter") {
-      ev.preventDefault();
-      loadBooks.cancel();                       // the typed text is searched now, not in 250ms
-      const q = ev.target.value.trim();
-      if (!q) return;
-      const books = await loadBooksNow();       // never pick from an older list
-      if (books === undefined || ev.target.value.trim() !== q) return;   // replaced / typing went on
-      if (!books) { toast("חיפוש הספרים נכשל", "err"); return; }
-      if (!books.length) { toast("לא נמצא ספר"); return; }
-      S.filters.book = books[0].key || books[0].name || books[0].source;
-      syncFilterControls();
-      filtersChanged();
-    }
-  });
+  for (const id of ["#fBookSearch", "#bpSearch"]) {
+    const inp = $(id);
+    inp.addEventListener("input", () => { setBookQuery(inp.value); loadBooks(); });
+    inp.addEventListener("keydown", bookSearchKeydown);
+  }
   $("#fVerified").addEventListener("change", () => { S.filters.verified = $("#fVerified").checked; filtersChanged(); });
   const mrSync = v => {
     S.filters.min_rank = parseFloat(v) || 0;

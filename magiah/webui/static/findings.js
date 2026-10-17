@@ -224,6 +224,7 @@ async function setStatus(ids, status, opts) {
     }
     updateSessionCounter();
     updateProgress();
+    if (bookPaneShown()) loadBooks();   // the books column's pending counts moved
     if (resp && resp.warnings) for (const w of resp.warnings) toast(w, "err", 8000);
     return resp;
   } catch (e) {
@@ -243,7 +244,7 @@ async function setStatus(ids, status, opts) {
  * current status filter means the change could have moved a row in/out of
  * view, or when no ids are given (bulk/unknown change). */
 function repaintStatuses(ids) {
-  if (S.view === "table") renderTableRows();
+  if (S.view === "table") renderTableRows();   // also redraws the focus pane
   if (S.view !== "fixer") return;
   const editable = !!(S.fixDoc && S.fixDoc.editable);
   if (ids && ids.length && canPatchFixRows()) {
@@ -422,7 +423,7 @@ function activeFilterChips() {
 /* "Clear filters": every filter back to its default. The hide switches stay. */
 function clearFilters() {
   S.filters = DEFAULT_FILTERS();
-  $("#fBookSearch").value = "";
+  setBookQuery("");
   syncFilterControls();
   loadBooks();
   filtersChanged();
@@ -451,7 +452,7 @@ function renderActiveFilters() {
       el("span", null, c.label), icon("x"));
     b.addEventListener("click", () => {
       c.clear();
-      $("#fBookSearch").value = "";
+      setBookQuery("");
       syncFilterControls();
       loadBooks();
       filtersChanged();
@@ -476,7 +477,8 @@ function filtersChanged() {
   refreshCurrentView();
   updateProgress();
   // the counts are only fetched where somebody reads them
-  if (filterDialogOpen()) { loadFacets(); loadBooks(); }
+  if (filterDialogOpen()) loadFacets();
+  if (filterDialogOpen() || bookPaneShown()) loadBooks();
   renderFacetCounts();
 }
 
@@ -615,10 +617,55 @@ function emptyFilterState() {
 
 /* books list */
 let bookSeq = 0;
+/* The book list lives in two places that show the same books: the filter
+ * window (#fBookList) and, on a wide review screen, the books column
+ * (#bpList). One query box value (S.bookQ) feeds both. */
+const bookBoxes = () => [$("#fBookList"), $("#bpList")].filter(Boolean);
+function setBookQuery(v) {
+  S.bookQ = v;
+  for (const id of ["#fBookSearch", "#bpSearch"]) { const i = $(id); if (i && i.value !== v) i.value = v; }
+}
+function renderBookLists(books) {
+  for (const box of bookBoxes()) renderBookItems(box, books);
+  const n = $("#bpCount");
+  if (n) n.textContent = books.length ? fmtNum(books.length) + " ספרים" : "";
+}
+function renderBookItems(box, books) {
+  box.replaceChildren();
+  if (!books.length) { box.append(el("div", { class: "empty" }, "לא נמצאו ספרים")); return books; }
+  // several books can share a title: filter by the stable key, and show
+  // the key next to a title that is not unique
+  const titleCount = new Map();
+  for (const b of books) titleCount.set(b.source, (titleCount.get(b.source) || 0) + 1);
+  for (const b of books.slice(0, 300)) {
+    const name = b.name || b.source || String(b);
+    const key = b.key || name;
+    const label = titleCount.get(b.source) > 1 ? name + " — " + key : name;
+    const pending = b.pending_count != null ? b.pending_count : b.pending;
+    const cnt = b.count ? (pending != null ? fmtNum(pending) + " ממתינים מתוך " : "") + fmtNum(b.count) : "0";
+    const item = el("div", { class: "book-item" + (S.filters.book === key ? " selected" : ""), dataset: { key } },
+      el("span", { class: "bname", title: label }, el("bdi", null, label)),
+      el("span", { class: "bcount" }, cnt));
+    const pick = () => {
+      S.filters.book = S.filters.book === key ? "" : key;
+      syncFilterControls();
+      filtersChanged();
+    };
+    item.addEventListener("click", pick);
+    makeActivatable(item, pick, "button");
+    item.setAttribute("aria-pressed", S.filters.book === key ? "true" : "false");
+    box.append(item);
+  }
+  if (books.length > 300) {
+    box.append(el("div", { class: "empty" }, "מוצגים 300 הראשונים מתוך " + fmtNum(books.length) + " — צמצם בחיפוש"));
+  }
+}
+
+
 /* Returns the books of this very request; null when it failed, undefined when
  * a newer request replaced it. A caller never acts on an older list. */
 async function loadBooksNow() {
-  const q = $("#fBookSearch").value.trim();
+  const q = (S.bookQ || "").trim();
   // the list's own filters, so a book's count is what choosing it shows
   // (the server leaves the book filter itself out). `q` there is the title
   // search; the free-text search of the list goes as `search`.
@@ -641,39 +688,11 @@ async function loadBooksNow() {
     }
     S.bookList = books;
     renderActiveFilters();
-    const box = $("#fBookList");
-    box.replaceChildren();
-    if (!books.length) { box.append(el("div", { class: "empty" }, "לא נמצאו ספרים")); return books; }
-    // several books can share a title: filter by the stable key, and show
-    // the key next to a title that is not unique
-    const titleCount = new Map();
-    for (const b of books) titleCount.set(b.source, (titleCount.get(b.source) || 0) + 1);
-    for (const b of books.slice(0, 300)) {
-      const name = b.name || b.source || String(b);
-      const key = b.key || name;
-      const label = titleCount.get(b.source) > 1 ? name + " — " + key : name;
-      const pending = b.pending_count != null ? b.pending_count : b.pending;
-      const cnt = b.count ? (pending != null ? fmtNum(pending) + " ממתינים מתוך " : "") + fmtNum(b.count) : "0";
-      const item = el("div", { class: "book-item" + (S.filters.book === key ? " selected" : ""), dataset: { key } },
-        el("span", { class: "bname", title: label }, el("bdi", null, label)),
-        el("span", { class: "bcount" }, cnt));
-      const pick = () => {
-        S.filters.book = S.filters.book === key ? "" : key;
-        syncFilterControls();
-        filtersChanged();
-      };
-      item.addEventListener("click", pick);
-      makeActivatable(item, pick, "button");
-      item.setAttribute("aria-pressed", S.filters.book === key ? "true" : "false");
-      box.append(item);
-    }
-    if (books.length > 300) {
-      box.append(el("div", { class: "empty" }, "מוצגים 300 הראשונים מתוך " + fmtNum(books.length) + " — צמצם בחיפוש"));
-    }
+    renderBookLists(books);
     return books;
   } catch (e) {
     if (seq !== bookSeq) return undefined;
-    $("#fBookList").replaceChildren(el("div", { class: "empty" }, "טעינת הספרים נכשלה: " + e.message));
+    for (const box of bookBoxes()) box.replaceChildren(el("div", { class: "empty" }, "טעינת הספרים נכשלה: " + e.message));
     return null;
   }
 }

@@ -227,6 +227,8 @@ const S = {
   lastActions: [],           // local stack for card-restore on undo
   hashLock: false,
   bookList: [],
+  bookQ: "",               // the book search text, shared by the filter window and the books column
+  focusId: null,            // the finding shown in the review focus pane
 };
 
 /* metadata accessors */

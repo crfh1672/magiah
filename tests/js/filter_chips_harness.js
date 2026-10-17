@@ -34,6 +34,7 @@ const code = [
   "function renderFixBookOptions() {}",
   "function syncFilterControls() {}",
   "function loadBooks() {}",
+  "function setBookQuery() {}",
   "function filtersChanged() {}",
   "const S = Object.assign({ view: 'table', page: 1, pageSize: 50, hideIrr: false, hideDb: false }, c.state);",
   "S.filters = Object.assign({ origin: '', book: '', errtypes: [], statuses: [], verified: false, min_rank: 0, q: '', sort: 'rank', dir: 'desc' }, c.state.filters || {});",
