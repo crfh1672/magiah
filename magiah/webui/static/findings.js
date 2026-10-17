@@ -296,7 +296,7 @@ async function doUndo() {
     }
     repaintStatuses();
     updateProgress();
-    if (S.view === "table") loadTable();
+    if (S.view === "table") { loadTable(); if (bookPaneShown()) loadBooks(); }   // the books column counts moved back
   } catch (e) {
     toast("הביטול נכשל: " + e.message, "err");
   }
@@ -693,6 +693,7 @@ async function loadBooksNow() {
   } catch (e) {
     if (seq !== bookSeq) return undefined;
     for (const box of bookBoxes()) box.replaceChildren(el("div", { class: "empty" }, "טעינת הספרים נכשלה: " + e.message));
+    const cnt = $("#bpCount"); if (cnt) cnt.textContent = "";
     return null;
   }
 }

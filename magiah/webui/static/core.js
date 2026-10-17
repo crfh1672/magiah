@@ -229,6 +229,8 @@ const S = {
   bookList: [],
   bookQ: "",               // the book search text, shared by the filter window and the books column
   focusId: null,            // the finding shown in the review focus pane
+  focusBusy: false,         // a page of the queue is loading
+  focusLast: false,         // after a page change, focus its last row (going back)
 };
 
 /* metadata accessors */

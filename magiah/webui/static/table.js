@@ -147,7 +147,7 @@ function renderTableRows() {
     tr.addEventListener("click", activate);
     makeActivatable(tr, activate);
     tr.addEventListener("keydown", ev => rowArrowKeys(ev, tr));
-    tr.setAttribute("aria-haspopup", "dialog");
+    if (!reviewWide()) tr.setAttribute("aria-haspopup", "dialog");   // only where the row opens the drawer
     tb.append(tr);
   }
   ensureFocus();
@@ -160,9 +160,13 @@ async function loadTable() {
   renderTableHead();
   // two quick filter changes send two requests; only the last one may draw
   const seq = ++tableSeq;
+  // the old rows are not the queue any more: the focus pane waits for the new ones
+  S.focusBusy = true;
+  renderFocusPane();
   try {
     const resp = await api("/api/findings?" + filterParams());
     if (seq !== tableSeq) return;
+    S.focusBusy = false;
     S.tableRows = rowsOf(resp);
     S.tableTotal = totalOf(resp);
     renderTableRows();
@@ -170,6 +174,9 @@ async function loadTable() {
     updateBulkBar();
   } catch (e) {
     if (seq !== tableSeq) return;
+    S.focusBusy = false;
+    S.tableRows = [];   // the table shows the error, so no stale queue stays behind it
+    renderFocusPane();
     tb.replaceChildren(el("tr", null, el("td", { class: "empty-row", colspan: String(TABLE_COLS.length + 1) }, "הטעינה נכשלה: " + e.message)));
     toast(e.message, "err");
   }

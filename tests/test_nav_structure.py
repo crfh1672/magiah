@@ -146,7 +146,8 @@ class TestNav(unittest.TestCase):
         with open(INDEX, encoding='utf-8') as f:
             src = f.read()
         self.assertIn('<script src="/static/review.js"></script>', src)
-        # the filter window's list and the column's list use the same item class
+        # both lists use the one renderer's item class; that they stay in step
+        # is checked by test_filter_chips (shared text) and the browser run
         self.assertEqual(src.count('class="booklist"'), 2)
 
     def test_toolbar_is_a_group_not_a_toolbar(self):
