@@ -217,10 +217,14 @@ function bindControls() {
       ev.target.value = ""; loadBooks();
     } else if (ev.key === "Enter") {
       ev.preventDefault();
-      await loadBooksNow();
-      const b = (S.bookList || [])[0];
-      if (!b || !ev.target.value.trim()) { if (ev.target.value.trim()) toast("לא נמצא ספר"); return; }
-      S.filters.book = b.key || b.name || b.source;
+      loadBooks.cancel();                       // the typed text is searched now, not in 250ms
+      const q = ev.target.value.trim();
+      if (!q) return;
+      const books = await loadBooksNow();       // never pick from an older list
+      if (books === undefined || ev.target.value.trim() !== q) return;   // replaced / typing went on
+      if (!books) { toast("חיפוש הספרים נכשל", "err"); return; }
+      if (!books.length) { toast("לא נמצא ספר"); return; }
+      S.filters.book = books[0].key || books[0].name || books[0].source;
       syncFilterControls();
       filtersChanged();
     }

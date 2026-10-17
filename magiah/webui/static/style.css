@@ -593,7 +593,7 @@ section.view.visible { display: block; animation: view-in var(--t-base); }
 }
 
 #tblOnlyTools { display: flex; align-items: center; gap: var(--sp-3); }
-#tblOnlyTools .menu { min-width: 190px; }
+#tblOnlyTools .menu { min-width: 190px; inset-inline-end: auto; inset-inline-start: 0; }   /* opens toward the middle of the screen, never off its edge */
 #tblOnlyTools .menu .chk-row { padding: 6px 10px; border-radius: 6px; }
 #tblOnlyTools .menu .chk-row:hover { background: var(--accent-soft); color: inherit; }
 /* compact density: more rows per screen */

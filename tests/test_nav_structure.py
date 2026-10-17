@@ -126,6 +126,12 @@ class TestNav(unittest.TestCase):
                          ['rank:desc', 'rank:asc', 'random:desc',
                           'source:asc', 'word:asc'])
 
+    def test_toolbar_is_a_group_not_a_toolbar(self):
+        # role=toolbar promises arrow-key navigation, which is not built
+        for tag, a, anc in self.nodes:
+            if a.get('id') == 'reviewBar':
+                self.assertEqual(a.get('role'), 'group')
+
     def test_sort_select_has_a_label(self):
         labels = [a for tag, a, anc in self.nodes
                   if tag == 'label' and a.get('for') == 'fSort']

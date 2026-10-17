@@ -107,7 +107,9 @@ function icon(name, cls) {
 
 function debounce(fn, ms) {
   let t;
-  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+  const d = (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+  d.cancel = () => clearTimeout(t);   // drop a call that has not fired yet
+  return d;
 }
 
 function fmtNum(n) {
