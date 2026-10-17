@@ -78,6 +78,15 @@ async function stepFocus(delta) {
   S.focusLast = delta < 0;
   writeHash();
   await loadTable();
+  // a decision under a status filter takes its row out of the list, so the
+  // total that sent us here may have shrunk by one and the page be empty:
+  // settle on the last page that exists now
+  if (!S.tableRows.length && S.tableTotal > 0) {
+    S.page = lastPage();
+    S.focusLast = false;
+    writeHash();
+    await loadTable();
+  }
   return true;
 }
 

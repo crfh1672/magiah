@@ -175,6 +175,7 @@ async function loadTable() {
   } catch (e) {
     if (seq !== tableSeq) return;
     S.focusBusy = false;
+    S.focusLast = false;   // a failed back-page fetch must not steer the next load
     S.tableRows = [];   // the table shows the error, so no stale queue stays behind it
     renderFocusPane();
     tb.replaceChildren(el("tr", null, el("td", { class: "empty-row", colspan: String(TABLE_COLS.length + 1) }, "הטעינה נכשלה: " + e.message)));
