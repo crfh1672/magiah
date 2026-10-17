@@ -615,7 +615,9 @@ function emptyFilterState() {
 
 /* books list */
 let bookSeq = 0;
-const loadBooks = debounce(async function () {
+/* Returns the books of this very request; null when it failed, undefined when
+ * a newer request replaced it. A caller never acts on an older list. */
+async function loadBooksNow() {
   const q = $("#fBookSearch").value.trim();
   // the list's own filters, so a book's count is what choosing it shows
   // (the server leaves the book filter itself out). `q` there is the title
@@ -630,7 +632,7 @@ const loadBooks = debounce(async function () {
   const seq = ++bookSeq;
   try {
     const resp = await api("/api/books?" + p);
-    if (seq !== bookSeq) return;
+    if (seq !== bookSeq) return undefined;
     let books = Array.isArray(resp) ? resp : (resp.books || resp.rows || []);
     for (const b of books) BOOK_NAMES.set(b.key || b.name || b.source, b.source || b.name || b.key);
     // the chosen book stays on the list, with its 0, so it can be unchosen there
@@ -641,7 +643,7 @@ const loadBooks = debounce(async function () {
     renderActiveFilters();
     const box = $("#fBookList");
     box.replaceChildren();
-    if (!books.length) { box.append(el("div", { class: "empty" }, "לא נמצאו ספרים")); return; }
+    if (!books.length) { box.append(el("div", { class: "empty" }, "לא נמצאו ספרים")); return books; }
     // several books can share a title: filter by the stable key, and show
     // the key next to a title that is not unique
     const titleCount = new Map();
@@ -668,8 +670,11 @@ const loadBooks = debounce(async function () {
     if (books.length > 300) {
       box.append(el("div", { class: "empty" }, "מוצגים 300 הראשונים מתוך " + fmtNum(books.length) + " — צמצם בחיפוש"));
     }
+    return books;
   } catch (e) {
-    if (seq !== bookSeq) return;
+    if (seq !== bookSeq) return undefined;
     $("#fBookList").replaceChildren(el("div", { class: "empty" }, "טעינת הספרים נכשלה: " + e.message));
+    return null;
   }
-}, 250);
+}
+const loadBooks = debounce(loadBooksNow, 250);
