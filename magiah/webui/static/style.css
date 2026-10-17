@@ -135,6 +135,8 @@
   --shadow-focus: 0 0 0 3px var(--primary-100);
 
   --topbar-h: 56px;
+  --rail-w: 76px;
+  --rail-h: 60px;
   --on-accent: #ffffff;   /* text on accent/green fills */
   /* keyboard focus */
   --focus-ring: 2px solid var(--accent);
@@ -235,6 +237,8 @@ body {
   color: var(--text);
   direction: rtl;
   overflow: hidden;
+  display: flex;            /* top bar, status strip, then the workspace */
+  flex-direction: column;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -278,6 +282,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
   box-shadow: var(--shadow);
   position: relative;
   z-index: 30;
+  flex: 0 0 auto;   /* the body is a column: the bar never shrinks */
 }
 #topbar .brand {
   font-size: var(--fs-xl);
@@ -345,8 +350,47 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 /* ==================== layout ==================== */
 #layout {
   display: flex;
-  height: calc(100vh - var(--topbar-h));
-  height: calc(100dvh - var(--topbar-h));
+  flex: 1 1 auto;
+  min-height: 0;            /* what is left under the top bar and the status strip */
+}
+[hidden] { display: none !important; }
+
+/* ==================== navigation rail ==================== */
+#rail {
+  flex: 0 0 var(--rail-w);
+  width: var(--rail-w);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-2) 6px;
+  background: var(--panel);
+  border-inline-end: 1px solid var(--border);
+  overflow-y: auto;
+}
+#rail .rail-spacer { flex: 1; }
+.rail-btn {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  min-height: 58px;
+  padding: 6px 2px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  text-align: center;
+  transition: all var(--t-fast);
+}
+.rail-btn .ic { width: 22px; height: 22px; }
+.rail-btn:hover { background: var(--accent-soft); color: var(--accent-strong); }
+.rail-btn.active { background: var(--accent-soft); color: var(--accent-strong); }
+.rail-btn.active::before {   /* the mark is not colour alone: a bar on the outer edge */
+  content: ""; position: absolute; inset-block: 10px; inset-inline-start: -7px;
+  width: 4px; border-radius: 4px; background: var(--accent);
 }
 /* The filter window: a panel on the right edge at every width (the drawer sits
    on the left). Closed it is visibility:hidden, so it is out of the tab order. */
@@ -1125,11 +1169,16 @@ section#view-cards.visible { display: flex; flex-direction: column; }
 
 /* -- result status: are the findings on screen the latest scan's? -- */
 #resultBanner {
-  display: flex; flex-direction: column; gap: var(--sp-2);
-  margin-bottom: var(--sp-3);
-  flex: 0 0 auto;   /* never shrink when #main is a flex column (table view) */
+  display: flex; flex-direction: column; gap: 0;
+  flex: 0 0 auto;
+  margin: 0;
+  max-height: 38vh; overflow-y: auto;   /* a long notice scrolls; it never pushes the workspace out */
+  border-bottom: 1px solid var(--border);
 }
-#resultBanner[hidden] { display: none; }
+#resultBanner .rb-notice {
+  border-radius: 0; border-width: 0; border-inline-start-width: 5px;
+  border-style: solid;
+}
 .rb-notice {
   display: flex; gap: var(--sp-3); align-items: flex-start;
   background: var(--blue-soft); border: 1px solid var(--blue);
@@ -1468,7 +1517,22 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
   table.ftable td.snip { max-width: 180px; }
 }
 @media (max-width: 760px) {
+  /* the rail becomes a bar along the bottom edge */
+  #layout { flex-direction: column; }
+  #rail {
+    order: 2; flex: 0 0 var(--rail-h); width: auto; height: var(--rail-h);
+    flex-direction: row; gap: 2px; padding: 4px;
+    border-inline-end: 0; border-top: 1px solid var(--border);
+    overflow: hidden;
+  }
+  #rail .rail-spacer { display: none; }
+  #toasts { bottom: calc(var(--rail-h) + 10px); inset-inline: 10px; max-width: none; }   /* above the bar, not over it */
+  .rail-btn { flex: 1 1 0; min-width: 0; min-height: 0; padding: 4px 1px; }
+  .rail-btn.active::before { inset-block: auto; inset-inline: 22%; top: -5px; bottom: auto; width: auto; height: 3px; }
+  #view-cards { min-height: calc(100dvh - var(--topbar-h) - var(--rail-h) - 108px); }
   #progressPill { display: none; }
+  #topbar { padding: 0 var(--sp-2); gap: var(--sp-1); }
+  #topbar .tb-word { display: none; }   /* icon only; the buttons carry aria-labels */
   .bookbar { grid-template-columns: 120px 1fr auto; }
 }
 
