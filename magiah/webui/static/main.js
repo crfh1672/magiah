@@ -63,9 +63,11 @@ function showView(v, skipHash) {
     b.classList.toggle("active", on);
     b.setAttribute("aria-pressed", String(on));
   });
-  // the filter window only filters the table and the cards
-  $("#btnSidebar").hidden = !isReviewView(v);
-  if (!isReviewView(v)) closeFilterDialog();
+  // the filter window filters the table and the cards; the fixer's book list
+  // follows its origin, so the window stays reachable there
+  const filterable = isReviewView(v) || v === "fixer";
+  $("#btnSidebar").hidden = !filterable;
+  if (!filterable) closeFilterDialog();
   $$("section.view").forEach(s => s.classList.toggle("visible", s.id === "view-" + v));
   if (!skipHash) writeHash();
   renderActiveFilters();

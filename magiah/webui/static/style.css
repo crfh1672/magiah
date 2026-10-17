@@ -1526,6 +1526,7 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
     overflow: hidden;
   }
   #rail .rail-spacer { display: none; }
+  #toasts { bottom: calc(var(--rail-h) + 10px); inset-inline: 10px; max-width: none; }   /* above the bar, not over it */
   .rail-btn { flex: 1 1 0; min-width: 0; min-height: 0; padding: 4px 1px; }
   .rail-btn.active::before { inset-block: auto; inset-inline: 22%; top: -5px; bottom: auto; width: auto; height: 3px; }
   #view-cards { min-height: calc(100dvh - var(--topbar-h) - var(--rail-h) - 108px); }
