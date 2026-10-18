@@ -78,7 +78,7 @@ function renderTableHead() {
   tr.append(el("th", null, all));
   for (const c of visibleCols()) {
     const info = colInfo(c.key);
-    const th = el("th", { class: c.sortable ? "sortable" : "" }, info.hebrew);
+    const th = el("th", { class: (c.sortable ? "sortable " : "") + "col-" + c.key }, info.hebrew);
     if (info.explanation) th.append(el("span", { class: "info-i", dataset: { tip: info.explanation } }, "ⓘ"));
     if (c.sortable) {
       if (S.filters.sort === c.key) th.append(el("span", { class: "arrow" }, S.filters.dir === "desc" ? " ▼" : " ▲"));
@@ -111,10 +111,11 @@ function renderTableRows() {
   const cols = visibleCols();
   if (!S.tableRows.length) {
     tb.append(el("tr", null, el("td", { class: "empty-row", colspan: String(cols.length + 1) }, emptyFilterState())));
+    ensureFocus();
     return;
   }
   for (const r of S.tableRows) {
-    const tr = el("tr", { class: S.sel.has(r.id) ? "selrow" : "" });
+    const tr = el("tr", { class: S.sel.has(r.id) ? "selrow" : "", dataset: { id: String(r.id) } });
     const cb = el("input", { type: "checkbox", "aria-label": "בחירת שורה" });
     cb.checked = S.sel.has(r.id);
     cb.addEventListener("click", ev => {
@@ -140,11 +141,16 @@ function renderTableRows() {
       status: () => el("td", null, statusChip(r)),
     };
     for (const c of cols) tr.append(cell[c.key]());
-    tr.addEventListener("click", () => openDrawer(r.id));
-    makeActivatable(tr, () => openDrawer(r.id));
-    tr.setAttribute("aria-haspopup", "dialog");
+    // wide screen: the row is shown in the focus pane (its button opens the
+    // drawer); narrow screen, where there is no pane: the drawer, as always
+    const activate = () => rowActivate(r.id);
+    tr.addEventListener("click", activate);
+    makeActivatable(tr, activate);
+    tr.addEventListener("keydown", ev => rowArrowKeys(ev, tr));
+    if (!reviewWide()) tr.setAttribute("aria-haspopup", "dialog");   // only where the row opens the drawer
     tb.append(tr);
   }
+  ensureFocus();
 }
 
 let tableSeq = 0;
@@ -154,9 +160,13 @@ async function loadTable() {
   renderTableHead();
   // two quick filter changes send two requests; only the last one may draw
   const seq = ++tableSeq;
+  // the old rows are not the queue any more: the focus pane waits for the new ones
+  S.focusBusy = true;
+  renderFocusPane();
   try {
     const resp = await api("/api/findings?" + filterParams());
     if (seq !== tableSeq) return;
+    S.focusBusy = false;
     S.tableRows = rowsOf(resp);
     S.tableTotal = totalOf(resp);
     renderTableRows();
@@ -164,6 +174,10 @@ async function loadTable() {
     updateBulkBar();
   } catch (e) {
     if (seq !== tableSeq) return;
+    S.focusBusy = false;
+    S.focusLast = false;   // a failed back-page fetch must not steer the next load
+    S.tableRows = [];   // the table shows the error, so no stale queue stays behind it
+    renderFocusPane();
     tb.replaceChildren(el("tr", null, el("td", { class: "empty-row", colspan: String(TABLE_COLS.length + 1) }, "הטעינה נכשלה: " + e.message)));
     toast(e.message, "err");
   }

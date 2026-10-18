@@ -126,6 +126,30 @@ class TestNav(unittest.TestCase):
                          ['rank:desc', 'rank:asc', 'random:desc',
                           'source:asc', 'word:asc'])
 
+    def test_review_station_has_three_zones(self):
+        # books | queue | focus, with the existing table as the queue
+        where = {a['id']: anc for _, a, anc in self.nodes if 'id' in a}
+        for i in ('bookPane', 'tblWrap', 'pager', 'focusPane', 'bpSearch', 'bpList'):
+            self.assertIn('reviewGrid', where[i], i)
+        for i in ('bookPane', 'focusPane'):
+            tag = [t for t, a, _ in self.nodes if a.get('id') == i][0]
+            self.assertEqual(tag, 'aside', i)
+        self.assertIn('view-table', where['reviewGrid'])
+        # the books column is named and its search is labelled
+        labels = {a.get('id'): a for _, a, _ in self.nodes if a.get('id') in ('bookPane', 'focusPane', 'bpSearch')}
+        for i, a in labels.items():
+            self.assertTrue(a.get('aria-label'), i)
+        # the drawer is still there
+        self.assertIn('drawer', self.ids)
+
+    def test_review_script_is_loaded_and_the_book_list_is_shared(self):
+        with open(INDEX, encoding='utf-8') as f:
+            src = f.read()
+        self.assertIn('<script src="/static/review.js"></script>', src)
+        # both lists use the one renderer's item class; that they stay in step
+        # is checked by test_filter_chips (shared text) and the browser run
+        self.assertEqual(src.count('class="booklist"'), 2)
+
     def test_toolbar_is_a_group_not_a_toolbar(self):
         # role=toolbar promises arrow-key navigation, which is not built
         for tag, a, anc in self.nodes:
