@@ -1266,7 +1266,6 @@ section#view-cards.visible { display: flex; flex-direction: column; }
   display: grid; grid-template-columns: 360px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 14px;
   align-items: stretch; flex: 1; min-height: 0;
 }
-#fixList { order: -1; }
 @media (min-width: 1151px) {
   #fixList .fix-row { grid-template-columns: 1fr; }
   #fixList .fix-acts { max-width: none; }
