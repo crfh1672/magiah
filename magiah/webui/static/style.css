@@ -134,8 +134,8 @@
   --shadow-lg: 0 6px 28px rgba(20, 32, 45, .18);
   --shadow-focus: 0 0 0 3px var(--primary-100);
 
-  --topbar-h: 56px;
-  --rail-w: 76px;
+  --topbar-h: 48px;
+  --rail-w: 62px;
   --rail-h: 60px;
   --on-accent: #ffffff;   /* text on accent/green fills */
   /* keyboard focus */
@@ -273,46 +273,58 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 /* ==================== top bar ==================== */
 #topbar {
   height: var(--topbar-h);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 380px) 1fr;   /* brand | search | actions, as in the layout prototype */
   align-items: center;
-  gap: var(--sp-2);
+  gap: 10px;
   padding: 0 var(--sp-4);
   background: var(--panel);
   border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow);
   position: relative;
   z-index: 30;
   flex: 0 0 auto;   /* the body is a column: the bar never shrinks */
 }
 #topbar .brand {
-  font-size: var(--fs-xl);
-  font-weight: var(--fw-extrabold);
-  color: var(--accent);
+  font-family: "Frank Ruhl Libre", David, Narkisim, "Times New Roman", serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text);
   white-space: nowrap;
-  letter-spacing: .5px;
-  transition: color var(--t-base);
 }
-#topbar .brand small { font-size: var(--fs-xs); font-weight: var(--fw-normal); color: var(--muted); margin-inline-start: 6px; }
-#globalSearch {
-  flex: 0 1 300px;
-  min-width: 130px;
-  padding: 7px var(--sp-3);
+#searchBox {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: var(--panel-2);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--faint);
+  font-size: var(--fs-sm);
   transition: border-color .15s;
 }
-#globalSearch:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
-#progressPill {
-  padding: 5px var(--sp-3);
-  border-radius: var(--radius-full);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-  font-weight: var(--fw-semibold);
-  white-space: nowrap;
-  font-size: var(--fs-sm);
+#searchBox:focus-within { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+#globalSearch {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: none;
+  color: var(--text); font: inherit; padding: 0;
 }
-#topbar .spacer { flex: 1; }
+#globalSearch::placeholder { color: var(--faint); }
+.kbd {
+  margin-inline-start: auto;
+  font: inherit; font-size: 11px; line-height: 1.5; color: var(--muted);
+  border: 1px solid var(--border-strong); border-radius: 5px; padding: 0 6px; background: var(--panel-2);
+}
+#topActions { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-2); min-width: 0; }
+#progressPill {
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--muted);
+  white-space: nowrap;
+  font-size: 11px;
+}
+/* quiet text buttons in the bar: no box until hovered */
+#topbar .tb-btn { border-color: transparent; background: none; box-shadow: none; color: var(--muted); padding: 4px 6px; font-size: var(--fs-sm); }
+#topbar .tb-btn:hover { color: var(--text); background: var(--accent-soft); }
 .tb-btn.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 
 /* dropdown menus (export, more): <details class="menu-wrap"> */
@@ -362,7 +374,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
-  padding: var(--sp-2) 6px;
+  padding: 6px 0;
   background: var(--panel);
   border-inline-end: 1px solid var(--border);
   overflow-y: auto;
@@ -372,20 +384,20 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
   position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 3px;
-  min-height: 58px;
-  padding: 6px 2px;
+  margin: 3px 7px;
+  padding: 9px 0;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   background: none;
   color: var(--muted);
   cursor: pointer;
-  font-size: 12px;
-  font-weight: var(--fw-semibold);
+  font-size: 12px;   /* the prototype has 11; 12 stays legible */
+  font-weight: var(--fw-normal);
   line-height: 1.2;
   text-align: center;
   transition: all var(--t-fast);
 }
-.rail-btn .ic { width: 22px; height: 22px; }
+.rail-btn .ic { width: 21px; height: 21px; }
 .rail-btn:hover { background: var(--accent-soft); color: var(--accent-strong); }
 .rail-btn.active { background: var(--accent-soft); color: var(--accent-strong); }
 .rail-btn.active::before {   /* the mark is not colour alone: a bar on the outer edge */
@@ -1560,8 +1572,6 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 
 /* ==================== responsive ==================== */
 @media (max-width: 1100px) {
-  #globalSearch { flex-basis: 170px; }
-  #topbar .brand small { display: none; }
   table.ftable td.snip { max-width: 180px; }
 }
 @media (max-width: 760px) {
@@ -1575,11 +1585,12 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
   }
   #rail .rail-spacer { display: none; }
   #toasts { bottom: calc(var(--rail-h) + 10px); inset-inline: 10px; max-width: none; }   /* above the bar, not over it */
-  .rail-btn { flex: 1 1 0; min-width: 0; min-height: 0; padding: 4px 1px; }
+  .rail-btn { flex: 1 1 0; min-width: 0; min-height: 0; margin: 0; padding: 4px 1px; }
   .rail-btn.active::before { inset-block: auto; inset-inline: 22%; top: -5px; bottom: auto; width: auto; height: 3px; }
   #view-cards { min-height: calc(100dvh - var(--topbar-h) - var(--rail-h) - 108px); }
   #progressPill { display: none; }
-  #topbar { padding: 0 var(--sp-2); gap: var(--sp-1); }
+  #topbar { padding: 0 var(--sp-2); gap: var(--sp-1); grid-template-columns: auto minmax(0, 1fr) auto; }
+  .kbd { display: none; }
   #topbar .tb-word { display: none; }   /* icon only; the buttons carry aria-labels */
   .bookbar { grid-template-columns: 120px 1fr auto; }
 }

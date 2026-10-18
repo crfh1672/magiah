@@ -125,6 +125,13 @@ function keyIs(ev, action) {
 }
 
 document.addEventListener("keydown", ev => {
+  // Ctrl+K: straight to the free search
+  if ((ev.ctrlKey || ev.metaKey) && !ev.altKey && (ev.code === "KeyK" || ev.key === "k" || ev.key === "K")) {
+    ev.preventDefault();
+    const box = $("#globalSearch");
+    box.focus(); box.select();
+    return;
+  }
   // Ctrl+Z anywhere — except while typing, where it undoes the text edit
   if (!isTextField(ev.target) && (ev.ctrlKey || ev.metaKey) && (ev.code === "KeyZ" || ev.key === "z" || ev.key === "Z")) {
     ev.preventDefault();
@@ -211,7 +218,9 @@ document.addEventListener("focusout", () => showTip(null));
 /* ---------------------------------------------------------- theme */
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
-  $("#btnTheme").replaceChildren(icon(t === "dark" ? "sun" : "moon"), el("span", null, t === "dark" ? "מצב בהיר" : "מצב כהה"));
+  const btn = $("#btnTheme");
+  btn.replaceChildren(icon(t === "dark" ? "sun" : "moon"));
+  btn.setAttribute("aria-label", t === "dark" ? "מצב בהיר" : "מצב כהה");
   try { localStorage.setItem("magiah_theme", t); } catch (e) {}
 }
 function initTheme() {

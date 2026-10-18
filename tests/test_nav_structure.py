@@ -77,15 +77,16 @@ class TestNav(unittest.TestCase):
             self.assertIn(i, self.ids, i)
 
     def test_the_more_menu_is_gone_and_nothing_was_in_it_alone(self):
-        # scan, help and the theme moved to the rail
+        # scan and help are in the rail; the theme switch is an icon in the top bar
         self.assertNotIn('moreMenu', self.ids)
         in_topbar = {a.get('id') for _, a, anc in self.nodes if 'topbar' in anc}
-        for i in ('btnScan', 'btnHelp', 'btnTheme'):
+        for i in ('btnScan', 'btnHelp'):
             self.assertNotIn(i, in_topbar)
+        self.assertIn('btnTheme', in_topbar)
 
     def test_icon_buttons_keep_an_accessible_name(self):
         for tag, a, anc in self.nodes:
-            if a.get('id') in ('btnUndo', 'btnSidebar'):
+            if a.get('id') in ('btnUndo', 'btnSidebar', 'btnTheme'):
                 self.assertTrue(a.get('aria-label') or a.get('title'), a)
             if 'exportMenu' in anc and tag == 'summary':
                 self.assertTrue(a.get('aria-label'))
