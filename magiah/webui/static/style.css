@@ -1685,6 +1685,18 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 #backupsList .bk-item { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-2); padding: 6px 2px; border-bottom: 1px solid var(--border); font-size: var(--fs-sm); }
 #backupsList .bk-item code { direction: ltr; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-xs); color: var(--muted); }
 
+/* the three scan areas are tabs, one at a time */
+.scan-grid { grid-template-columns: minmax(0, 1fr); }
+.scan-card[hidden] { display: none; }
+#scanTabs { display: flex; gap: var(--sp-1); margin-bottom: var(--sp-3); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.scan-tab {
+  border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted);
+  padding: 8px 14px; cursor: pointer; font: inherit; font-size: var(--fs-md); margin-bottom: -1px;
+}
+.scan-tab:hover { color: var(--text); background: var(--accent-soft); }
+.scan-tab[aria-selected="true"] { color: var(--accent-strong); border-bottom-color: var(--accent); font-weight: var(--fw-semibold); }
+.scan-tab.danger[aria-selected="true"] { color: var(--red); border-bottom-color: var(--red); }
+
 /* §9d — run-scan panel */
 #scanRunSection { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: var(--sp-3); background: var(--panel-2); }
 #scanRunSection > summary { cursor: pointer; font-weight: var(--fw-bold); padding: var(--sp-3) 12px; list-style: none; transition: background var(--t-fast); }
