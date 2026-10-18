@@ -65,6 +65,23 @@ function matrixTable(entries, firstColTitle, labelFn) {
   return el("div", { class: "stats-table-wrap" }, table);
 }
 
+/* one block of the statistics; the "breakdown by" switch shows one or all */
+let statsBy = "all";
+function statsSec(key, title, content) {
+  return el("section", { class: "stats-sec", dataset: { sec: key } }, el("h3", null, title), content);
+}
+function applyStatsBy() {
+  $$("#statsBody .stats-sec").forEach(sec => { sec.hidden = statsBy !== "all" && sec.dataset.sec !== statsBy; });
+  $$("#statsBy .seg-btn").forEach(b => {
+    const on = b.dataset.by === statsBy;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+function initStatsBy() {
+  $$("#statsBy .seg-btn").forEach(b => b.addEventListener("click", () => { statsBy = b.dataset.by; applyStatsBy(); }));
+}
+
 async function loadStats() {
   const body = $("#statsBody");
   body.replaceChildren(el("div", null, "טוען…"));
@@ -84,15 +101,12 @@ async function loadStats() {
   const actors = normalizeMatrix(st.by_actor || {});
   const ACTOR_HE = { human: "אדם", agent: "סוכן", unknown: "לא ידוע (לפני תיעוד)" };
   if (origins.length) {
-    body.append(el("h3", null, "לפי מאגר"));
-    body.append(matrixTable(origins, colInfo("origin").hebrew, l => originInfo(l).hebrew || l));
+    body.append(statsSec("origin", "לפי מאגר", matrixTable(origins, colInfo("origin").hebrew, l => originInfo(l).hebrew || l)));
   }
   if (errts.length) {
-    body.append(el("h3", null, "לפי סוג שגיאה"));
-    body.append(matrixTable(errts, colInfo("errtype").hebrew, l => errtypeInfo(l).hebrew || l));
+    body.append(statsSec("errtype", "לפי סוג שגיאה", matrixTable(errts, colInfo("errtype").hebrew, l => errtypeInfo(l).hebrew || l)));
   }
   if (books.length) {
-    body.append(el("h3", null, "התקדמות לפי ספר"));
     const bars = el("div", { class: "bookbars" });
     for (const b of books) {
       const total = b.total != null ? b.total : Object.values(b.counts).reduce((a, n) => a + n, 0);
@@ -104,12 +118,12 @@ async function loadStats() {
         el("div", { class: "pbar" }, el("div", { style: "width:" + pct + "%" })),
         el("span", { class: "bb-nums" }, fmtNum(done) + " / " + fmtNum(total) + " (" + pct + "%)")));
     }
-    body.append(bars);
+    body.append(statsSec("book", "התקדמות לפי ספר", bars));
   }
   if (actors.length) {
-    body.append(el("h3", null, "לפי מקבל ההחלטה"));
-    body.append(matrixTable(actors, "הוחלט ע״י", l => ACTOR_HE[l] || l));
+    body.append(statsSec("actor", "לפי מקבל ההחלטה", matrixTable(actors, "הוחלט ע״י", l => ACTOR_HE[l] || l)));
   }
+  applyStatsBy();
   if (!origins.length && !errts.length && !books.length) {
     body.append(el("div", null, "אין נתוני סטטיסטיקה להצגה."));
   }

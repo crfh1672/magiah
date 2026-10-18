@@ -349,6 +349,7 @@ async function init() {
   }
   buildSidebar();
   bindTableTools();
+  initStatsBy();
   renderColsMenu();
   renderResultBanner();
   loadBooks();

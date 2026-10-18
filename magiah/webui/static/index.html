@@ -271,7 +271,17 @@
 
     <!-- ===================== stats view ===================== -->
     <section id="view-stats" class="view">
-      <h2><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> סטטיסטיקה והתקדמות</h2>
+      <h2 class="sr-only">סטטיסטיקה והתקדמות</h2>
+      <div class="stats-head">
+        <span id="statsByLabel">פילוח לפי:</span>
+        <div class="seg" id="statsBy" role="group" aria-labelledby="statsByLabel">
+          <button type="button" class="seg-btn active" data-by="all" aria-pressed="true">הכל</button>
+          <button type="button" class="seg-btn" data-by="origin" aria-pressed="false">מאגר</button>
+          <button type="button" class="seg-btn" data-by="errtype" aria-pressed="false">סוג שגיאה</button>
+          <button type="button" class="seg-btn" data-by="book" aria-pressed="false">ספר</button>
+          <button type="button" class="seg-btn" data-by="actor" aria-pressed="false">מקבל ההחלטה</button>
+        </div>
+      </div>
       <div id="statsBody">טוען…</div>
     </section>
 
@@ -281,7 +291,7 @@
       <div id="helpBody">טוען…</div>
     </section>
     <section id="view-scan" class="view">
-      <h2><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> ניהול סריקה</h2>
+      <h2 class="sr-only">ניהול סריקה</h2>
       <div id="scanTabs" role="tablist" aria-label="ניהול סריקה">
         <button type="button" role="tab" id="scanTabRun" class="scan-tab" data-tab="scanPanelRun" aria-controls="scanPanelRun" aria-selected="true">הרצה</button>
         <button type="button" role="tab" id="scanTabData" class="scan-tab" data-tab="scanPanelData" aria-controls="scanPanelData" aria-selected="false" tabindex="-1">נתונים וגיבויים</button>
@@ -289,8 +299,8 @@
       </div>
       <div class="scan-grid">
         <div class="scan-card" id="scanPanelRun" role="tabpanel" aria-labelledby="scanTabRun">
-          <h3>הרצת סריקה</h3>
-          <details id="scanRunSection">
+          <h3 class="sr-only">הרצת סריקה</h3>
+          <details id="scanRunSection" open>
                 <summary>▶ הרצת סריקה חדשה</summary>
                 <div class="scanrun">
                   <div class="f-group">
