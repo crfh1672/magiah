@@ -638,6 +638,16 @@ function renderBookItems(box, books) {
   // the key next to a title that is not unique
   const titleCount = new Map();
   for (const b of books) titleCount.set(b.source, (titleCount.get(b.source) || 0) + 1);
+  if (box.id === "bpList") {
+    // the books column starts with "all books": choosing it clears the book filter
+    const all = el("div", { class: "book-item" + (S.filters.book ? "" : " selected"), dataset: { key: "" } },
+      el("span", { class: "bname" }, "כל הספרים"));
+    const pickAll = () => { if (!S.filters.book) return; S.filters.book = ""; syncFilterControls(); filtersChanged(); };
+    all.addEventListener("click", pickAll);
+    makeActivatable(all, pickAll, "button");
+    all.setAttribute("aria-pressed", S.filters.book ? "false" : "true");
+    box.append(all);
+  }
   for (const b of books.slice(0, 300)) {
     const name = b.name || b.source || String(b);
     const key = b.key || name;

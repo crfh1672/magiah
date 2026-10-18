@@ -267,6 +267,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 /* -------- word/fix coloring, used everywhere -------- */
 .w-err { color: var(--red); font-weight: var(--fw-bold); }
 .w-fix { color: var(--green); font-weight: var(--fw-bold); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .hl-err { color: var(--red); font-weight: var(--fw-bold); background: var(--red-soft); border-radius: 3px; padding: 0 2px; }
 .hl-fix { color: var(--green); font-weight: var(--fw-bold); background: var(--green-soft); border-radius: 3px; padding: 0 2px; }
 
@@ -538,9 +539,15 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 #reviewBar {
   display: flex; align-items: center; flex-wrap: wrap;
   gap: 6px var(--sp-2);
-  margin-bottom: var(--sp-3);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  position: relative; z-index: 6;   /* its menus open over the zones below */
   flex: 0 0 auto;   /* never stretch when #main is a flex column (table view) */
 }
+/* with the toolbar, the zones run edge to edge, ruled by lines instead of floating cards */
+#main:has(> #reviewBar:not([hidden])) { padding: 0; background: var(--panel); }
+#view-cards { padding: var(--sp-4) 20px; }
+#view-fixer { padding: var(--sp-3) 12px 0; }
 .rb-spacer { flex: 1 1 0; }
 #reviewBar.rb-fixer > :not(#filterSlot) { display: none; }
 /* the pill switch: list | cards */
@@ -624,10 +631,8 @@ section.view.visible { display: block; animation: view-in var(--t-base); }
   gap: var(--sp-3);
   flex-wrap: wrap;
   padding: 9px var(--sp-3);
-  margin-bottom: var(--sp-3);
   background: var(--accent-soft);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
+  border-bottom: 1px solid var(--accent);
 }
 #bulkBar.visible { display: flex; flex: 0 0 auto; }
 #bulkBar .bulk-count { font-weight: var(--fw-bold); color: var(--accent-strong); }
@@ -641,6 +646,7 @@ section.view.visible { display: block; animation: view-in var(--t-base); }
    `height: 100%` would ignore #main's padding and overflow by that much. */
 #main:has(> #view-table.visible) { display: flex; flex-direction: column; }
 section#view-table.visible { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+#view-table .card-panel { border: 0; border-radius: 0; box-shadow: none; background: transparent; }
 #view-table .card-panel {
   display: flex;
   flex-direction: column;
@@ -653,35 +659,55 @@ section#view-table.visible { display: flex; flex-direction: column; flex: 1; min
 #reviewGrid { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 #bookPane, #focusPane { display: none; }
 @media (min-width: 1360px) {
-  #reviewGrid { display: grid; grid-template-columns: 230px minmax(0, 1fr) 340px; gap: var(--sp-3); }
-  #bookPane, #focusPane {
-    display: flex; flex-direction: column; min-height: 0; min-width: 0;
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: var(--radius); box-shadow: var(--shadow);
-  }
-  #bookPane { padding: var(--sp-3); gap: var(--sp-2); }
-  #bookPane h2, #focusPane h2 { margin: 0; font-size: var(--fs-md); font-weight: var(--fw-bold); }
+  #reviewGrid { display: grid; grid-template-columns: 190px minmax(0, 1fr) 300px; gap: 0; }
+  #bookPane, #focusPane { display: flex; flex-direction: column; min-height: 0; min-width: 0; position: relative; }
+  #bookPane { background: var(--panel-2); border-inline-end: 1px solid var(--border); padding: var(--sp-2) 0 0; gap: var(--sp-2); }
+  #bookPane > :not(#bpList) { margin-inline: 12px; }
+  #focusPane { border-inline-start: 1px solid var(--border); }
+  #view-table .card-panel { border-inline-start: 0; }
+  #bookPane h2 { margin: 0; }
   #bpSearch { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel-2); }
   #bpSearch:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
-  #bpList { flex: 1; min-height: 0; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel-2); }
+  #bpList { flex: 1; min-height: 0; overflow-y: auto; border: 0; background: none; }
+  /* the prototype's books column: the name over a quiet count; the chosen one tinted */
+  #bpList .book-item { display: block; padding: 8px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+  #bpList .book-item .bname { display: block; font-weight: 500; }
+  #bpList .book-item .bcount { display: block; margin-top: 1px; color: var(--muted); font-size: 11px; }
+  #bpList .book-item.selected { background: var(--accent-soft); color: var(--text); }
+  #bpList .book-item.selected .bcount { color: var(--muted); }
+  #bpTitle { font-size: 11px; font-weight: var(--fw-normal); color: var(--faint); }
   #bpCount { color: var(--muted); font-size: var(--fs-xs); }
-  #focusPane { padding: var(--sp-3); gap: var(--sp-3); overflow-y: auto; }
+  #focusPane { padding: 14px; gap: 10px; overflow-y: auto; }
   /* the sentence is read in the focus pane, so the queue does not spend its width on it */
   #reviewGrid table.ftable th.col-snippet, #reviewGrid table.ftable td.snip { display: none; }
 }
 .booklist .book-item { cursor: pointer; }
 .fp-empty { color: var(--muted); padding: var(--sp-4) var(--sp-2); text-align: center; }
-.fp-nav { display: flex; align-items: center; gap: var(--sp-2); }
-.fp-nav .fp-pos { flex: 1; text-align: center; color: var(--muted); font-size: var(--fs-xs); }
-.fp-pair { font-size: var(--fs-xl); font-weight: var(--fw-bold); display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
-.fp-pair .fp-arrow { color: var(--muted); }
-.fp-snippet { line-height: var(--lh-relaxed); background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); overflow-wrap: anywhere; }
-.fp-meta { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px var(--sp-3); font-size: var(--fs-sm); }
-.fp-meta dt { color: var(--muted); }
-.fp-meta .vbadge { margin-inline-start: var(--sp-2); }
-.fp-meta dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
-.fp-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.fp-actions .btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.fp-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.fp-chips .ch { font-size: 11px; padding: 2px 9px; border-radius: var(--radius-full); border: 1px solid var(--border); background: var(--panel-2); color: var(--muted); white-space: nowrap; }
+.fp-chips .ch.on { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+.fp-where { color: var(--muted); font-size: var(--fs-sm); }
+.fp-snippet {
+  font: 15px/1.9 "Frank Ruhl Libre", David, Narkisim, "Times New Roman", serif;
+  background: var(--panel-2); border-radius: 8px; padding: 8px 10px; overflow-wrap: anywhere;
+}
+.fp-snippet .bad { color: var(--red); text-decoration: line-through; }
+.fp-snippet .good { color: var(--green); font-weight: 500; }
+.fp-act {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 8px;
+  background: var(--panel); color: var(--text); cursor: pointer; font: inherit; font-size: 13px; text-align: start;
+}
+.fp-act:hover { background: var(--accent-soft); }
+.fp-act .kbd { margin-inline-start: auto; }
+.fp-act.ok { background: var(--green-soft); color: var(--green); border-color: var(--green); font-weight: 500; }
+.fp-act[aria-pressed="true"] { box-shadow: inset 0 0 0 2px currentColor; font-weight: 600; }
+.fp-actions { display: flex; flex-direction: column; gap: 8px; }
+.fp-more > summary { cursor: pointer; color: var(--accent); font-size: var(--fs-sm); list-style: none; padding: 2px 0; }
+.fp-more > summary::-webkit-details-marker { display: none; }
+.fp-more-body { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.fp-nav { display: flex; align-items: center; gap: var(--sp-2); margin-top: auto; padding-top: var(--sp-2); }
+.fp-nav .fp-pos { flex: 1; text-align: center; color: var(--faint); font-size: 12px; }
 table.ftable tr.focusrow td { background: var(--accent-soft); }
 table.ftable tr.focusrow td:first-child { box-shadow: inset 4px 0 0 var(--accent); }
 #tblWrap { overflow: auto; flex: 1; min-height: 0; }
@@ -690,11 +716,12 @@ table.ftable th {
   position: sticky;
   top: 0;
   background: var(--panel-2);
-  border-bottom: 2px solid var(--border-strong);
-  padding: 9px var(--sp-2);
+  border-bottom: 1px solid var(--border);
+  padding: 5px 12px;
   text-align: right;
-  font-size: var(--fs-xs);
-  color: var(--muted);
+  font-size: 11px;
+  font-weight: var(--fw-normal);
+  color: var(--faint);
   white-space: nowrap;
   z-index: 5;
   user-select: none;
@@ -703,10 +730,18 @@ table.ftable th.sortable { cursor: pointer; transition: color var(--t-fast); }
 table.ftable th.sortable:hover { color: var(--accent); }
 table.ftable th .arrow { font-size: var(--fs-xs); color: var(--accent); }
 table.ftable td {
-  padding: 7px var(--sp-2);
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
+/* words in the reading face, as in the prototype */
+table.ftable td .w-err, table.ftable td .w-fix { font-family: "Frank Ruhl Libre", David, Narkisim, "Times New Roman", serif; font-size: 17px; font-weight: 500; }
+table.ftable td.wordcell { white-space: nowrap; position: relative; }   /* holds the visually hidden status name */
+.sdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); margin-inline-end: 8px; vertical-align: middle; flex: none; }
+.sdot.st-approved, .sdot.st-fixed { background: var(--green); }
+.sdot.st-not_error { background: var(--red); }
+.sdot.st-unsure { background: var(--amber); }
+.sdot.st-ignored { background: var(--faint); }
 table.ftable tbody tr { cursor: pointer; transition: background var(--t-fast); }
 table.ftable tbody tr:hover { background: var(--accent-soft); }
 table.ftable tbody tr:focus-visible { outline-offset: -2px; background: var(--accent-soft); }
@@ -733,11 +768,12 @@ table.ftable td.bookcell { max-width: 150px; overflow: hidden; text-overflow: el
 table.ftable td.refcell { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: var(--fs-xs); }
 .et-tag {
   display: inline-block;
-  font-size: var(--fs-xs);
-  background: var(--slate-soft);
-  color: var(--slate);
-  border-radius: 9px;
-  padding: 1px var(--sp-2);
+  font-size: 11px;
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 9px;
   white-space: nowrap;
 }
 

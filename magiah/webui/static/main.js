@@ -151,7 +151,9 @@ document.addEventListener("keydown", ev => {
   // Space on a focused button / summary / link belongs to that control
   if ((ev.code === "Space" || ev.key === " ") && isControl(t)) return;
 
-  if (S.view === "cards") {
+  if (S.view === "table") {
+    if (!ev.ctrlKey && !ev.metaKey && !ev.altKey) focusKeyDecide(ev);   // the Hebrew keys, on the finding shown in the pane
+  } else if (S.view === "cards") {
     if (keyIs(ev, "approve")) { ev.preventDefault(); cardAct("approved"); }
     else if (keyIs(ev, "reject")) { ev.preventDefault(); cardAct("not_error"); }
     else if (keyIs(ev, "rejectAll")) { ev.preventDefault(); cardAct("not_error", { scope: "word" }); }

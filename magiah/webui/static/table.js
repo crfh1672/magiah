@@ -18,13 +18,18 @@ const TABLE_COLS = [
 
 /* The word and its suggestion are what the table is for: they cannot be hidden. */
 const LOCKED_COLS = new Set(["word", "suggestion"]);
+/* what a reviewer who has not chosen sees: the word, its fix and the kind of error.
+ * The rest is one click away in the columns menu. */
+const DEFAULT_HIDDEN_COLS = ["rank", "verified", "source", "ref", "snippet", "status"];
 const visibleCols = () => TABLE_COLS.filter(c => !S.hiddenCols.has(c.key));
 
 function loadTablePrefs() {
   try {
     const d = localStorage.getItem("magiah_density");
     if (d === "compact" || d === "comfortable") S.density = d;
-    const h = JSON.parse(localStorage.getItem("magiah_hidden_cols") || "[]");
+    const saved = localStorage.getItem("magiah_hidden_cols");
+    if (saved === null) { S.hiddenCols = new Set(DEFAULT_HIDDEN_COLS); return; }
+    const h = JSON.parse(saved);
     if (Array.isArray(h)) S.hiddenCols = new Set(h.filter(k => TABLE_COLS.some(c => c.key === k) && !LOCKED_COLS.has(k)));
   } catch (e) {}
 }
@@ -128,7 +133,14 @@ function renderTableRows() {
     // one cell per column; letter-level diff on the word pair, so scanning the
     // table shows *what* changed
     const cell = {
-      word: () => el("td", null, wordDiffNode(r.word || "", effFix(r), "err", "w-err")),
+      word: () => {
+        // the status as a dot (never colour alone: its name is read out)
+        const st = effStatus(r);
+        return el("td", { class: "wordcell" },
+          el("span", { class: "sdot st-" + st, "aria-hidden": "true" }),
+          el("span", { class: "sr-only" }, statusInfo(st).hebrew + ": "),
+          wordDiffNode(r.word || "", effFix(r), "err", "w-err"));
+      },
       suggestion: () => el("td", null, effFix(r)
         ? wordDiffNode(effFix(r), r.word || "", "fix", "w-fix")
         : el("bdi", { class: "w-fix" }, "")),
