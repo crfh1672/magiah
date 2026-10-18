@@ -161,6 +161,23 @@ class TestNav(unittest.TestCase):
                   if tag == 'label' and a.get('for') == 'fSort']
         self.assertEqual(len(labels), 1)
 
+    def test_scan_tabs_cover_every_area_and_keep_the_danger_zone_typed(self):
+        ids = {a.get('id'): a for tag, a, anc in self.nodes if a.get('id')}
+        tabs = [a for tag, a, anc in self.nodes if a.get('role') == 'tab']
+        self.assertEqual([t['id'] for t in tabs],
+                         ['scanTabRun', 'scanTabData', 'scanTabDanger'])
+        for t in tabs:
+            panel = ids[t['aria-controls']]
+            self.assertEqual(panel.get('role'), 'tabpanel')
+            self.assertEqual(panel.get('aria-labelledby'), t['id'])
+        # what the screen offered before is still in it
+        for must in ('scanStart', 'bsStart', 'scanRefresh', 'scanImportLegacy',
+                     'backupsList', 'dzStatusesInput', 'dzStatusesGo',
+                     'dzAllInput', 'dzAllGo'):
+            self.assertIn(must, ids)
+        self.assertIn('disabled', ids['dzStatusesGo'])
+        self.assertIn('disabled', ids['dzAllGo'])
+
 
 if __name__ == '__main__':
     unittest.main()
