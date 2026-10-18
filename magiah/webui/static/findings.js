@@ -436,6 +436,7 @@ function renderActiveFilters() {
   const btn = $("#btnSidebar");
   if (btn) {
     $("#filterBtnCount").textContent = n ? fmtNum(n) : "";
+    btn.classList.toggle("has-filters", n > 0);
     btn.setAttribute("aria-label", n ? "סינון הממצאים, " + fmtNum(n) + " מסננים פעילים" : "סינון הממצאים");
   }
   const box = $("#activeFilters");

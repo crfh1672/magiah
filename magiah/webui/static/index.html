@@ -53,7 +53,6 @@
   </div>
   <div id="topActions">
     <div id="progressPill" title="התקדמות בסינון הנוכחי">טוען…</div>
-    <button id="btnSidebar" class="tb-btn" title="סינון הממצאים" aria-haspopup="dialog" aria-expanded="false" aria-controls="sidebar"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg> <span class="tb-word">סינון</span><span id="filterBtnCount"></span></button>
     <button id="btnTheme" class="tb-btn" title="מצב כהה / בהיר" aria-label="מצב כהה"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg></button>
     <button id="btnUndo" class="tb-btn" title="ביטול הפעולה האחרונה (Ctrl+Z)" aria-label="ביטול הפעולה האחרונה"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg> <span class="tb-word">ביטול</span></button>
     <details id="exportMenu" class="menu-wrap">
@@ -142,13 +141,16 @@
   <main id="main">
     <div id="reviewBar" role="group" aria-label="כלי הסקירה">
       <div id="viewtabs" role="group" aria-label="תצוגת הסקירה">
-        <button type="button" data-view="table" class="active" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg> <span class="rb-word">טבלה</span></button>
-        <button type="button" data-view="cards" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg> <span class="rb-word">כרטיסים</span></button>
+        <button type="button" data-view="table" class="active" aria-pressed="true">רשימה</button>
+        <button type="button" data-view="cards" aria-pressed="false">כרטיסים</button>
       </div>
-      <label class="rb-sort" for="fSort">מיון
+      <div id="filterSlot"><button id="btnSidebar" class="ch-btn filter-btn" title="סינון הממצאים" aria-haspopup="dialog" aria-expanded="false" aria-controls="sidebar"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg> <span class="tb-word">סינון</span><span id="filterBtnCount"></span></button></div>
+      <div id="activeFilters" role="group" aria-label="סינונים פעילים" hidden></div>
+      <span class="rb-spacer"></span>
+      <label class="rb-sort" for="fSort">סדר:
         <select id="fSort">
-        <option value="rank:desc">ציון — מהגבוה לנמוך</option>
-        <option value="rank:asc">ציון — מהנמוך לגבוה</option>
+        <option value="rank:desc">ציון, מהגבוה לנמוך</option>
+        <option value="rank:asc">ציון, מהנמוך לגבוה</option>
         <option value="random:desc">אקראי</option>
         <option value="source:asc">לפי ספר</option>
         <option value="word:asc">לפי מילה</option>
@@ -156,17 +158,22 @@
       </label>
       <div id="tblOnlyTools">
         <details id="colsMenu" class="menu-wrap">
-          <summary class="btn sm">עמודות</summary>
-          <div class="menu" id="colsMenuBody"></div>
+          <summary class="ch-btn">עמודות</summary>
+          <div class="menu">
+            <div id="colsMenuBody"></div>
+            <div class="menu-sep" role="separator"></div>
+            <div class="menu-density">
+              <span id="densityLabel">צפיפות</span>
+              <div class="seg" id="densitySeg" role="group" aria-labelledby="densityLabel">
+                <button type="button" class="seg-btn active" data-density="comfortable" aria-pressed="true">נינוח</button>
+                <button type="button" class="seg-btn" data-density="compact" aria-pressed="false">צפוף</button>
+              </div>
+            </div>
+          </div>
         </details>
-        <div class="seg" id="densitySeg" role="group" aria-label="צפיפות הטבלה">
-          <button type="button" class="seg-btn active" data-density="comfortable" aria-pressed="true">נינוח</button>
-          <button type="button" class="seg-btn" data-density="compact" aria-pressed="false">צפוף</button>
-        </div>
       </div>
       <span class="tab-hint" id="sessionCounter"></span>
     </div>
-    <div id="activeFilters" role="group" aria-label="סינונים פעילים" hidden></div>
 
     <!-- ===================== table view ===================== -->
     <section id="view-table" class="view visible">

@@ -79,7 +79,9 @@ function showView(v, skipHash) {
     b.classList.toggle("active", on);
     if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
   });
-  $("#reviewBar").hidden = !isReviewView(v);
+  // the review's toolbar; in the fixer only its filter button stays
+  $("#reviewBar").hidden = !(isReviewView(v) || v === "fixer");
+  $("#reviewBar").classList.toggle("rb-fixer", v === "fixer");
   $("#tblOnlyTools").hidden = v !== "table";   // columns and density belong to the table
   $$("#viewtabs button[data-view]").forEach(b => {
     const on = b.dataset.view === v;

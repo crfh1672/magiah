@@ -534,44 +534,48 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
 #btnClearFilters { background: none; color: var(--muted); }
 #btnClearFilters:hover { color: var(--red); border-color: var(--red); background: var(--red-soft); }
 
-/* ==================== review toolbar: view, sort, columns, density ==================== */
+/* ==================== review toolbar: view, filter, chips | sort, columns ==================== */
 #reviewBar {
   display: flex; align-items: center; flex-wrap: wrap;
-  gap: var(--sp-2) var(--sp-3);
+  gap: 6px var(--sp-2);
   margin-bottom: var(--sp-3);
   flex: 0 0 auto;   /* never stretch when #main is a flex column (table view) */
 }
-#viewtabs { display: flex; gap: var(--sp-2); }
-.rb-sort { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--muted); }
-.rb-sort select {
-  max-width: 190px; padding: 5px 8px;
-  color: var(--text); background: var(--panel);
-  border: 1px solid var(--border); border-radius: var(--radius-sm);
-}
+.rb-spacer { flex: 1 1 0; }
+#reviewBar.rb-fixer > :not(#filterSlot) { display: none; }
+/* the pill switch: list | cards */
+#viewtabs { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-full); overflow: hidden; font-size: var(--fs-sm); background: var(--panel); }
 #viewtabs button {
-  display: inline-flex; align-items: center; gap: var(--sp-2);
-  padding: 8px 18px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  font-weight: var(--fw-semibold);
-  font-size: var(--fs-sm);
-  color: var(--muted);
-  transition: all var(--t-fast);
+  padding: 3px 13px; border: 0; background: none; cursor: pointer;
+  color: var(--muted); font: inherit; font-size: var(--fs-sm);
 }
-#viewtabs button:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
-#viewtabs button.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); box-shadow: var(--shadow); }
-#reviewBar .tab-hint { margin-inline-start: auto; align-self: center; color: var(--faint); font-size: var(--fs-xs); }
+#viewtabs button:hover { color: var(--text); }
+#viewtabs button.active { background: var(--accent-soft); color: var(--accent-strong); }
+/* chip-like controls: filter, sort, columns */
+.ch-btn, .rb-sort select {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border: 1px solid var(--border); border-radius: var(--radius-full);
+  background: var(--panel-2); color: var(--muted); font: inherit; font-size: var(--fs-sm);
+  cursor: pointer; list-style: none;
+}
+.ch-btn:hover, .rb-sort select:hover { color: var(--text); border-color: var(--border-strong); }
+.ch-btn::-webkit-details-marker { display: none; }
+#colsMenu > summary::after { content: "▾"; font-size: 10px; margin-inline-start: 2px; }
+.filter-btn.has-filters { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+.rb-sort { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: var(--fs-sm); color: var(--muted); }
+.rb-sort select { max-width: 210px; color: var(--text); }
+#reviewBar .tab-hint { align-self: center; color: var(--faint); font-size: var(--fs-xs); }
+.menu-sep { height: 1px; background: var(--border); margin: 6px 0; }
+.menu-density { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: 4px 10px; font-size: var(--fs-sm); color: var(--muted); }
 
 /* ---- active filter chips ---- */
-#activeFilters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); flex: 0 0 auto; }
+#activeFilters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; flex: 0 1 auto; }
 #activeFilters[hidden] { display: none; }
 .fchip {
   display: inline-flex; align-items: center; gap: var(--sp-1);
-  padding: 3px 6px 3px 10px; border-radius: 14px;
-  border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent-strong);
-  font: inherit; font-size: var(--fs-xs); font-weight: 600; cursor: pointer;
+  padding: 2px 9px; border-radius: var(--radius-full);
+  border: 1px solid var(--border); background: var(--panel-2); color: var(--muted);
+  font: inherit; font-size: 11px; cursor: pointer; white-space: nowrap;
 }
 .fchip .ic { width: 14px; height: 14px; }
 .fchip:hover { background: var(--red-soft); border-color: var(--red); color: var(--red); }
@@ -604,8 +608,10 @@ section.view.visible { display: block; animation: view-in var(--t-base); }
   box-shadow: var(--shadow);
 }
 
-#tblOnlyTools { display: flex; align-items: center; gap: var(--sp-3); }
+#tblOnlyTools { display: flex; align-items: center; gap: var(--sp-2); }
 #tblOnlyTools .menu { min-width: 190px; inset-inline-end: auto; inset-inline-start: 0; }   /* opens toward the middle of the screen, never off its edge */
+/* on wide screens the button sits at the left edge: the menu opens from it toward the middle */
+@media (min-width: 761px) { #tblOnlyTools .menu { inset-inline-start: auto; inset-inline-end: 0; } }
 #tblOnlyTools .menu .chk-row { padding: 6px 10px; border-radius: 6px; }
 #tblOnlyTools .menu .chk-row:hover { background: var(--accent-soft); color: inherit; }
 /* compact density: more rows per screen */
@@ -1574,6 +1580,11 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 @media (max-width: 1100px) {
   table.ftable td.snip { max-width: 180px; }
 }
+/* mid widths: the actions would run into the centred search, so they lose their words (the buttons keep aria-labels) */
+@media (max-width: 1000px) {
+  #topbar .tb-word { display: none; }
+  #topbar { grid-template-columns: 1fr minmax(0, 300px) 1fr; }
+}
 @media (max-width: 760px) {
   /* the rail becomes a bar along the bottom edge */
   #layout { flex-direction: column; }
@@ -1757,16 +1768,3 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 .bs-ctx { margin-top: var(--sp-3); align-items: flex-start; }
 #scanLog { direction: ltr; text-align: left; unicode-bidi: plaintext; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); max-height: 220px; overflow: auto; font-family: var(--font-mono); font-size: 11.5px; line-height: var(--lh-normal); white-space: pre-wrap; word-break: break-all; margin: 0; }
 
-/* narrow screens: the filter button keeps its icon and the number, not the word */
-@media (max-width: 760px) {
-  #btnSidebar { position: relative; }
-  #btnSidebar .tb-word { display: none; }
-  #filterBtnCount:not(:empty)::before { content: none; }
-  /* the number sits on the icon as a badge, so the top bar does not grow */
-  #filterBtnCount:not(:empty) {
-    position: absolute; top: -4px; inset-inline-start: -4px;
-    min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box;
-    border-radius: 9px; background: var(--accent); color: var(--on-accent);
-    font-size: var(--fs-xs); font-weight: var(--fw-bold); line-height: 18px; text-align: center;
-  }
-}
