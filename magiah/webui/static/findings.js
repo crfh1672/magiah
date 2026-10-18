@@ -351,7 +351,9 @@ function buildSidebar() {
   }
   // the fixer's own copy of the origin choice
   const fsel = $("#fixOrigin");
-  fsel.replaceChildren(...[...sel.options].map(o => el("option", { value: o.value }, o.textContent)));
+  // no counts here and no "no origin" entry: the fixer needs a named origin
+  fsel.replaceChildren(el("option", { value: "" }, "כל המאגרים"),
+    ...(m.origins || []).filter(o => o.name !== NO_ORIGIN).map(o => el("option", { value: o.name }, o.hebrew || o.name)));
   fsel.value = S.filters.origin;
   // errtypes
   const et = $("#fErrtypes");

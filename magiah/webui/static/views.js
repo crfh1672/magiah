@@ -71,6 +71,8 @@ function statsSec(key, title, content) {
   return el("section", { class: "stats-sec", dataset: { sec: key } }, el("h3", null, title), content);
 }
 function applyStatsBy() {
+  // a breakdown with no rows must not blank the page
+  if (statsBy !== "all" && !$(`#statsBody .stats-sec[data-sec="${statsBy}"]`) && $$("#statsBody .stats-sec").length) statsBy = "all";
   $$("#statsBody .stats-sec").forEach(sec => { sec.hidden = statsBy !== "all" && sec.dataset.sec !== statsBy; });
   $$("#statsBy .seg-btn").forEach(b => {
     const on = b.dataset.by === statsBy;

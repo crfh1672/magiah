@@ -240,6 +240,7 @@ function bindControls() {
   $("#fOrigin").addEventListener("change", () => {
     S.filters.origin = $("#fOrigin").value;
     S.filters.book = "";
+    syncFilterControls();
     loadBooks();
     filtersChanged();
   });
@@ -282,9 +283,9 @@ function bindControls() {
   $("#fixOrigin").addEventListener("change", () => {
     S.filters.origin = $("#fixOrigin").value;
     S.filters.book = "";
+    S.fixKey = "";   // the open book may not belong to the new origin
     syncFilterControls();
-    filtersChanged();
-    loadFixerBooks().then(loadFixDoc);
+    filtersChanged();   // reloads the fixer
   });
   $("#fixInclude").addEventListener("change", () => {
     S.fixInclude = $("#fixInclude").checked;
