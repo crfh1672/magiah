@@ -1695,7 +1695,8 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 }
 .scan-tab:hover { color: var(--text); background: var(--accent-soft); }
 .scan-tab[aria-selected="true"] { color: var(--accent-strong); border-bottom-color: var(--accent); font-weight: var(--fw-semibold); }
-.scan-tab.danger[aria-selected="true"] { color: var(--red); border-bottom-color: var(--red); }
+.scan-tab.danger, .scan-tab.danger:hover { color: var(--red); }
+.scan-tab.danger[aria-selected="true"] { border-bottom-color: var(--red); }
 
 /* §9d — run-scan panel */
 #scanRunSection { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: var(--sp-3); background: var(--panel-2); }
