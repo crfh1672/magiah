@@ -323,6 +323,7 @@ function updateSessionCounter() {
 function syncFilterControls() {
   const f = S.filters;
   $("#fOrigin").value = f.origin;
+  $("#fixOrigin").value = f.origin;
   $("#fVerified").checked = f.verified;
   $("#fMinRank").value = f.min_rank;
   $("#fMinRankVal").value = f.min_rank;
@@ -348,6 +349,10 @@ function buildSidebar() {
   for (const o of (m.origins || [])) {
     sel.append(el("option", { value: o.name }, (o.hebrew || o.name) + (o.count != null ? " (" + fmtNum(o.count) + ")" : "")));
   }
+  // the fixer's own copy of the origin choice
+  const fsel = $("#fixOrigin");
+  fsel.replaceChildren(...[...sel.options].map(o => el("option", { value: o.value }, o.textContent)));
+  fsel.value = S.filters.origin;
   // errtypes
   const et = $("#fErrtypes");
   et.replaceChildren();

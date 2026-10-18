@@ -279,6 +279,13 @@ function bindControls() {
   $("#filterClose").addEventListener("click", closeFilterDialog);
   $("#filterDone").addEventListener("click", closeFilterDialog);
   $("#fixBook").addEventListener("change", () => { S.fixKey = $("#fixBook").value; writeHash(); loadFixDoc(); });
+  $("#fixOrigin").addEventListener("change", () => {
+    S.filters.origin = $("#fixOrigin").value;
+    S.filters.book = "";
+    syncFilterControls();
+    filtersChanged();
+    loadFixerBooks().then(loadFixDoc);
+  });
   $("#fixInclude").addEventListener("change", () => {
     S.fixInclude = $("#fixInclude").checked;
     writeHash();
