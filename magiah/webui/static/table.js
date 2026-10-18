@@ -168,7 +168,7 @@ function renderTableRows() {
 let tableSeq = 0;
 async function loadTable() {
   const tb = $("#tblBody");
-  tb.replaceChildren(el("tr", null, el("td", { class: "loading-row", colspan: String(TABLE_COLS.length + 1) }, "טוען ממצאים…")));
+  tb.replaceChildren(el("tr", null, el("td", { class: "loading-row", colspan: String(visibleCols().length + 1) }, "טוען ממצאים…")));
   renderTableHead();
   // two quick filter changes send two requests; only the last one may draw
   const seq = ++tableSeq;
@@ -190,7 +190,7 @@ async function loadTable() {
     S.focusLast = false;   // a failed back-page fetch must not steer the next load
     S.tableRows = [];   // the table shows the error, so no stale queue stays behind it
     renderFocusPane();
-    tb.replaceChildren(el("tr", null, el("td", { class: "empty-row", colspan: String(TABLE_COLS.length + 1) }, "הטעינה נכשלה: " + e.message)));
+    tb.replaceChildren(el("tr", null, el("td", { class: "empty-row", colspan: String(visibleCols().length + 1) }, "הטעינה נכשלה: " + e.message)));
     toast(e.message, "err");
   }
 }

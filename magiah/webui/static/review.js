@@ -112,7 +112,15 @@ function focusKeyDecide(ev) {
 function swapSentence(snippet, word, fix) {
   const s = snippet == null ? "" : String(snippet), w = word || "";
   const i = s && w ? locateWord(s, w) : -1;
-  if (i < 0 || !fix || fix === w) return renderSnippet(snippet, word, null, fix);
+  if (i < 0 || !fix || fix === w) {
+    if (i < 0 && w) {   // the sentence does not hold the word: still show the word and its fix
+      const fb = el("bdi");
+      fb.append(s || "—", " ", el("span", { class: "bad" }, w));
+      if (fix && fix !== w) fb.append(" ", el("span", { class: "good" }, fix));
+      return fb;
+    }
+    return renderSnippet(snippet, word, null, fix);
+  }
   const b = el("bdi");
   b.append(s.slice(0, i), el("span", { class: "bad" }, w), " ", el("span", { class: "good" }, fix), s.slice(i + w.length));
   return b;
