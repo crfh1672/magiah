@@ -106,6 +106,16 @@ class FilterChipsTest(unittest.TestCase):
             'dir': 'desc'})
         self.assertEqual((r['hideIrr'], r['hideDb']), (True, True))
 
+    def test_the_book_search_text_is_one_value_in_both_boxes(self):
+        # typed in the filter window or in the books column, it shows in both
+        a, b, c = self.run_cases(
+            {'op': 'bookQuery', 'set': 'משנה', 'dialog': 'משנה'},
+            {'op': 'bookQuery', 'set': 'משנה', 'column': 'משנה'},
+            {'op': 'bookQuery', 'set': '', 'dialog': 'x', 'column': 'y'})
+        for r in (a, b):
+            self.assertEqual(r, {'q': 'משנה', 'dialog': 'משנה', 'column': 'משנה'})
+        self.assertEqual(c, {'q': '', 'dialog': '', 'column': ''})
+
     def test_the_counts_query_is_the_lists_without_paging_and_sorting(self):
         (r,) = self.run_cases({'op': 'query', 'state': {
             'filters': dict(ALL, sort='word', dir='asc'), 'page': 3,

@@ -483,7 +483,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
   margin-top: 6px;
   background: var(--panel-2);
 }
-#fBookList .book-item {
+.booklist .book-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -493,14 +493,14 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offs
   border-bottom: 1px solid var(--border);
   font-size: var(--fs-sm);
 }
-#fBookList .book-item:last-child { border-bottom: none; }
-#fBookList .book-item:hover { background: var(--accent-soft); }
-#fBookList .book-item:focus-visible, #bsResults .bs-item:focus-visible { outline-offset: -2px; }
-#fBookList .book-item.selected { background: var(--accent); color: var(--on-accent); }
-#fBookList .book-item .bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#fBookList .book-item .bcount { color: var(--faint); font-size: var(--fs-xs); flex-shrink: 0; }
-#fBookList .book-item.selected .bcount { color: color-mix(in srgb, var(--on-accent) 80%, transparent); }
-#fBookList .empty { padding: 8px; color: var(--faint); font-size: var(--fs-xs); }
+.booklist .book-item:last-child { border-bottom: none; }
+.booklist .book-item:hover { background: var(--accent-soft); }
+.booklist .book-item:focus-visible, #bsResults .bs-item:focus-visible { outline-offset: -2px; }
+.booklist .book-item.selected { background: var(--accent); color: var(--on-accent); }
+.booklist .book-item .bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.booklist .book-item .bcount { color: var(--faint); font-size: var(--fs-xs); flex-shrink: 0; }
+.booklist .book-item.selected .bcount { color: color-mix(in srgb, var(--on-accent) 80%, transparent); }
+.booklist .empty { padding: 8px; color: var(--faint); font-size: var(--fs-xs); }
 
 .chk-row {
   display: flex;
@@ -629,6 +629,43 @@ section#view-table.visible { display: flex; flex-direction: column; flex: 1; min
   min-height: 0;   /* let the flex child actually shrink so #tblWrap can scroll */
   flex: 1;
 }
+/* The review station's three zones: books | queue | focus. Below 1360px the
+   side zones are not drawn (books are chosen in the filter window, a row opens
+   the drawer, as before) and the grid is just the queue. */
+#reviewGrid { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+#bookPane, #focusPane { display: none; }
+@media (min-width: 1360px) {
+  #reviewGrid { display: grid; grid-template-columns: 230px minmax(0, 1fr) 340px; gap: var(--sp-3); }
+  #bookPane, #focusPane {
+    display: flex; flex-direction: column; min-height: 0; min-width: 0;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  #bookPane { padding: var(--sp-3); gap: var(--sp-2); }
+  #bookPane h2, #focusPane h2 { margin: 0; font-size: var(--fs-md); font-weight: var(--fw-bold); }
+  #bpSearch { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel-2); }
+  #bpSearch:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+  #bpList { flex: 1; min-height: 0; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel-2); }
+  #bpCount { color: var(--muted); font-size: var(--fs-xs); }
+  #focusPane { padding: var(--sp-3); gap: var(--sp-3); overflow-y: auto; }
+  /* the sentence is read in the focus pane, so the queue does not spend its width on it */
+  #reviewGrid table.ftable th.col-snippet, #reviewGrid table.ftable td.snip { display: none; }
+}
+.booklist .book-item { cursor: pointer; }
+.fp-empty { color: var(--muted); padding: var(--sp-4) var(--sp-2); text-align: center; }
+.fp-nav { display: flex; align-items: center; gap: var(--sp-2); }
+.fp-nav .fp-pos { flex: 1; text-align: center; color: var(--muted); font-size: var(--fs-xs); }
+.fp-pair { font-size: var(--fs-xl); font-weight: var(--fw-bold); display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.fp-pair .fp-arrow { color: var(--muted); }
+.fp-snippet { line-height: var(--lh-relaxed); background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); overflow-wrap: anywhere; }
+.fp-meta { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px var(--sp-3); font-size: var(--fs-sm); }
+.fp-meta dt { color: var(--muted); }
+.fp-meta .vbadge { margin-inline-start: var(--sp-2); }
+.fp-meta dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.fp-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.fp-actions .btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+table.ftable tr.focusrow td { background: var(--accent-soft); }
+table.ftable tr.focusrow td:first-child { box-shadow: inset 4px 0 0 var(--accent); }
 #tblWrap { overflow: auto; flex: 1; min-height: 0; }
 table.ftable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 table.ftable th {

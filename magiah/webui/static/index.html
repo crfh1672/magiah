@@ -93,7 +93,7 @@
     <div class="f-group">
       <label class="f-title" for="fBookSearch">ספר</label>
       <input id="fBookSearch" type="text" placeholder="חיפוש ספר…" autocomplete="off">
-      <div id="fBookList"><div class="empty">טוען רשימת ספרים…</div></div>
+      <div id="fBookList" class="booklist"><div class="empty">טוען רשימת ספרים…</div></div>
     </div>
 
     <div class="f-group">
@@ -170,14 +170,23 @@
         <label class="word-scope"><input type="checkbox" id="bulkWordScope"> החל על המילה בכל מקום</label>
         <button class="bulk-clear" id="bulkClear"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg> ביטול בחירה</button>
       </div>
-      <div class="card-panel">
-        <div id="tblWrap">
-          <table class="ftable">
-            <thead id="tblHead"></thead>
-            <tbody id="tblBody"></tbody>
-          </table>
+      <div id="reviewGrid">
+        <aside id="bookPane" aria-label="ספרים">
+          <h2 id="bpTitle">ספרים</h2>
+          <input id="bpSearch" type="search" placeholder="חיפוש ספר…" aria-label="חיפוש ספר" autocomplete="off">
+          <div id="bpList" class="booklist" aria-labelledby="bpTitle"><div class="empty">טוען רשימת ספרים…</div></div>
+          <span id="bpCount" aria-live="polite"></span>
+        </aside>
+        <div class="card-panel">
+          <div id="tblWrap">
+            <table class="ftable">
+              <thead id="tblHead"></thead>
+              <tbody id="tblBody"></tbody>
+            </table>
+          </div>
+          <div id="pager"></div>
         </div>
-        <div id="pager"></div>
+        <aside id="focusPane" aria-label="הממצא הנבחר"></aside>
       </div>
     </section>
 
@@ -412,6 +421,7 @@
 <script src="/static/core.js"></script>
 <script src="/static/findings.js"></script>
 <script src="/static/table.js"></script>
+<script src="/static/review.js"></script>
 <script src="/static/drawer.js"></script>
 <script src="/static/cards.js"></script>
 <script src="/static/fixer.js"></script>

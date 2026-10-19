@@ -4,6 +4,7 @@
 //   chips : the active-filter chips (label, kind) and their number N
 //   clear : the state after removing chip number `index`
 //   clearAll : the state after "clear filters" (clearFilters())
+//   bookQuery : the book search text set from one box shows in both
 //   query : facetQuery() and whether the last /api/facets answer is current
 "use strict";
 const fs = require("fs");
@@ -34,18 +35,20 @@ const code = [
   "function renderFixBookOptions() {}",
   "function syncFilterControls() {}",
   "function loadBooks() {}",
+  "function setBookQuery() {}",
   "function filtersChanged() {}",
   "const S = Object.assign({ view: 'table', page: 1, pageSize: 50, hideIrr: false, hideDb: false }, c.state);",
   "S.filters = Object.assign({ origin: '', book: '', errtypes: [], statuses: [], verified: false, min_rank: 0, q: '', sort: 'rank', dir: 'desc' }, c.state.filters || {});",
   ...["FALLBACK_STATUSES", "STATUS_ICONS", "statuses", "statusInfo", "errtypeInfo",
       "originInfo", "fmtRank", "fmtNum", "filterParams", "BOOK_NAMES", "bookName",
-      "applyHide", "DEFAULT_FILTERS", "clearFilters", "activeFilterChips", "facetQuery", "facetsFresh", "facetsTotal"].map(grab),
+      "setBookQuery", "bookBoxes", "applyHide", "DEFAULT_FILTERS", "clearFilters", "activeFilterChips", "facetQuery", "facetsFresh", "facetsTotal"].map(grab),
   "for (const [k, v] of Object.entries(c.bookNames || {})) BOOK_NAMES.set(k, v);",
   "if (c.facets) { S.facets = c.facets; S.facetsKey = c.facetsKey; }",
   "const snap = () => ({ filters: S.filters, hideIrr: S.hideIrr, hideDb: S.hideDb });",
   "if (c.op === 'chips') { const ch = activeFilterChips(); return { n: ch.length, chips: ch.map(x => ({ label: x.label, kind: x.kind })) }; }",
   "if (c.op === 'clearAll') { clearFilters(); return snap(); }",
   "if (c.op === 'clear') { activeFilterChips()[c.index].clear(); return snap(); }",
+  "if (c.op === 'bookQuery') { boxes['#fBookSearch'] = { value: c.dialog || '' }; boxes['#bpSearch'] = { value: c.column || '' }; setBookQuery(c.set); return { q: S.bookQ, dialog: boxes['#fBookSearch'].value, column: boxes['#bpSearch'].value }; }",
   "if (c.op === 'query') return { query: facetQuery().toString(), fresh: facetsFresh(), total: facetsTotal() };",
   "throw new Error('op ' + c.op);",
 ].join("\n");
