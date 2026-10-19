@@ -106,23 +106,24 @@
   --slate-700: #3e4d5e;
 
   /* ---- semantic aliases (back-compat with existing code) ---- */
-  --bg: #f3f5f8;
+  /* the neutral palette of the layout prototype */
+  --bg: #f4f4f1;
   --panel: #ffffff;
-  --panel-2: #f8fafc;
-  --border: #dde3ea;
-  --border-strong: #c4cdd8;
-  --text: #1c2733;
-  --muted: #556372;
-  --faint: #5f6d7c;
-  --accent: #1a6fb5;
-  --accent-strong: #135a95;
-  --accent-soft: #e3f0fa;
-  --red: #b13024;
-  --red-soft: #fdecea;
-  --green: #197140;
-  --green-soft: #e6f5ec;
-  --amber: #8a5a00;
-  --amber-soft: #fcf3df;
+  --panel-2: #f4f4f1;
+  --border: #dedede;
+  --border-strong: #bdbdbd;
+  --text: #1f1f1d;
+  --muted: #5f5e5a;
+  --faint: #6b6a65;
+  --accent: #185fa5;
+  --accent-strong: #0f4a85;
+  --accent-soft: #e6f1fb;
+  --red: #a32d2d;
+  --red-soft: #fcebeb;
+  --green: #3b6d11;
+  --green-soft: #eaf3de;
+  --amber: #854f0b;
+  --amber-soft: #faeeda;
   --blue: #1f5fa8;
   --blue-soft: #e5eefb;
   --slate: #52626f;
@@ -199,23 +200,23 @@
   --slate-700: #c3cedb;
 
   --on-accent: #0b1722;
-  --bg: #12181f;
-  --panel: #1b232d;
-  --panel-2: #202a36;
-  --border: #2c3948;
-  --border-strong: #3d4d5f;
-  --text: #e4eaf1;
-  --muted: #9fadbc;
-  --faint: #919fae;
-  --accent: #4d9fdc;
-  --accent-strong: #6fb3e6;
-  --accent-soft: #1d3348;
-  --red: #e8796b;
-  --red-soft: #3a2320;
-  --green: #57b97e;
-  --green-soft: #1c3527;
-  --amber: #d9a441;
-  --amber-soft: #3a2f18;
+  --bg: #171715;
+  --panel: #1e1e1c;
+  --panel-2: #2a2a27;
+  --border: #3a3a37;
+  --border-strong: #55554f;
+  --text: #f1efe8;
+  --muted: #b4b2a9;
+  --faint: #a3a198;
+  --accent: #85b7eb;
+  --accent-strong: #a8cdf2;
+  --accent-soft: #0c2a4a;
+  --red: #f09595;
+  --red-soft: #501313;
+  --green: #97c459;
+  --green-soft: #27500a;
+  --amber: #fac775;
+  --amber-soft: #412402;
   --blue: #6fa8e8;
   --blue-soft: #1d2f47;
   --slate: #9aa9b8;
@@ -665,7 +666,7 @@ section#view-table.visible { display: flex; flex-direction: column; flex: 1; min
   #focusPane { border-inline-start: 1px solid var(--border); }
   #view-table .card-panel { border-inline-start: 0; }
   #bookPane h2 { margin: 0; }
-  #bpSearch { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel-2); }
+  #bpSearch { width: calc(100% - 24px); padding: 7px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel-2); }
   #bpSearch:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
   #bpList { flex: 1; min-height: 0; overflow-y: auto; border: 0; background: none; }
   /* the prototype's books column: the name over a quiet count; the chosen one tinted */
@@ -1856,3 +1857,65 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 #scanModes .mode-desc { font-weight: 400; }
 @media (max-width: 760px) { #scanModes { grid-template-columns: minmax(0, 1fr); } }
 #view-scan #scanTabs { max-width: none; width: auto; }
+
+/* ---- cards, as in the layout prototype: one compact card under a progress line ---- */
+#main:has(> #view-cards.visible) { background: var(--panel); }
+#view-cards { padding: 18px 20px 32px; min-height: 0; }
+#view-cards .cards-stage { max-width: 540px; justify-content: flex-start; padding-bottom: 0; }
+#cardMeta { justify-content: flex-start; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; }
+#cardMeta .cm-bar { width: 80px; height: 4px; flex: none; }
+#cardMeta .menu-wrap { margin-inline-start: auto; }
+#cardBox { padding: 14px 18px 16px; box-shadow: none; animation: none; display: flex; flex-direction: column; gap: 10px; }
+.cd-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cd-chips .ch { font-size: 11px; padding: 2px 9px; border-radius: var(--radius-full); border: 1px solid var(--border); background: var(--panel-2); color: var(--muted); white-space: nowrap; }
+.cd-chips .ch.on { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+.cd-where { margin-inline-start: auto; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+#cardBox .cl { position: relative; padding: 10px 14px; border-radius: var(--radius-sm); font: 17px/1.8 "Frank Ruhl Libre", David, Narkisim, "Times New Roman", serif; overflow-wrap: anywhere; }
+#cardBox .cl.b { background: var(--red-soft); }
+#cardBox .cl.g { background: var(--green-soft); }
+#cardBox .cl .bad { color: var(--red); text-decoration: line-through; }
+#cardBox .cl .good { color: var(--green); font-weight: 500; }
+#cardBox .cl .pair-copy { position: absolute; inset-inline-end: 8px; top: 50%; transform: translateY(-50%); padding: 2px 6px; background: var(--panel); }
+.mg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mg .mt { background: var(--panel-2); border-radius: var(--radius-sm); padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+.mg .mt span { font-size: 11px; color: var(--muted); }
+.mg .mt b { font-size: 20px; font-weight: 500; }
+#cardBox .card-actions.primary-row { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+#cardBox .card-actions.primary-row button { font-size: var(--fs-md); font-weight: var(--fw-medium); padding: 9px 12px; border-width: 1px; box-shadow: none; justify-content: space-between; }
+#cardBox .card-actions.primary-row .act-unsure { background: var(--panel); color: var(--text); border-color: var(--border); }
+#cardBox .card-actions.second-row { justify-content: flex-start; gap: 6px; }
+#cardBox .card-actions.second-row button.sm, #cardBox .card-actions.second-row summary { font-size: 12px; padding: 4px 10px; background: var(--panel); }
+#cardBox .card-actions.second-row .card-more .menu { inset-inline-start: 0; inset-inline-end: auto; transform: none; bottom: auto; top: calc(100% + 6px); }
+@media (max-width: 760px) { #cardBox .card-actions.primary-row { grid-template-columns: minmax(0, 1fr); } }
+#cardBox .cl .pair-copy .ic { width: 14px; height: 14px; }
+#cardBox .cl .pair-copy { line-height: 1; display: inline-flex; }
+
+/* ---- help, as in the layout prototype: one topic at a time, the topics in a column ---- */
+#main:has(> #view-help.visible) { padding: 0; background: var(--panel); }
+#view-help { position: relative; padding: 0; max-width: none; }
+.help-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 190px; align-items: stretch; min-height: calc(100vh - var(--topbar-h)); }
+#helpBody { max-width: 760px; width: 100%; margin: 0 auto; padding: 18px 24px 40px; }
+#helpBody .help-block { border: 0; box-shadow: none; padding: 0; background: none; margin: 0; }
+#helpBody .help-block[hidden] { display: none; }
+#helpBody .help-block h3 { color: var(--text); font-size: var(--fs-md); font-weight: var(--fw-medium); margin: 0 0 var(--sp-3); }
+#helpNav { background: var(--panel-2); border-inline-start: 1px solid var(--border); display: flex; flex-direction: column; }
+#helpNav button { text-align: start; padding: 10px 14px; border: 0; border-bottom: 1px solid var(--border); background: none; color: var(--text); font: inherit; font-size: var(--fs-sm); cursor: pointer; }
+#helpNav button:hover { background: var(--accent-soft); }
+#helpNav button.active { background: var(--accent-soft); color: var(--accent-strong); }
+@media (max-width: 760px) {
+  .help-wrap { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  #helpNav { flex-direction: row; flex-wrap: wrap; border-inline-start: 0; border-bottom: 1px solid var(--border); }
+  #helpNav button { border-bottom: 0; }
+}
+
+/* the fixer's two toolbar groups share one strip */
+#fixerHead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--border); flex: 0 0 auto; }
+#fixerHead > #fixerTop, #fixerHead > #fixerOpts { display: contents; }
+#fixerTop, #fixerOpts { padding: 0; border-bottom: 0; }
+#fixerHead #fixBookPick { flex: 1 1 360px; }
+@media (max-width: 760px) { #fixerHead #fixProgressWrap { flex: 1 1 100%; margin-inline-start: 0; } }
+#cardBox .cl.g { padding-inline-end: 48px; }
+#cardBox .cd-chips .chip { cursor: default; }
+#cardBox .cd-chips .chip:hover { transform: none; border-color: transparent; }
+#cardBox .cl .pair-copy { border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--muted); cursor: pointer; }
+#cardBox .cl .pair-copy:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }

@@ -310,6 +310,8 @@ const updateProgress = debounce(async function () {
     const [allR, pendR] = await Promise.all([api("/api/findings?" + base), api("/api/findings?" + pend)]);
     const total = totalOf(allR), pending = totalOf(pendR);
     const done = Math.max(0, total - pending);
+    S.progDone = done; S.progTotal = total;
+    if (S.view === "cards" && typeof renderCardMeta === "function") renderCardMeta();
     $("#progressPill").textContent = "טופלו " + fmtNum(done) + " מתוך " + fmtNum(total);
     $("#progressPill").title = "בסינון הנוכחי (ללא סינון סטטוס)";
   } catch (e) { /* silent */ }
