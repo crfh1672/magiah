@@ -323,6 +323,7 @@ function updateSessionCounter() {
 function syncFilterControls() {
   const f = S.filters;
   $("#fOrigin").value = f.origin;
+  $("#fixOrigin").value = f.origin;
   $("#fVerified").checked = f.verified;
   $("#fMinRank").value = f.min_rank;
   $("#fMinRankVal").value = f.min_rank;
@@ -348,6 +349,12 @@ function buildSidebar() {
   for (const o of (m.origins || [])) {
     sel.append(el("option", { value: o.name }, (o.hebrew || o.name) + (o.count != null ? " (" + fmtNum(o.count) + ")" : "")));
   }
+  // the fixer's own copy of the origin choice
+  const fsel = $("#fixOrigin");
+  // no counts here and no "no origin" entry: the fixer needs a named origin
+  fsel.replaceChildren(el("option", { value: "" }, "כל המאגרים"),
+    ...(m.origins || []).filter(o => o.name !== NO_ORIGIN).map(o => el("option", { value: o.name }, o.hebrew || o.name)));
+  fsel.value = S.filters.origin;
   // errtypes
   const et = $("#fErrtypes");
   et.replaceChildren();
@@ -436,6 +443,7 @@ function renderActiveFilters() {
   const btn = $("#btnSidebar");
   if (btn) {
     $("#filterBtnCount").textContent = n ? fmtNum(n) : "";
+    btn.classList.toggle("has-filters", n > 0);
     btn.setAttribute("aria-label", n ? "סינון הממצאים, " + fmtNum(n) + " מסננים פעילים" : "סינון הממצאים");
   }
   const box = $("#activeFilters");
@@ -632,6 +640,16 @@ function renderBookLists(books) {
 }
 function renderBookItems(box, books) {
   box.replaceChildren();
+  if (box.id === "bpList") {
+    // the books column starts with "all books": choosing it clears the book filter
+    const all = el("div", { class: "book-item" + (S.filters.book ? "" : " selected"), dataset: { key: "" } },
+      el("span", { class: "bname" }, "כל הספרים"));
+    const pickAll = () => { if (!S.filters.book) return; S.filters.book = ""; syncFilterControls(); filtersChanged(); };
+    all.addEventListener("click", pickAll);
+    makeActivatable(all, pickAll, "button");
+    all.setAttribute("aria-pressed", S.filters.book ? "false" : "true");
+    box.append(all);
+  }
   if (!books.length) { box.append(el("div", { class: "empty" }, "לא נמצאו ספרים")); return books; }
   // several books can share a title: filter by the stable key, and show
   // the key next to a title that is not unique
