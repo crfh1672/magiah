@@ -79,7 +79,7 @@ function renderCardMeta() {
     el("span", null, "בתור: " + fmtNum(q.queue.length) + (q.exhausted ? "" : "+") + (r && r.source ? " · " : ""),
       r && r.source ? el("bdi", null, r.source) : null),
     total ? el("div", { class: "pbar cm-bar", role: "progressbar", "aria-valuenow": String(pct), "aria-valuemin": "0", "aria-valuemax": "100",
-      "aria-label": "התקדמות בסינון הנוכחי" }, el("div", { style: "width:" + pct + "%" })) : null,
+      "aria-label": "התקדמות בסינון הנוכחי (ללא סינון סטטוס)" }, el("div", { style: "width:" + pct + "%" })) : null,
     q.skipped.length ? el("span", { title: "יוצגו שוב בסוף התור" }, "נדחו לאחר כך: " + fmtNum(q.skipped.length)) : null,
     shortcutsMenu()].filter(Boolean));
 }
@@ -122,6 +122,7 @@ function renderCard() {
   box.append(el("div", { class: "cd-chips" },
     el("span", { class: "ch", title: info.explanation || "" }, info.hebrew),
     r.verified ? el("span", { class: "ch on" }, "מאומת") : null,
+    el("span", { class: "chip st-" + effStatus(r) }, statusInfo(effStatus(r)).icon + " " + statusInfo(effStatus(r)).hebrew),
     el("span", { class: "cd-where" }, el("bdi", null, [r.source, r.ref].filter(Boolean).join(" · ")))));
 
   // the sentence as it is, and as it would be
@@ -135,7 +136,7 @@ function renderCard() {
   box.append(el("div", { class: "mg" },
     tile("ציון", fmtRank(r.rank)),
     tile("אימות הקשר", r.ctx_hits != null ? fmtNum(r.ctx_hits) : "—"),
-    tile("חזרות בספר", r.book_repeat != null ? fmtNum(r.book_repeat) : "—")));
+    tile("חזרה בספר", r.book_repeat == null ? "—" : r.book_repeat ? "כן" : "לא")));
 
   /* Decisions — same eight actions and same keys as always, but ranked by how
    * often they are actually used. In triage ~90% of cards end in one of the

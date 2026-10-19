@@ -1875,7 +1875,7 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 #cardBox .cl.g { background: var(--green-soft); }
 #cardBox .cl .bad { color: var(--red); text-decoration: line-through; }
 #cardBox .cl .good { color: var(--green); font-weight: 500; }
-#cardBox .cl .pair-copy { position: absolute; inset-inline-start: 8px; top: 50%; transform: translateY(-50%); padding: 2px 6px; background: var(--panel); }
+#cardBox .cl .pair-copy { position: absolute; inset-inline-end: 8px; top: 50%; transform: translateY(-50%); padding: 2px 6px; background: var(--panel); }
 .mg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .mg .mt { background: var(--panel-2); border-radius: var(--radius-sm); padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
 .mg .mt span { font-size: 11px; color: var(--muted); }
@@ -1914,3 +1914,8 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 #fixerTop, #fixerOpts { padding: 0; border-bottom: 0; }
 #fixerHead #fixBookPick { flex: 1 1 360px; }
 @media (max-width: 760px) { #fixerHead #fixProgressWrap { flex: 1 1 100%; margin-inline-start: 0; } }
+#cardBox .cl.g { padding-inline-end: 48px; }
+#cardBox .cd-chips .chip { cursor: default; }
+#cardBox .cd-chips .chip:hover { transform: none; border-color: transparent; }
+#cardBox .cl .pair-copy { border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--muted); cursor: pointer; }
+#cardBox .cl .pair-copy:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
