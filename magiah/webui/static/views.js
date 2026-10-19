@@ -261,6 +261,28 @@ function renderHelp() {
       el("li", null, el("b", null, "ייבוא החלטות ישנות: "), "ייבוא ההחלטות מהכלי הישן (decisions.db) — פעולה מפורשת בלבד, לא אוטומטית."),
       el("li", null, el("b", null, "אפס החלטות: "), "ניקוי כל הסטטוסים בממשק זה; גיבוי נשמר אוטומטית וניתן לשחזור."),
       el("li", null, el("b", null, "אפס הכל: "), "בנוסף מוחק את decisions.db כדי שסריקות הבאות לא יושפעו מהחלטות ניסיוניות."))));
+  helpNav();
+}
+
+/* the topics beside the text; one topic at a time */
+let helpTopic = 0;
+function helpNav() {
+  const blocks = $$("#helpBody .help-block");
+  const nav = $("#helpNav");
+  if (!blocks.length) { nav.replaceChildren(); return; }
+  if (helpTopic >= blocks.length) helpTopic = 0;
+  const show = (n) => {
+    helpTopic = n;
+    blocks.forEach((b, k) => { b.hidden = k !== n; });
+    $$("button", nav).forEach((b, k) => { b.classList.toggle("active", k === n); if (k === n) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current"); });
+  };
+  nav.replaceChildren(...blocks.map((b, k) => {
+    const t = $("h3", b).textContent.replace(/^[^\u0590-\u05FFA-Za-z]+/, "");
+    const btn = el("button", { type: "button" }, t);
+    btn.addEventListener("click", () => show(k));
+    return btn;
+  }));
+  show(helpTopic);
 }
 
 /* ------------------------------------------------ file-based units (§9c) */
