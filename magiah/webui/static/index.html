@@ -269,8 +269,13 @@
     </section>
     <section id="view-scan" class="view">
       <h2><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> ניהול סריקה</h2>
+      <div id="scanTabs" role="tablist" aria-label="ניהול סריקה">
+        <button type="button" role="tab" id="scanTabRun" class="scan-tab" data-tab="scanPanelRun" aria-controls="scanPanelRun" aria-selected="true">הרצה</button>
+        <button type="button" role="tab" id="scanTabData" class="scan-tab" data-tab="scanPanelData" aria-controls="scanPanelData" aria-selected="false" tabindex="-1">נתונים וגיבויים</button>
+        <button type="button" role="tab" id="scanTabDanger" class="scan-tab danger" data-tab="scanPanelDanger" aria-controls="scanPanelDanger" aria-selected="false" tabindex="-1">אזור סכנה</button>
+      </div>
       <div class="scan-grid">
-        <div class="scan-card">
+        <div class="scan-card" id="scanPanelRun" role="tabpanel" aria-labelledby="scanTabRun">
           <h3>הרצת סריקה</h3>
           <details id="scanRunSection">
                 <summary>▶ הרצת סריקה חדשה</summary>
@@ -357,7 +362,7 @@
                 </div>
               </details>
         </div>
-        <div class="scan-card">
+        <div class="scan-card" id="scanPanelData" role="tabpanel" aria-labelledby="scanTabData" hidden>
           <h3>נתונים וגיבויים</h3>
           <div class="scan-row">
             <button id="scanRefresh" class="btn primary"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> רענן מסריקה חדשה</button>
@@ -370,7 +375,7 @@
           <h4>גיבויים זמינים</h4>
           <div id="backupsList">טוען…</div>
         </div>
-        <div class="scan-card danger-zone">
+        <div class="scan-card danger-zone" id="scanPanelDanger" role="tabpanel" aria-labelledby="scanTabDanger" hidden>
           <h3><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg> אזור סכנה</h3>
           <p class="dz-lead">פעולות שמוחקות החלטות. גיבוי מלא נשמר אוטומטית לפני כל איפוס, וכדי להמשיך צריך להקליד את מילת האישור.</p>
           <div class="dz-item">

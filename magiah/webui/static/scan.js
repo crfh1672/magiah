@@ -564,3 +564,33 @@ async function afterDataChanged() {
   refreshCurrentView();
   updateProgress();
 }
+
+/* ---- the scan screen's tabs: run | data and backups | danger zone ---- */
+function selectScanTab(tab, focus) {
+  for (const b of $$("#scanTabs .scan-tab")) {
+    const on = b === tab;
+    b.setAttribute("aria-selected", String(on));
+    b.tabIndex = on ? 0 : -1;
+    $("#" + b.dataset.tab).hidden = !on;
+  }
+  if (focus) tab.focus();
+}
+function initScanTabs() {
+  const tabs = $$("#scanTabs .scan-tab");
+  for (const b of tabs) {
+    b.addEventListener("click", () => selectScanTab(b, false));
+    b.addEventListener("keydown", ev => {
+      // RTL: the first tab is on the right, so ArrowLeft goes on
+      const i = tabs.indexOf(b);
+      let j = -1;
+      if (ev.key === "ArrowLeft") j = (i + 1) % tabs.length;
+      else if (ev.key === "ArrowRight") j = (i - 1 + tabs.length) % tabs.length;
+      else if (ev.key === "Home") j = 0;
+      else if (ev.key === "End") j = tabs.length - 1;
+      if (j < 0) return;
+      ev.preventDefault();
+      selectScanTab(tabs[j], true);
+    });
+  }
+}
+initScanTabs();
