@@ -1856,3 +1856,35 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 #scanModes .mode-desc { font-weight: 400; }
 @media (max-width: 760px) { #scanModes { grid-template-columns: minmax(0, 1fr); } }
 #view-scan #scanTabs { max-width: none; width: auto; }
+
+/* ---- cards, as in the layout prototype: one compact card under a progress line ---- */
+#main:has(> #view-cards.visible) { background: var(--panel); }
+#view-cards { padding: 18px 20px 32px; min-height: 0; }
+#view-cards .cards-stage { max-width: 540px; justify-content: flex-start; padding-bottom: 0; }
+#cardMeta { justify-content: flex-start; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; }
+#cardMeta .cm-bar { width: 80px; height: 4px; flex: none; }
+#cardMeta .menu-wrap { margin-inline-start: auto; }
+#cardBox { padding: 14px 18px 16px; box-shadow: none; animation: none; display: flex; flex-direction: column; gap: 10px; }
+.cd-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cd-chips .ch { font-size: 11px; padding: 2px 9px; border-radius: var(--radius-full); border: 1px solid var(--border); background: var(--panel-2); color: var(--muted); white-space: nowrap; }
+.cd-chips .ch.on { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+.cd-where { margin-inline-start: auto; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+#cardBox .cl { position: relative; padding: 10px 14px; border-radius: var(--radius-sm); font: 17px/1.8 "Frank Ruhl Libre", David, Narkisim, "Times New Roman", serif; overflow-wrap: anywhere; }
+#cardBox .cl.b { background: var(--red-soft); }
+#cardBox .cl.g { background: var(--green-soft); }
+#cardBox .cl .bad { color: var(--red); text-decoration: line-through; }
+#cardBox .cl .good { color: var(--green); font-weight: 500; }
+#cardBox .cl .pair-copy { position: absolute; inset-inline-start: 8px; top: 50%; transform: translateY(-50%); padding: 2px 6px; background: var(--panel); }
+.mg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mg .mt { background: var(--panel-2); border-radius: var(--radius-sm); padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+.mg .mt span { font-size: 11px; color: var(--muted); }
+.mg .mt b { font-size: 20px; font-weight: 500; }
+#cardBox .card-actions.primary-row { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+#cardBox .card-actions.primary-row button { font-size: var(--fs-md); font-weight: var(--fw-medium); padding: 9px 12px; border-width: 1px; box-shadow: none; justify-content: space-between; }
+#cardBox .card-actions.primary-row .act-unsure { background: var(--panel); color: var(--text); border-color: var(--border); }
+#cardBox .card-actions.second-row { justify-content: flex-start; gap: 6px; }
+#cardBox .card-actions.second-row button.sm, #cardBox .card-actions.second-row summary { font-size: 12px; padding: 4px 10px; background: var(--panel); }
+#cardBox .card-actions.second-row .card-more .menu { inset-inline-start: 0; inset-inline-end: auto; transform: none; bottom: auto; top: calc(100% + 6px); }
+@media (max-width: 760px) { #cardBox .card-actions.primary-row { grid-template-columns: minmax(0, 1fr); } }
+#cardBox .cl .pair-copy .ic { width: 14px; height: 14px; }
+#cardBox .cl .pair-copy { line-height: 1; display: inline-flex; }

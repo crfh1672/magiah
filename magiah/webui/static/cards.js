@@ -69,17 +69,37 @@ function resetCardQueue() {
 
 function currentCard() { return S.cq ? S.cq.head() : null; }
 
+/* the line over the card: where the queue stands, and the keyboard help */
+function renderCardMeta() {
+  const q = cardQueue();
+  const total = S.progTotal || 0, done = S.progDone || 0;
+  const pct = total ? Math.round(done * 100 / total) : 0;
+  const r = currentCard();
+  $("#cardMeta").replaceChildren(...[
+    el("span", null, "בתור: " + fmtNum(q.queue.length) + (q.exhausted ? "" : "+") + (r && r.source ? " · " : ""),
+      r && r.source ? el("bdi", null, r.source) : null),
+    total ? el("div", { class: "pbar cm-bar", role: "progressbar", "aria-valuenow": String(pct), "aria-valuemin": "0", "aria-valuemax": "100",
+      "aria-label": "התקדמות בסינון הנוכחי" }, el("div", { style: "width:" + pct + "%" })) : null,
+    q.skipped.length ? el("span", { title: "יוצגו שוב בסוף התור" }, "נדחו לאחר כך: " + fmtNum(q.skipped.length)) : null,
+    shortcutsMenu()].filter(Boolean));
+}
+
+/* a sentence with the word marked, or replaced by its fix */
+function cardSentence(r, kind, fix) {
+  const s = r.snippet == null ? "" : String(r.snippet), w = r.word || "";
+  const i = s && w ? locateWord(s, w) : -1;
+  const bdi = el("bdi");
+  const mark = kind === "bad" ? el("span", { class: "bad" }, w) : el("span", { class: "good" }, fix || w);
+  if (i < 0) { bdi.append(s || "", s ? " " : "", mark); }
+  else bdi.append(s.slice(0, i), mark, s.slice(i + w.length));
+  return el("div", { class: "cl " + (kind === "bad" ? "b" : "g") }, bdi);
+}
+
 function renderCard() {
   const box = $("#cardBox");
-  const meta = $("#cardMeta");
   const r = currentCard();
   const q = cardQueue();
-  // replaceChildren() would print a null as the text "null": drop it first
-  meta.replaceChildren(...[
-    el("span", null, "בתור: " + fmtNum(q.queue.length) + (q.exhausted ? "" : "+")),
-    q.skipped.length ? el("span", { title: "יוצגו שוב בסוף התור" }, "נדחו לאחר כך: " + fmtNum(q.skipped.length)) : null,
-    shortcutsMenu()]
-    .filter(Boolean));
+  renderCardMeta();
   box.replaceChildren();
   if (!r) {
     // nothing matches the filters at all: say so and offer the way back
@@ -98,30 +118,25 @@ function renderCard() {
   const info = errtypeInfo(r.errtype);
   const fix = effFix(r);
 
-  // 1. the reading line — sentence intact, swap stacked in place at the error
-  const focus = renderFocusLine(r);
-  box.append(focus);
-  // must run after the node is in the document to measure it
-  requestAnimationFrame(() => fitFocusLine(focus));
+  // what kind of error, where it is
+  box.append(el("div", { class: "cd-chips" },
+    el("span", { class: "ch", title: info.explanation || "" }, info.hebrew),
+    r.verified ? el("span", { class: "ch on" }, "מאומת") : null,
+    el("span", { class: "cd-where" }, el("bdi", null, [r.source, r.ref].filter(Boolean).join(" · ")))));
 
-  // 2. the isolated pair, letter-diffed, for when the stack alone isn't enough
-  const pair = el("div", { class: "card-pair" },
-    wordDiffNode(r.word || "—", fix || "", "err", "w-err"),
-    el("span", { class: "arr" }, "⇦"),
-    fix ? wordDiffNode(fix, r.word || "", "fix", "w-fix") : el("bdi", { class: "w-fix" }, "—"));
+  // the sentence as it is, and as it would be
+  box.append(cardSentence(r, "bad", fix), cardSentence(r, "good", fix || r.word));
   const cp = el("button", { class: "pair-copy", title: "העתקת התיקון", "aria-label": "העתקת התיקון" }, icon("copy"));
   cp.addEventListener("click", () => copyText(fix || r.word || ""));
-  pair.append(cp);
-  box.append(pair);
+  box.lastChild.append(cp);
 
-  // 3. provenance / confidence, secondary
-  box.append(el("div", { class: "card-sub" },
-    el("span", { class: "et-tag", title: info.explanation || "" }, info.hebrew),
-    el("span", { class: "meta-item" }, icon("book"), el("bdi", null, r.source || "")),
-    el("span", { class: "meta-item" }, icon("pin"), el("bdi", null, r.ref || "")),
-    el("span", null, "ציון: " + fmtRank(r.rank)),
-    r.verified ? el("span", { class: "vbadge" }, "מאומת") : null,
-    el("span", { class: "chip st-" + effStatus(r) }, statusInfo(effStatus(r)).icon + " " + statusInfo(effStatus(r)).hebrew)));
+  // the numbers the verdict rests on
+  const tile = (label, v) => el("div", { class: "mt" }, el("span", null, label), el("b", null, v));
+  box.append(el("div", { class: "mg" },
+    tile("ציון", fmtRank(r.rank)),
+    tile("אימות הקשר", r.ctx_hits != null ? fmtNum(r.ctx_hits) : "—"),
+    tile("חזרות בספר", r.book_repeat != null ? fmtNum(r.book_repeat) : "—")));
+
   /* Decisions — same eight actions and same keys as always, but ranked by how
    * often they are actually used. In triage ~90% of cards end in one of the
    * first two, so those get large, colour-coded primary buttons; the rest stay
@@ -134,29 +149,28 @@ function renderCard() {
     return b;
   };
   box.append(el("div", { class: "card-actions primary-row" },
-    mkBtn("אושר — זו שגיאה", "י", () => cardAct("approved"), "act-approve", "check-circle"),
+    mkBtn("אשר תיקון", "י", () => cardAct("approved"), "act-approve", "check-circle"),
     mkBtn("לא שגיאה", "נ", () => cardAct("not_error"), "act-reject", "x-circle"),
-    mkBtn("דלג", "רווח", () => cardSkip(), "act-skip", "skip")));
-  // The rarer decisions live in one menu (same actions, same shortcuts), so
-  // the card shows three buttons instead of ten.
+    mkBtn("דרוש בירור", "ב", () => cardAct("unsure"), "act-unsure", "help")));
+  // the rest, quieter: the same actions and shortcuts as ever
   const item = (label, kbd, fn, ico) => {
     const b = el("button", { type: "button" }, icon(ico), el("span", null, label), kbd ? el("kbd", null, kbd) : null);
     b.addEventListener("click", fn);
     return b;
   };
-  box.append(el("div", { class: "card-more-row" },
+  box.append(el("div", { class: "card-actions second-row" },
+    mkBtn("הקלדת תיקון", "ת", () => toggleCardFix(true), "sm"),
+    mkBtn("בכל מקום", "ד", () => cardAct("not_error", { scope: "word" }), "sm"),
+    mkBtn("התעלם", "ע", () => cardAct("ignored"), "sm"),
+    mkBtn("דלג", "רווח", () => cardSkip(), "sm"),
     el("details", { class: "menu-wrap card-more" },
-      el("summary", { class: "btn" }, "עוד פעולות", icon("more")),
+      el("summary", { class: "btn sm" }, "עוד", icon("more")),
       el("div", { class: "menu" },
         el("div", { class: "menu-title" }, "לא שגיאה…"),
-        item("בכל מקום", "ד", () => cardAct("not_error", { scope: "word" }), "x-circle"),
         // narrower than "everywhere": the word may still be wrong elsewhere
         item("תקין בספר זה", "", () => cardAct("not_error", { scope: "book" }), "x-circle"),
         item("ההצעה שגויה", "", () => cardAct("not_error", { scope: "replacement" }), "x-circle"),
         el("div", { class: "sep" }),
-        item("תיקון ידני", "ת", () => toggleCardFix(true), "pencil"),
-        item("דרוש בירור", "ב", () => cardAct("unsure"), "help"),
-        item("התעלם", "ע", () => cardAct("ignored"), "ban"),
         item("תוקן בספר", "ק", () => cardAct("fixed"), "wrench")))));
   const fixRow = el("div", { id: "cardFixRow", class: S.cardFixOpen ? "visible" : "" },
     el("input", { id: "cardFixInput", type: "text", placeholder: "הקלד את התיקון הנכון ולחץ Enter…", dir: "rtl" }),
