@@ -1262,8 +1262,13 @@ section#view-cards.visible { display: flex; flex-direction: column; }
 #fixPickBar .fp-label { color: var(--faint); }
 
 #fixerSplit {
-  display: grid; grid-template-columns: 1.1fr .9fr; grid-template-rows: minmax(0, 1fr); gap: 14px;
+  /* worklist on the start side, the book text beside it (as in the layout prototype) */
+  display: grid; grid-template-columns: 360px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 14px;
   align-items: stretch; flex: 1; min-height: 0;
+}
+@media (min-width: 1151px) {
+  #fixList .fix-row { grid-template-columns: 1fr; }
+  #fixList .fix-acts { max-width: none; }
 }
 @media (max-width: 1150px) {
   #fixerSplit { grid-template-columns: 1fr; grid-template-rows: none; overflow-y: auto; }
