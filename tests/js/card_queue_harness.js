@@ -111,6 +111,47 @@ async function main() {
     out.dupes = ids.length - new Set(ids).size;
     process.stdout.write(JSON.stringify(out));
     return;
+  } else if (scenario === "approved_filter") {
+    // reviewing a status-filtered set whose decisions keep the rows in it
+    // (approved -> approved): the server count never drops, but nothing is
+    // left to do once every card was confirmed
+    const rows = [1, 2, 3, 4, 5].map(id => ({ id, word: "w" + id, effective_status: "approved" }));
+    const fake = {
+      fetchPage: async (cursor) => ({ rows: rows.map(r => Object.assign({}, r)), next_cursor: null }),
+      countRemaining: async () => rows.length,
+      save: async () => ({ updated: 0 }),
+    };
+    const fq = new CardQueue(fake, { min: 3 });
+    const seen = await drain(fq, () => fq.act("approved"));
+    out.visited = seen.size;
+    out.state = fq.state();
+    out.remaining = fq.remaining;
+    // later: those five left the filter and two new findings entered it. The
+    // earlier pass's list of confirmed-but-still-open cards must not be
+    // subtracted from this new count
+    rows.splice(0, rows.length, ...[6, 7].map(id => ({ id, word: "w" + id, effective_status: "approved" })));
+    await fq.fill();
+    out.after_new = fq.queue.map(r => r.id);
+    process.stdout.write(JSON.stringify(out));
+    return;
+  } else if (scenario === "reset_during_save") {
+    // a filter change resets the queue while a save is in flight; the fetch
+    // for the new queue reloads the same finding as a new object
+    const fake = {
+      fetchPage: async () => ({ rows: [1, 2, 3].map(id => ({ id, word: "w" + id })), next_cursor: null }),
+      countRemaining: async () => 0,
+      save: async () => { await new Promise(r => setTimeout(r, 40)); return { updated: 1 }; },
+    };
+    const fq = new CardQueue(fake, { min: 3 });
+    await fq.fill();
+    const acting = fq.act("approved");
+    await new Promise(r => setTimeout(r, 5));
+    fq.reset();
+    await fq.fill();
+    await acting;
+    out.ids = fq.queue.map(r => r.id);
+    process.stdout.write(JSON.stringify(out));
+    return;
   } else if (scenario === "restore_dup") {
     await q.fill();
     const h = q.head();

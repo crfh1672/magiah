@@ -11,15 +11,17 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
-from magiah.webui import hebrew
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from appsrc import write_app_js                                  # noqa: E402
+from magiah.webui import hebrew                                  # noqa: E402
 
 NODE = shutil.which('node')
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_JS = os.path.join(os.path.dirname(HERE), 'magiah', 'webui', 'static',
-                      'app.js')
 HARNESS = os.path.join(HERE, 'js', 'drawer_extra_harness.js')
 META = {'evidence_labels': hebrew.EVIDENCE_LABELS,
         'extra_labels': hebrew.EXTRA_LABELS,
@@ -38,7 +40,7 @@ class DrawerExtraTest(unittest.TestCase):
                 json.dump({'meta': META, 'cases': [
                     {'key': k, 'value': v} for k, v in cases]}, f,
                     ensure_ascii=False)
-            out = subprocess.run([NODE, HARNESS, APP_JS, p],
+            out = subprocess.run([NODE, HARNESS, write_app_js(d), p],
                                  capture_output=True, timeout=60)
         self.assertEqual(out.returncode, 0, out.stderr.decode('utf-8',
                                                               'replace'))

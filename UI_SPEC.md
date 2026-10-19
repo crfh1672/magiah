@@ -25,7 +25,7 @@ magiah/magiah/webui/
     server.py        # ThreadingHTTPServer + JSON API + static file serving
     static/
         index.html   # RTL Hebrew SPA
-        app.js
+        *.js         # classic scripts, load order = <script> tags in index.html (core … main)
         style.css
 ```
 
