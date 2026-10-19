@@ -170,6 +170,8 @@ function copyFallback(text, done) {
 }
 
 /* ------------------------------------------------------------ constants */
+/* The origin value the server uses for findings whose origin is unknown. */
+const NO_ORIGIN = "__none__";
 /* Fallbacks only — real labels come from /api/meta (§4-§5). */
 const FALLBACK_STATUSES = [
   { key: "pending", hebrew: "טרם נבדק", icon: "⬜" },

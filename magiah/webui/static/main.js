@@ -8,6 +8,8 @@ function bindExports() {
   $("#expXlsxCurrent").addEventListener("click", async () => {
     closeExportMenu();
     if (!S.filters.origin) { toast("בחרו מאגר בסינון תחילה, או השתמשו ב«כל המאגרים»", "err"); return; }
+    // findings of no known origin are one group in the filter, but not a workbook of their own
+    if (S.filters.origin === NO_ORIGIN) { toast("אין ייצוא נפרד לממצאים ללא מאגר — השתמשו ב«כל המאגרים»", "err"); return; }
     await runExport("/api/export/xlsx", { origin: S.filters.origin }, "ייצוא Excel למאגר " + (originInfo(S.filters.origin).hebrew || S.filters.origin));
   });
   $("#expXlsxAll").addEventListener("click", async () => {
@@ -58,7 +60,7 @@ function showView(v, skipHash) {
 function refreshCurrentView() {
   switch (S.view) {
     case "table": loadTable(); break;
-    case "cards": if (S.cardStale) resetCardQueue(); else { renderCard(); ensureCardQueue(); } break;
+    case "cards": loadFacets(); if (S.cardStale) resetCardQueue(); else { renderCard(); ensureCardQueue(); } break;
     case "fixer": loadFixerBooks().then(loadFixDoc); break;
     case "stats": loadStats(); break;
     case "help": renderHelp(); break;
@@ -90,13 +92,13 @@ document.addEventListener("keydown", ev => {
     return;
   }
   if (ev.key === "Escape") {
-    closeDrawer(); closeStatusMenu(); closeExportMenu();
+    closeDrawer(); closeStatusMenu(); closeExportMenu(); closeFilterDialog();
     if (S.cardFixOpen) toggleCardFix(false);
     return;
   }
   const t = ev.target;
   if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
-  if ($("#drawer").classList.contains("visible")) return;
+  if ($("#drawer").classList.contains("visible") || filterDialogOpen()) return;
   // Space on a focused button / summary / link belongs to that control
   if ((ev.code === "Space" || ev.key === " ") && isControl(t)) return;
 
@@ -205,13 +207,7 @@ function bindControls() {
     S.filters.sort = s; S.filters.dir = d || "desc";
     filtersChanged();
   });
-  $("#btnClearFilters").addEventListener("click", () => {
-    S.filters = DEFAULT_FILTERS();
-    $("#fBookSearch").value = "";
-    syncFilterControls();
-    loadBooks();
-    filtersChanged();
-  });
+  $("#btnClearFilters").addEventListener("click", clearFilters);
   $("#globalSearch").addEventListener("input", debounce(() => {
     S.filters.q = $("#globalSearch").value.trim();
     filtersChanged();
@@ -222,7 +218,10 @@ function bindControls() {
   $("#drawerClose").addEventListener("click", closeDrawer);
   $("#drawerScrim").addEventListener("click", closeDrawer);
   $("#bulkClear").addEventListener("click", () => { S.sel.clear(); renderTableRows(); updateBulkBar(); });
-  $("#btnSidebar").addEventListener("click", () => $("#sidebar").classList.toggle("open"));
+  $("#btnSidebar").addEventListener("click", () => (filterDialogOpen() ? closeFilterDialog() : openFilterDialog()));
+  $("#filterScrim").addEventListener("click", closeFilterDialog);
+  $("#filterClose").addEventListener("click", closeFilterDialog);
+  $("#filterDone").addEventListener("click", closeFilterDialog);
   $("#fixBook").addEventListener("change", () => { S.fixKey = $("#fixBook").value; writeHash(); loadFixDoc(); });
   $("#fixInclude").addEventListener("change", () => {
     S.fixInclude = $("#fixInclude").checked;
@@ -232,7 +231,7 @@ function bindControls() {
   for (const b of $$("#fixPickBar .fp-btn")) {
     b.addEventListener("click", () => fixPick(b.dataset.pick));
   }
-  // the same two switches sit in the sidebar and in the fixer bar
+  // the same two switches sit in the filter window and in the fixer bar
   for (const [prop, ids] of [["hideIrr", ["#fHideIrr", "#fixHideIrrelevant"]],
                              ["hideDb", ["#fHideDb", "#fixHideExportOnly"]]]) {
     try { const v = localStorage.getItem("magiah_" + prop); if (v !== null) S[prop] = v === "1"; } catch (e) {}
@@ -240,10 +239,7 @@ function bindControls() {
       const box = $(id);
       box.checked = S[prop];
       box.addEventListener("change", () => {
-        S[prop] = box.checked;
-        for (const other of ids) $(other).checked = S[prop];
-        try { localStorage.setItem("magiah_" + prop, S[prop] ? "1" : "0"); } catch (e) {}
-        renderFixBookOptions();
+        applyHide(prop, box.checked);
         loadBooks();
         filtersChanged();
       });

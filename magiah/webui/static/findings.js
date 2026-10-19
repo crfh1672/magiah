@@ -1,4 +1,4 @@
-/* ============ מגיה — findings.js: snippets, status writes, progress, sidebar filters ============
+/* ============ מגיה — findings.js: snippets, status writes, progress, the filter window ============
  * Classic script: shares the global scope with the other files (load order is
  * set in index.html; core.js comes first, main.js last and calls init()). */
 "use strict";
@@ -333,7 +333,6 @@ function syncFilterControls() {
     b.classList.toggle("selected", b.dataset.key === f.book);
     b.setAttribute("aria-pressed", b.dataset.key === f.book ? "true" : "false");
   });
-  if (f.min_rank || f.sort !== "rank" || f.dir !== "desc" || !S.hideIrr || S.hideDb) $("#fMore").open = true;
   $("#fixInclude").checked = S.fixInclude;
   if ($("#fixBook")) $("#fixBook").value = S.fixKey;
   syncModeButtons();
@@ -353,7 +352,7 @@ function buildSidebar() {
   et.replaceChildren();
   for (const e of (m.errtypes || [])) {
     const cnt = e.pending_count != null ? fmtNum(e.pending_count) + " ממתינים" : (e.count != null ? fmtNum(e.count) : "");
-    const lb = el("label", { class: "chk-row", title: e.explanation || "" },
+    const lb = el("label", { class: "chk-row", title: e.explanation || "", dataset: { key: e.key } },
       el("input", { type: "checkbox", value: e.key }),
       el("span", null, e.hebrew || e.key),
       el("span", { class: "cnt" }, cnt));
@@ -364,13 +363,16 @@ function buildSidebar() {
   const st = $("#fStatuses");
   st.replaceChildren();
   for (const s of statuses()) {
-    const lb = el("label", { class: "chk-row" },
+    const lb = el("label", { class: "chk-row", dataset: { key: s.key } },
       el("input", { type: "checkbox", value: s.key }),
-      el("span", null, s.icon + " " + s.hebrew));
+      el("span", null, s.icon + " " + s.hebrew),
+      el("span", { class: "cnt" }));
     lb.querySelector("input").addEventListener("change", onStatusFilterChange);
     st.append(lb);
   }
   syncFilterControls();
+  renderFacetCounts();
+  if (filterDialogOpen()) loadFacets();
 }
 
 function onErrtypeChange() {
@@ -384,27 +386,66 @@ function onStatusFilterChange() {
 /* ---- active filters: what is the list narrowed by, one click to undo each ---- */
 const DEFAULT_FILTERS = () => ({ origin: "", book: "", errtypes: [], statuses: [], verified: false, min_rank: 0, q: "", sort: "rank", dir: "desc" });
 
+/* Titles of the books seen so far, by key: the chip of a chosen book keeps its
+ * name even when the book has no findings under the other filters and so is
+ * no longer in the list the server sends. */
+const BOOK_NAMES = new Map();
+function bookName(key) { return BOOK_NAMES.get(key) || key; }
+
+/* The two "hide" switches narrow the list too, so they are chips like the rest
+ * (kind "hide"). They are a standing preference of this browser, which is why
+ * "clear filters" leaves them alone and only their own chip turns them off. */
+function applyHide(prop, value) {
+  S[prop] = !!value;
+  const ids = prop === "hideIrr" ? ["#fHideIrr", "#fixHideIrrelevant"] : ["#fHideDb", "#fixHideExportOnly"];
+  for (const id of ids) { const box = $(id); if (box) box.checked = S[prop]; }
+  try { localStorage.setItem("magiah_" + prop, S[prop] ? "1" : "0"); } catch (e) {}
+  renderFixBookOptions();
+}
+
 function activeFilterChips() {
   const f = S.filters, chips = [];
-  const add = (label, clear) => chips.push({ label, clear });
-  if (f.q) add("חיפוש: " + f.q, () => { f.q = ""; });
-  if (f.origin) add("מאגר: " + (originInfo(f.origin).hebrew || f.origin), () => { f.origin = ""; });
-  if (f.book) {
-    const b = S.bookList.find(x => (x.key || x.name || x.source) === f.book);
-    add("ספר: " + (b ? (b.name || b.source) : f.book), () => { f.book = ""; });
-  }
-  for (const k of f.errtypes) add(errtypeInfo(k).hebrew || k, () => { f.errtypes = f.errtypes.filter(x => x !== k); });
-  for (const k of f.statuses) add("סטטוס: " + statusInfo(k).hebrew, () => { f.statuses = f.statuses.filter(x => x !== k); });
-  if (f.verified) add("מאומתים בלבד", () => { f.verified = false; });
-  if (f.min_rank) add("ציון מ־" + fmtRank(f.min_rank), () => { f.min_rank = 0; });
+  // `clear` runs later, so it reads S.filters then (clearFilters replaces the object)
+  const add = (label, clear, kind) => chips.push({ label, clear, kind: kind || "filter" });
+  if (f.q) add("חיפוש: " + f.q, () => { S.filters.q = ""; });
+  if (f.origin) add("מאגר: " + (originInfo(f.origin).hebrew || f.origin), () => { S.filters.origin = ""; });
+  if (f.book) add("ספר: " + bookName(f.book), () => { S.filters.book = ""; });
+  for (const k of f.errtypes) add(errtypeInfo(k).hebrew || k, () => { S.filters.errtypes = S.filters.errtypes.filter(x => x !== k); });
+  for (const k of f.statuses) add("סטטוס: " + statusInfo(k).hebrew, () => { S.filters.statuses = S.filters.statuses.filter(x => x !== k); });
+  if (f.verified) add("מאומתים בלבד", () => { S.filters.verified = false; });
+  if (f.min_rank) add("ציון מ־" + fmtRank(f.min_rank), () => { S.filters.min_rank = 0; });
+  if (S.hideIrr) add("מוסתר: נתיבי «לא רלוונטי»", () => applyHide("hideIrr", false), "hide");
+  if (S.hideDb) add("מוסתר: ספרים לייצוא בלבד", () => applyHide("hideDb", false), "hide");
   return chips;
 }
 
+/* "Clear filters": every filter back to its default. The hide switches stay. */
+function clearFilters() {
+  S.filters = DEFAULT_FILTERS();
+  $("#fBookSearch").value = "";
+  syncFilterControls();
+  loadBooks();
+  filtersChanged();
+}
+
 function renderActiveFilters() {
+  const all = activeFilterChips();
+  const n = all.length;
+  // the button that opens the filter window carries the number
+  const btn = $("#btnSidebar");
+  if (btn) {
+    $("#filterBtnCount").textContent = n ? fmtNum(n) : "";
+    btn.setAttribute("aria-label", n ? "סינון הממצאים, " + fmtNum(n) + " מסננים פעילים" : "סינון הממצאים");
+  }
   const box = $("#activeFilters");
   if (!box) return;
-  const chips = (S.view === "table" || S.view === "cards") ? activeFilterChips() : [];
+  const chips = (S.view === "table" || S.view === "cards") ? all : [];
   box.hidden = !chips.length;
+  // loadBooks() calls this again when the book titles arrive: rebuilding an
+  // unchanged row of chips would throw away the keyboard focus on one of them
+  const sig = chips.map(c => c.kind + ":" + c.label).join("\n");
+  if (box.dataset.sig === sig && box.childElementCount) return;
+  box.dataset.sig = sig;
   box.replaceChildren(...chips.map(c => {
     const b = el("button", { type: "button", class: "fchip", "aria-label": "הסר סינון: " + c.label },
       el("span", null, c.label), icon("x"));
@@ -414,13 +455,15 @@ function renderActiveFilters() {
       syncFilterControls();
       loadBooks();
       filtersChanged();
+      // the chip that had focus is gone: keep the keyboard where it was
+      ($("#activeFilters .fchip") || $("#btnSidebar")).focus();
     });
     return b;
   }));
-  if (chips.length > 1) {
-    const all = el("button", { type: "button", class: "fchip-clear" }, "נקה הכל");
-    all.addEventListener("click", () => $("#btnClearFilters").click());
-    box.append(all);
+  if (chips.some(c => c.kind === "filter") && chips.length > 1) {
+    const clr = el("button", { type: "button", class: "fchip-clear", title: "מסיר את המסננים; מתגי ההסתרה נשארים כפי שהם" }, "נקה סינון");
+    clr.addEventListener("click", () => { clearFilters(); $("#btnSidebar").focus(); });
+    box.append(clr);
   }
 }
 
@@ -432,19 +475,168 @@ function filtersChanged() {
   writeHash();
   refreshCurrentView();
   updateProgress();
+  // the counts are only fetched where somebody reads them
+  if (filterDialogOpen()) { loadFacets(); loadBooks(); }
+  renderFacetCounts();
+}
+
+/* ---- counts: asked of the server with the list's own parameters ---- */
+/* The query the list is built from, minus paging and sorting. /api/facets
+ * counts every group under all of these except the group's own filter, so
+ * the number beside an entry is what choosing that entry shows. */
+function facetQuery() {
+  const p = filterParams({});
+  for (const k of ["sort", "dir", "page", "page_size"]) p.delete(k);
+  return p;
+}
+S.facets = null;          // the last /api/facets answer ...
+S.facetsKey = "";         // ... and the query it answered
+S.facetsFailed = false;
+let facetSeq = 0;
+function facetsFresh() {
+  return !!S.facets && S.facetsKey === facetQuery().toString();
+}
+/* The list's total under the current filters, or null while unknown. */
+function facetsTotal() { return facetsFresh() ? S.facets.total : null; }
+
+const loadFacets = debounce(async function () {
+  const seq = ++facetSeq, key = facetQuery().toString();
+  try {
+    const resp = await api("/api/facets?" + key);
+    if (seq !== facetSeq) return;
+    S.facets = resp; S.facetsKey = key; S.facetsFailed = false;
+  } catch (e) {
+    if (seq !== facetSeq) return;
+    S.facets = null; S.facetsKey = ""; S.facetsFailed = true;
+  }
+  renderFacetCounts();
+  // a card view that is waiting on the total can now say why it is empty
+  if (S.view === "cards" && !currentCard()) renderCard();
+}, 120);
+
+function renderFacetCounts() {
+  const body = $("#filterBody");
+  if (!body) return;
+  // counts of an older query are not shown while the new ones are on the way
+  const fresh = facetsFresh(), f = fresh ? S.facets : null;
+  body.setAttribute("aria-busy", fresh ? "false" : "true");
+  body.classList.toggle("stale", !fresh);
+  const origins = new Map(), errs = new Map(), sts = new Map();
+  if (f) {
+    for (const o of f.origins) origins.set(o.name, o);
+    for (const e of f.errtypes) errs.set(e.key, e);
+    for (const x of f.statuses) sts.set(x.key, x.count);
+  }
+  // origins: the select's own options
+  const sel = $("#fOrigin");
+  for (const opt of sel.options) {
+    if (!opt.value) {
+      const sum = f ? f.origins.reduce((a, o) => a + o.count, 0) : null;
+      opt.textContent = "כל המאגרים" + (sum != null ? " (" + fmtNum(sum) + ")" : "");
+      continue;
+    }
+    const o = originInfo(opt.value);
+    const c = origins.get(opt.value);
+    opt.textContent = (o.hebrew || opt.value) + (f ? " (" + fmtNum(c ? c.count : 0) + ")" : "");
+  }
+  // error types: "pending of count", or just 0
+  for (const row of $$("#fErrtypes .chk-row")) {
+    const cnt = $(".cnt", row), e = errs.get(row.dataset.key);
+    if (!f) { cnt.textContent = ""; cnt.classList.remove("zero"); continue; }
+    const n = e ? e.count : 0;
+    cnt.textContent = n ? fmtNum(e.pending_count) + " ממתינים מתוך " + fmtNum(n) : "0";
+    cnt.classList.toggle("zero", !n);
+  }
+  for (const row of $$("#fStatuses .chk-row")) {
+    const cnt = $(".cnt", row);
+    const n = f ? (sts.get(row.dataset.key) || 0) : null;
+    cnt.textContent = n == null ? "" : fmtNum(n);
+    cnt.classList.toggle("zero", n === 0);
+  }
+  // the window's summary and the button that closes it
+  const res = $("#filterResults"), done = $("#filterDone");
+  if (S.facetsFailed) { res.textContent = "הספירות לא נטענו"; done.textContent = "הצג ממצאים"; return; }
+  if (!fresh) { res.textContent = "מעדכן…"; return; }
+  res.textContent = fmtNum(f.total) + " ממצאים";
+  done.textContent = f.total ? "הצג " + fmtNum(f.total) + " ממצאים" : "אין ממצאים";
+}
+
+/* ---- the filter window ---- */
+function filterDialogOpen() { return $("#sidebar").classList.contains("visible"); }
+function openFilterDialog() {
+  if (filterDialogOpen()) return;
+  $("#sidebar").classList.add("visible");
+  $("#filterScrim").classList.add("visible");
+  $("#btnSidebar").setAttribute("aria-expanded", "true");
+  openLayer($("#sidebar"), "#btnSidebar");
+  renderFacetCounts();
+  loadFacets();
+  loadBooks();
+}
+function closeFilterDialog() {
+  if (!filterDialogOpen()) return;
+  $("#sidebar").classList.remove("visible");
+  $("#filterScrim").classList.remove("visible");
+  $("#btnSidebar").setAttribute("aria-expanded", "false");
+  closeLayer($("#sidebar"));
+}
+
+/* ---- the list is empty: say so, say why if the hidden books are the reason,
+ * and offer the way back ---- */
+function emptyFilterState() {
+  const hasFilters = activeFilterChips().some(c => c.kind === "filter");
+  const hint = el("p", { class: "es-hint" });
+  const actions = el("div", { class: "es-actions" });
+  const box = el("div", { class: "empty-state", role: "status" },
+    icon("inbox", "ic-lg"), el("p", null, "אין ממצאים בסינון הנוכחי"), hint, actions);
+  if (hasFilters) {
+    const b = el("button", { type: "button", class: "btn primary" }, "נקה סינון");
+    b.addEventListener("click", () => { clearFilters(); $("#btnSidebar").focus(); });
+    actions.append(b);
+  }
+  // would the books the hide switches keep out bring results back?
+  if (S.hideIrr || S.hideDb) {
+    const p = facetQuery();
+    p.delete("hide_irr"); p.delete("hide_db");
+    api("/api/facets?" + p).then(r => {
+      if (!r || !r.total) return;
+      hint.textContent = "יש " + fmtNum(r.total) + " ממצאים בספרים שהוסתרו (נתיבי «לא רלוונטי» או ספרים לייצוא בלבד).";
+      const show = el("button", { type: "button", class: "btn" }, "הצג גם את המוסתרים");
+      show.addEventListener("click", () => {
+        applyHide("hideIrr", false); applyHide("hideDb", false);
+        loadBooks(); filtersChanged();
+        $("#btnSidebar").focus();
+      });
+      actions.append(show);
+    }).catch(() => {});
+  }
+  return box;
 }
 
 /* books list */
+let bookSeq = 0;
 const loadBooks = debounce(async function () {
   const q = $("#fBookSearch").value.trim();
-  const p = new URLSearchParams();
-  if (S.filters.origin) p.set("origin", S.filters.origin);
+  // the list's own filters, so a book's count is what choosing it shows
+  // (the server leaves the book filter itself out). `q` there is the title
+  // search; the free-text search of the list goes as `search`.
+  const p = facetQuery();
+  p.delete("book_key");
+  const free = p.get("q");
+  p.delete("q");
+  if (free) p.set("search", free);
   if (q) p.set("q", q);
-  if (S.hideIrr) p.set("hide_irr", "1");
-  if (S.hideDb) p.set("hide_db", "1");
+  // a slower answer to an older request must not replace a newer one
+  const seq = ++bookSeq;
   try {
     const resp = await api("/api/books?" + p);
-    const books = Array.isArray(resp) ? resp : (resp.books || resp.rows || []);
+    if (seq !== bookSeq) return;
+    let books = Array.isArray(resp) ? resp : (resp.books || resp.rows || []);
+    for (const b of books) BOOK_NAMES.set(b.key || b.name || b.source, b.source || b.name || b.key);
+    // the chosen book stays on the list, with its 0, so it can be unchosen there
+    if (S.filters.book && !q && !books.some(b => (b.key || b.name || b.source) === S.filters.book)) {
+      books = [{ key: S.filters.book, source: bookName(S.filters.book), count: 0, pending_count: 0 }, ...books];
+    }
     S.bookList = books;
     renderActiveFilters();
     const box = $("#fBookList");
@@ -459,7 +651,7 @@ const loadBooks = debounce(async function () {
       const key = b.key || name;
       const label = titleCount.get(b.source) > 1 ? name + " — " + key : name;
       const pending = b.pending_count != null ? b.pending_count : b.pending;
-      const cnt = (pending != null ? fmtNum(pending) + " ממתינים / " : "") + (b.count != null ? fmtNum(b.count) : "");
+      const cnt = b.count ? (pending != null ? fmtNum(pending) + " ממתינים מתוך " : "") + fmtNum(b.count) : "0";
       const item = el("div", { class: "book-item" + (S.filters.book === key ? " selected" : ""), dataset: { key } },
         el("span", { class: "bname", title: label }, el("bdi", null, label)),
         el("span", { class: "bcount" }, cnt));
@@ -473,7 +665,11 @@ const loadBooks = debounce(async function () {
       item.setAttribute("aria-pressed", S.filters.book === key ? "true" : "false");
       box.append(item);
     }
+    if (books.length > 300) {
+      box.append(el("div", { class: "empty" }, "מוצגים 300 הראשונים מתוך " + fmtNum(books.length) + " — צמצם בחיפוש"));
+    }
   } catch (e) {
+    if (seq !== bookSeq) return;
     $("#fBookList").replaceChildren(el("div", { class: "empty" }, "טעינת הספרים נכשלה: " + e.message));
   }
 }, 250);
