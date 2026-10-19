@@ -106,23 +106,24 @@
   --slate-700: #3e4d5e;
 
   /* ---- semantic aliases (back-compat with existing code) ---- */
-  --bg: #f3f5f8;
+  /* the neutral palette of the layout prototype */
+  --bg: #f4f4f1;
   --panel: #ffffff;
-  --panel-2: #f8fafc;
-  --border: #dde3ea;
-  --border-strong: #c4cdd8;
-  --text: #1c2733;
-  --muted: #556372;
-  --faint: #5f6d7c;
-  --accent: #1a6fb5;
-  --accent-strong: #135a95;
-  --accent-soft: #e3f0fa;
-  --red: #b13024;
-  --red-soft: #fdecea;
-  --green: #197140;
-  --green-soft: #e6f5ec;
-  --amber: #8a5a00;
-  --amber-soft: #fcf3df;
+  --panel-2: #f4f4f1;
+  --border: #dedede;
+  --border-strong: #bdbdbd;
+  --text: #1f1f1d;
+  --muted: #5f5e5a;
+  --faint: #6b6a65;
+  --accent: #185fa5;
+  --accent-strong: #0f4a85;
+  --accent-soft: #e6f1fb;
+  --red: #a32d2d;
+  --red-soft: #fcebeb;
+  --green: #3b6d11;
+  --green-soft: #eaf3de;
+  --amber: #854f0b;
+  --amber-soft: #faeeda;
   --blue: #1f5fa8;
   --blue-soft: #e5eefb;
   --slate: #52626f;
@@ -199,23 +200,23 @@
   --slate-700: #c3cedb;
 
   --on-accent: #0b1722;
-  --bg: #12181f;
-  --panel: #1b232d;
-  --panel-2: #202a36;
-  --border: #2c3948;
-  --border-strong: #3d4d5f;
-  --text: #e4eaf1;
-  --muted: #9fadbc;
-  --faint: #919fae;
-  --accent: #4d9fdc;
-  --accent-strong: #6fb3e6;
-  --accent-soft: #1d3348;
-  --red: #e8796b;
-  --red-soft: #3a2320;
-  --green: #57b97e;
-  --green-soft: #1c3527;
-  --amber: #d9a441;
-  --amber-soft: #3a2f18;
+  --bg: #171715;
+  --panel: #1e1e1c;
+  --panel-2: #2a2a27;
+  --border: #3a3a37;
+  --border-strong: #55554f;
+  --text: #f1efe8;
+  --muted: #b4b2a9;
+  --faint: #a3a198;
+  --accent: #85b7eb;
+  --accent-strong: #a8cdf2;
+  --accent-soft: #0c2a4a;
+  --red: #f09595;
+  --red-soft: #501313;
+  --green: #97c459;
+  --green-soft: #27500a;
+  --amber: #fac775;
+  --amber-soft: #412402;
   --blue: #6fa8e8;
   --blue-soft: #1d2f47;
   --slate: #9aa9b8;
@@ -665,7 +666,7 @@ section#view-table.visible { display: flex; flex-direction: column; flex: 1; min
   #focusPane { border-inline-start: 1px solid var(--border); }
   #view-table .card-panel { border-inline-start: 0; }
   #bookPane h2 { margin: 0; }
-  #bpSearch { width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel-2); }
+  #bpSearch { width: calc(100% - 24px); padding: 7px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel-2); }
   #bpSearch:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
   #bpList { flex: 1; min-height: 0; overflow-y: auto; border: 0; background: none; }
   /* the prototype's books column: the name over a quiet count; the chosen one tinted */
@@ -1906,3 +1907,10 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
   #helpNav { flex-direction: row; flex-wrap: wrap; border-inline-start: 0; border-bottom: 1px solid var(--border); }
   #helpNav button { border-bottom: 0; }
 }
+
+/* the fixer's two toolbar groups share one strip */
+#fixerHead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--border); flex: 0 0 auto; }
+#fixerHead > #fixerTop, #fixerHead > #fixerOpts { display: contents; }
+#fixerTop, #fixerOpts { padding: 0; border-bottom: 0; }
+#fixerHead #fixBookPick { flex: 1 1 360px; }
+@media (max-width: 760px) { #fixerHead #fixProgressWrap { flex: 1 1 100%; margin-inline-start: 0; } }
