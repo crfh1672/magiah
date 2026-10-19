@@ -124,16 +124,6 @@
       </div>
     </div>
 
-    <div class="f-group">
-      <label class="f-title" for="fSort">סדר מיון</label>
-      <select id="fSort">
-        <option value="rank:desc">ציון — מהגבוה לנמוך</option>
-        <option value="rank:asc">ציון — מהנמוך לגבוה</option>
-        <option value="random:desc">אקראי</option>
-        <option value="source:asc">לפי ספר</option>
-        <option value="word:asc">לפי מילה</option>
-      </select>
-    </div>
     </div>
     </div>
 
@@ -144,16 +134,21 @@
   </aside>
 
   <main id="main">
-    <div id="viewtabs" role="group" aria-label="תצוגת הסקירה">
-      <button type="button" data-view="table" class="active" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg> תצוגת טבלה</button>
-      <button type="button" data-view="cards" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg> תצוגת כרטיסים</button>
-      <span class="tab-hint" id="sessionCounter"></span>
-    </div>
-    <div id="activeFilters" role="group" aria-label="סינונים פעילים" hidden></div>
-
-    <!-- ===================== table view ===================== -->
-    <section id="view-table" class="view visible">
-      <div id="tblTools">
+    <div id="reviewBar" role="group" aria-label="כלי הסקירה">
+      <div id="viewtabs" role="group" aria-label="תצוגת הסקירה">
+        <button type="button" data-view="table" class="active" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg> <span class="rb-word">טבלה</span></button>
+        <button type="button" data-view="cards" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg> <span class="rb-word">כרטיסים</span></button>
+      </div>
+      <label class="rb-sort" for="fSort">מיון
+        <select id="fSort">
+        <option value="rank:desc">ציון — מהגבוה לנמוך</option>
+        <option value="rank:asc">ציון — מהנמוך לגבוה</option>
+        <option value="random:desc">אקראי</option>
+        <option value="source:asc">לפי ספר</option>
+        <option value="word:asc">לפי מילה</option>
+      </select>
+      </label>
+      <div id="tblOnlyTools">
         <details id="colsMenu" class="menu-wrap">
           <summary class="btn sm">עמודות</summary>
           <div class="menu" id="colsMenuBody"></div>
@@ -163,6 +158,12 @@
           <button type="button" class="seg-btn" data-density="compact" aria-pressed="false">צפוף</button>
         </div>
       </div>
+      <span class="tab-hint" id="sessionCounter"></span>
+    </div>
+    <div id="activeFilters" role="group" aria-label="סינונים פעילים" hidden></div>
+
+    <!-- ===================== table view ===================== -->
+    <section id="view-table" class="view visible">
       <div id="bulkBar">
         <span class="bulk-count"></span>
         <div class="bulk-actions"></div>

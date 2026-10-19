@@ -57,7 +57,8 @@ function showView(v, skipHash) {
     b.classList.toggle("active", on);
     if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
   });
-  $("#viewtabs").hidden = !isReviewView(v);
+  $("#reviewBar").hidden = !isReviewView(v);
+  $("#tblOnlyTools").hidden = v !== "table";   // columns and density belong to the table
   $$("#viewtabs button[data-view]").forEach(b => {
     const on = b.dataset.view === v;
     b.classList.toggle("active", on);
@@ -210,6 +211,24 @@ function bindControls() {
     filtersChanged();
   });
   $("#fBookSearch").addEventListener("input", loadBooks);
+  $("#fBookSearch").addEventListener("keydown", async ev => {
+    if (ev.key === "Escape" && ev.target.value) {   // first Escape clears; the next closes the window
+      ev.preventDefault(); ev.stopPropagation();
+      ev.target.value = ""; loadBooks();
+    } else if (ev.key === "Enter") {
+      ev.preventDefault();
+      loadBooks.cancel();                       // the typed text is searched now, not in 250ms
+      const q = ev.target.value.trim();
+      if (!q) return;
+      const books = await loadBooksNow();       // never pick from an older list
+      if (books === undefined || ev.target.value.trim() !== q) return;   // replaced / typing went on
+      if (!books) { toast("חיפוש הספרים נכשל", "err"); return; }
+      if (!books.length) { toast("לא נמצא ספר"); return; }
+      S.filters.book = books[0].key || books[0].name || books[0].source;
+      syncFilterControls();
+      filtersChanged();
+    }
+  });
   $("#fVerified").addEventListener("change", () => { S.filters.verified = $("#fVerified").checked; filtersChanged(); });
   const mrSync = v => {
     S.filters.min_rank = parseFloat(v) || 0;
