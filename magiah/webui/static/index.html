@@ -49,9 +49,9 @@
   <input id="globalSearch" type="search" placeholder="חיפוש חופשי: מילה, תיקון, קטע, מראה מקום…" aria-label="חיפוש חופשי" autocomplete="off">
   <div id="progressPill" title="התקדמות בסינון הנוכחי">טוען…</div>
   <div class="spacer"></div>
-  <button id="btnUndo" class="tb-btn" title="ביטול הפעולה האחרונה (Ctrl+Z)" aria-label="ביטול הפעולה האחרונה"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg> ביטול</button>
+  <button id="btnUndo" class="tb-btn" title="ביטול הפעולה האחרונה (Ctrl+Z)" aria-label="ביטול הפעולה האחרונה"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg> <span class="tb-word">ביטול</span></button>
   <details id="exportMenu" class="menu-wrap">
-    <summary class="tb-btn"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> ייצוא</summary>
+    <summary class="tb-btn" aria-label="ייצוא"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> <span class="tb-word">ייצוא</span></summary>
     <div class="menu">
       <button id="expXlsxCurrent">Excel — למאגר הנוכחי</button>
       <button id="expXlsxAll">Excel — כל המאגרים</button>
@@ -59,18 +59,22 @@
       <button id="expFixes">ייצוא תיקונים ל־to_send</button>
     </div>
   </details>
-  <details id="moreMenu" class="menu-wrap">
-    <summary class="tb-btn" title="עוד" aria-label="עוד"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg></summary>
-    <div class="menu">
-      <button id="btnScan" title="ניהול סריקה: רענון, ייבוא, איפוס, גיבויים"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> ניהול סריקה</button>
-      <button id="btnHelp" data-goview="help"><svg class="ic" aria-hidden="true"><use href="#i-help"/></svg> עזרה</button>
-      <div class="sep"></div>
-      <button id="btnTheme" title="מצב כהה / בהיר"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg> מצב כהה</button>
-    </div>
-  </details>
 </header>
 
+<!-- result status (UI_SPEC §9f): a strip under the top bar, on every screen; filled by renderResultBanner() -->
+<div id="resultBanner" role="status" aria-live="polite" hidden></div>
+
 <div id="layout">
+
+  <nav id="rail" aria-label="ניווט ראשי">
+    <button type="button" class="rail-btn" id="btnReview" data-station="review"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg><span>סקירה</span></button>
+    <button type="button" class="rail-btn" data-goview="fixer"><svg class="ic" aria-hidden="true"><use href="#i-wrench"/></svg><span>תיקון</span></button>
+    <button type="button" class="rail-btn" data-goview="stats"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg><span>התקדמות</span></button>
+    <button type="button" class="rail-btn" id="btnScan" data-station="scan" title="ניהול סריקה: רענון, ייבוא, איפוס, גיבויים"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span>סריקה</span></button>
+    <button type="button" class="rail-btn" id="btnHelp" data-goview="help"><svg class="ic" aria-hidden="true"><use href="#i-help"/></svg><span>עזרה</span></button>
+    <span class="rail-spacer"></span>
+    <button type="button" class="rail-btn" id="btnTheme" title="מצב כהה / בהיר"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg><span>מצב כהה</span></button>
+  </nav>
 
   <div id="filterScrim"></div>
   <aside id="sidebar" role="dialog" aria-modal="true" aria-labelledby="filterTitle">
@@ -140,15 +144,11 @@
   </aside>
 
   <main id="main">
-    <!-- result status (UI_SPEC §9f): filled by renderResultBanner() -->
-    <div id="resultBanner" role="status" aria-live="polite" hidden></div>
-    <nav id="viewtabs">
-      <button data-view="table" class="active"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg> תצוגת טבלה</button>
-      <button data-view="cards"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg> תצוגת כרטיסים</button>
-      <button data-view="fixer"><svg class="ic" aria-hidden="true"><use href="#i-wrench"/></svg> מצב מתקן</button>
-      <button data-view="stats"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> סטטיסטיקה</button>
+    <div id="viewtabs" role="group" aria-label="תצוגת הסקירה">
+      <button type="button" data-view="table" class="active" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg> תצוגת טבלה</button>
+      <button type="button" data-view="cards" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg> תצוגת כרטיסים</button>
       <span class="tab-hint" id="sessionCounter"></span>
-    </nav>
+    </div>
     <div id="activeFilters" role="group" aria-label="סינונים פעילים" hidden></div>
 
     <!-- ===================== table view ===================== -->
