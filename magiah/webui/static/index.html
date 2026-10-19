@@ -26,6 +26,7 @@
 <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
 <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
 <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></symbol>
 <symbol id="i-table" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M12 3v18"/></symbol>
 <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></symbol>
 <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
@@ -44,21 +45,26 @@
 </svg>
 
 <header id="topbar">
-  <button id="btnSidebar" class="tb-btn" title="סינון הממצאים" aria-haspopup="dialog" aria-expanded="false" aria-controls="sidebar"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg> <span class="tb-word">סינון</span><span id="filterBtnCount"></span></button>
-  <div class="brand">מַגִּיהַּ<small>סקירת שגיאות דפוס</small></div>
-  <input id="globalSearch" type="search" placeholder="חיפוש חופשי: מילה, תיקון, קטע, מראה מקום…" aria-label="חיפוש חופשי" autocomplete="off">
-  <div id="progressPill" title="התקדמות בסינון הנוכחי">טוען…</div>
-  <div class="spacer"></div>
-  <button id="btnUndo" class="tb-btn" title="ביטול הפעולה האחרונה (Ctrl+Z)" aria-label="ביטול הפעולה האחרונה"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg> <span class="tb-word">ביטול</span></button>
-  <details id="exportMenu" class="menu-wrap">
-    <summary class="tb-btn" aria-label="ייצוא"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> <span class="tb-word">ייצוא</span></summary>
-    <div class="menu">
-      <button id="expXlsxCurrent">Excel — למאגר הנוכחי</button>
-      <button id="expXlsxAll">Excel — כל המאגרים</button>
-      <div class="sep"></div>
-      <button id="expFixes">ייצוא תיקונים ל־to_send</button>
-    </div>
-  </details>
+  <div class="brand">מַגִּיהַּ</div>
+  <div id="searchBox">
+    <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
+    <input id="globalSearch" type="search" placeholder="חיפוש חופשי" title="מילה, תיקון, קטע או מראה מקום" aria-label="חיפוש חופשי: מילה, תיקון, קטע או מראה מקום" aria-keyshortcuts="Control+K" autocomplete="off">
+    <kbd class="kbd" aria-hidden="true">Ctrl K</kbd>
+  </div>
+  <div id="topActions">
+    <div id="progressPill" title="התקדמות בסינון הנוכחי">טוען…</div>
+    <button id="btnTheme" class="tb-btn" title="מצב כהה / בהיר" aria-label="מצב כהה"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg></button>
+    <button id="btnUndo" class="tb-btn" title="ביטול הפעולה האחרונה (Ctrl+Z)" aria-label="ביטול הפעולה האחרונה"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg> <span class="tb-word">ביטול</span></button>
+    <details id="exportMenu" class="menu-wrap">
+      <summary class="tb-btn" aria-label="ייצוא"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> <span class="tb-word">ייצוא</span></summary>
+      <div class="menu">
+        <button id="expXlsxCurrent">Excel — למאגר הנוכחי</button>
+        <button id="expXlsxAll">Excel — כל המאגרים</button>
+        <div class="sep"></div>
+        <button id="expFixes">ייצוא תיקונים ל־to_send</button>
+      </div>
+    </details>
+  </div>
 </header>
 
 <!-- result status (UI_SPEC §9f): a strip under the top bar, on every screen; filled by renderResultBanner() -->
@@ -67,13 +73,12 @@
 <div id="layout">
 
   <nav id="rail" aria-label="ניווט ראשי">
-    <button type="button" class="rail-btn" id="btnReview" data-station="review"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg><span>סקירה</span></button>
-    <button type="button" class="rail-btn" data-goview="fixer"><svg class="ic" aria-hidden="true"><use href="#i-wrench"/></svg><span>תיקון</span></button>
+    <button type="button" class="rail-btn" id="btnReview" data-station="review"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg><span>סקירה</span></button>
+    <button type="button" class="rail-btn" data-goview="fixer"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg><span>תיקון</span></button>
     <button type="button" class="rail-btn" data-goview="stats"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg><span>התקדמות</span></button>
-    <button type="button" class="rail-btn" id="btnScan" data-station="scan" title="ניהול סריקה: רענון, ייבוא, איפוס, גיבויים"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg><span>סריקה</span></button>
+    <button type="button" class="rail-btn" id="btnScan" data-station="scan" title="ניהול סריקה: רענון, ייבוא, איפוס, גיבויים"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg><span>סריקה</span></button>
     <button type="button" class="rail-btn" id="btnHelp" data-goview="help"><svg class="ic" aria-hidden="true"><use href="#i-help"/></svg><span>עזרה</span></button>
     <span class="rail-spacer"></span>
-    <button type="button" class="rail-btn" id="btnTheme" title="מצב כהה / בהיר"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg><span>מצב כהה</span></button>
   </nav>
 
   <div id="filterScrim"></div>
@@ -136,13 +141,16 @@
   <main id="main">
     <div id="reviewBar" role="group" aria-label="כלי הסקירה">
       <div id="viewtabs" role="group" aria-label="תצוגת הסקירה">
-        <button type="button" data-view="table" class="active" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg> <span class="rb-word">טבלה</span></button>
-        <button type="button" data-view="cards" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg> <span class="rb-word">כרטיסים</span></button>
+        <button type="button" data-view="table" class="active" aria-pressed="true">רשימה</button>
+        <button type="button" data-view="cards" aria-pressed="false">כרטיסים</button>
       </div>
-      <label class="rb-sort" for="fSort">מיון
+      <div id="filterSlot"><button id="btnSidebar" class="ch-btn filter-btn" title="סינון הממצאים" aria-haspopup="dialog" aria-expanded="false" aria-controls="sidebar"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg> <span class="tb-word">סינון</span><span id="filterBtnCount"></span></button></div>
+      <div id="activeFilters" role="group" aria-label="סינונים פעילים" hidden></div>
+      <span class="rb-spacer"></span>
+      <label class="rb-sort" for="fSort">סדר:
         <select id="fSort">
-        <option value="rank:desc">ציון — מהגבוה לנמוך</option>
-        <option value="rank:asc">ציון — מהנמוך לגבוה</option>
+        <option value="rank:desc">ציון, מהגבוה לנמוך</option>
+        <option value="rank:asc">ציון, מהנמוך לגבוה</option>
         <option value="random:desc">אקראי</option>
         <option value="source:asc">לפי ספר</option>
         <option value="word:asc">לפי מילה</option>
@@ -150,17 +158,22 @@
       </label>
       <div id="tblOnlyTools">
         <details id="colsMenu" class="menu-wrap">
-          <summary class="btn sm">עמודות</summary>
-          <div class="menu" id="colsMenuBody"></div>
+          <summary class="ch-btn">עמודות</summary>
+          <div class="menu">
+            <div id="colsMenuBody"></div>
+            <div class="menu-sep" role="separator"></div>
+            <div class="menu-density">
+              <span id="densityLabel">צפיפות</span>
+              <div class="seg" id="densitySeg" role="group" aria-labelledby="densityLabel">
+                <button type="button" class="seg-btn active" data-density="comfortable" aria-pressed="true">נינוח</button>
+                <button type="button" class="seg-btn" data-density="compact" aria-pressed="false">צפוף</button>
+              </div>
+            </div>
+          </div>
         </details>
-        <div class="seg" id="densitySeg" role="group" aria-label="צפיפות הטבלה">
-          <button type="button" class="seg-btn active" data-density="comfortable" aria-pressed="true">נינוח</button>
-          <button type="button" class="seg-btn" data-density="compact" aria-pressed="false">צפוף</button>
-        </div>
       </div>
       <span class="tab-hint" id="sessionCounter"></span>
     </div>
-    <div id="activeFilters" role="group" aria-label="סינונים פעילים" hidden></div>
 
     <!-- ===================== table view ===================== -->
     <section id="view-table" class="view visible">
@@ -172,8 +185,8 @@
       </div>
       <div id="reviewGrid">
         <aside id="bookPane" aria-label="ספרים">
-          <h2 id="bpTitle">ספרים</h2>
           <input id="bpSearch" type="search" placeholder="חיפוש ספר…" aria-label="חיפוש ספר" autocomplete="off">
+          <h2 id="bpTitle">ספרים</h2>
           <div id="bpList" class="booklist" aria-labelledby="bpTitle"><div class="empty">טוען רשימת ספרים…</div></div>
           <span id="bpCount" aria-live="polite"></span>
         </aside>
@@ -214,6 +227,9 @@
       <!-- what to show -->
       <div id="fixerOpts">
         <label class="chk-row"><input type="checkbox" id="fixInclude"> כלול גם «דרוש בירור» ו«טרם נבדק»</label>
+        <select id="fixOrigin" aria-label="מאגר">
+          <option value="">כל המאגרים</option>
+        </select>
         <select id="fixView" title="הצגת סוג מסוים בלבד — הסדר תמיד לפי מספר השורה בספר" aria-label="סוג ממצא להצגה">
           <option value="">הכל</option>
         </select>
@@ -258,7 +274,17 @@
 
     <!-- ===================== stats view ===================== -->
     <section id="view-stats" class="view">
-      <h2><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> סטטיסטיקה והתקדמות</h2>
+      <h2 class="sr-only">סטטיסטיקה והתקדמות</h2>
+      <div class="stats-head">
+        <span id="statsByLabel">פילוח לפי:</span>
+        <div class="seg" id="statsBy" role="group" aria-labelledby="statsByLabel">
+          <button type="button" class="seg-btn active" data-by="all" aria-pressed="true">הכל</button>
+          <button type="button" class="seg-btn" data-by="origin" aria-pressed="false">מאגר</button>
+          <button type="button" class="seg-btn" data-by="errtype" aria-pressed="false">סוג שגיאה</button>
+          <button type="button" class="seg-btn" data-by="book" aria-pressed="false">ספר</button>
+          <button type="button" class="seg-btn" data-by="actor" aria-pressed="false">מקבל ההחלטה</button>
+        </div>
+      </div>
       <div id="statsBody">טוען…</div>
     </section>
 
@@ -268,7 +294,7 @@
       <div id="helpBody">טוען…</div>
     </section>
     <section id="view-scan" class="view">
-      <h2><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg> ניהול סריקה</h2>
+      <h2 class="sr-only">ניהול סריקה</h2>
       <div id="scanTabs" role="tablist" aria-label="ניהול סריקה">
         <button type="button" role="tab" id="scanTabRun" class="scan-tab" data-tab="scanPanelRun" aria-controls="scanPanelRun" aria-selected="true">הרצה</button>
         <button type="button" role="tab" id="scanTabData" class="scan-tab" data-tab="scanPanelData" aria-controls="scanPanelData" aria-selected="false" tabindex="-1">נתונים וגיבויים</button>
@@ -276,8 +302,8 @@
       </div>
       <div class="scan-grid">
         <div class="scan-card" id="scanPanelRun" role="tabpanel" aria-labelledby="scanTabRun">
-          <h3>הרצת סריקה</h3>
-          <details id="scanRunSection">
+          <h3 class="sr-only">הרצת סריקה</h3>
+          <details id="scanRunSection" open>
                 <summary>▶ הרצת סריקה חדשה</summary>
                 <div class="scanrun">
                   <div class="f-group">

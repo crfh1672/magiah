@@ -125,6 +125,13 @@ function keyIs(ev, action) {
 }
 
 document.addEventListener("keydown", ev => {
+  // Ctrl+K: straight to the free search
+  if ((ev.ctrlKey || ev.metaKey) && !ev.altKey && (ev.code === "KeyK" || ev.key === "k" || ev.key === "K")) {
+    ev.preventDefault();
+    const box = $("#globalSearch");
+    box.focus(); box.select();
+    return;
+  }
   // Ctrl+Z anywhere — except while typing, where it undoes the text edit
   if (!isTextField(ev.target) && (ev.ctrlKey || ev.metaKey) && (ev.code === "KeyZ" || ev.key === "z" || ev.key === "Z")) {
     ev.preventDefault();
@@ -142,7 +149,9 @@ document.addEventListener("keydown", ev => {
   // Space on a focused button / summary / link belongs to that control
   if ((ev.code === "Space" || ev.key === " ") && isControl(t)) return;
 
-  if (S.view === "cards") {
+  if (S.view === "table") {
+    if (!ev.ctrlKey && !ev.metaKey && !ev.altKey) focusKeyDecide(ev);   // the Hebrew keys, on the finding shown in the pane
+  } else if (S.view === "cards") {
     if (keyIs(ev, "approve")) { ev.preventDefault(); cardAct("approved"); }
     else if (keyIs(ev, "reject")) { ev.preventDefault(); cardAct("not_error"); }
     else if (keyIs(ev, "rejectAll")) { ev.preventDefault(); cardAct("not_error", { scope: "word" }); }
@@ -211,7 +220,9 @@ document.addEventListener("focusout", () => showTip(null));
 /* ---------------------------------------------------------- theme */
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
-  $("#btnTheme").replaceChildren(icon(t === "dark" ? "sun" : "moon"), el("span", null, t === "dark" ? "מצב בהיר" : "מצב כהה"));
+  const btn = $("#btnTheme");
+  btn.replaceChildren(icon(t === "dark" ? "sun" : "moon"));
+  btn.setAttribute("aria-label", t === "dark" ? "מצב בהיר" : "מצב כהה");
   try { localStorage.setItem("magiah_theme", t); } catch (e) {}
 }
 function initTheme() {
@@ -229,6 +240,7 @@ function bindControls() {
   $("#fOrigin").addEventListener("change", () => {
     S.filters.origin = $("#fOrigin").value;
     S.filters.book = "";
+    syncFilterControls();
     loadBooks();
     filtersChanged();
   });
@@ -268,6 +280,13 @@ function bindControls() {
   $("#filterClose").addEventListener("click", closeFilterDialog);
   $("#filterDone").addEventListener("click", closeFilterDialog);
   $("#fixBook").addEventListener("change", () => { S.fixKey = $("#fixBook").value; writeHash(); loadFixDoc(); });
+  $("#fixOrigin").addEventListener("change", () => {
+    S.filters.origin = $("#fixOrigin").value;
+    S.filters.book = "";
+    S.fixKey = "";   // the open book may not belong to the new origin
+    syncFilterControls();
+    filtersChanged();   // reloads the fixer
+  });
   $("#fixInclude").addEventListener("change", () => {
     S.fixInclude = $("#fixInclude").checked;
     writeHash();
@@ -338,6 +357,7 @@ async function init() {
   }
   buildSidebar();
   bindTableTools();
+  initStatsBy();
   renderColsMenu();
   renderResultBanner();
   loadBooks();

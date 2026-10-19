@@ -91,6 +91,41 @@ async function stepFocus(delta) {
 }
 
 let lastFa = null;   // the pane button the keyboard was last on
+let moreOpen = false;   // the "more actions" disclosure keeps its state across redraws
+
+/* decide on one finding, then on to the next; the keyboard stays on the same button */
+async function focusDecide(id, status) {
+  try { await setStatus([id], status); } catch (e) { return; }   // the toast is shown
+  if (S.focusId === id) await stepFocus(1);
+}
+/* the Hebrew keys of the cards view work on the focused finding too */
+const FOCUS_KEYS = { approved: "approve", not_error: "reject", unsure: "unsure", ignored: "ignore", fixed: "fixedBook" };
+function focusKeyDecide(ev) {
+  if (!bookPaneShown() || !S.focusId) return false;
+  for (const [status, action] of Object.entries(FOCUS_KEYS)) {
+    if (keyIs(ev, action)) { ev.preventDefault(); focusDecide(S.focusId, status); return true; }
+  }
+  return false;
+}
+
+/* the sentence with the swap in place: the wrong word struck out, the fix after it */
+function swapSentence(snippet, word, fix) {
+  const s = snippet == null ? "" : String(snippet), w = word || "";
+  const i = s && w ? locateWord(s, w) : -1;
+  if (i < 0 || !fix || fix === w) {
+    if (i < 0 && w) {   // the sentence does not hold the word: still show the word and its fix
+      const fb = el("bdi");
+      fb.append(s || "—", " ", el("span", { class: "bad" }, w));
+      if (fix && fix !== w) fb.append(" ", el("span", { class: "good" }, fix));
+      return fb;
+    }
+    return renderSnippet(snippet, word, null, fix);
+  }
+  const b = el("bdi");
+  b.append(s.slice(0, i), el("span", { class: "bad" }, w), " ", el("span", { class: "good" }, fix), s.slice(i + w.length));
+  return b;
+}
+
 function renderFocusPane() {
   const box = $("#focusPane");
   if (!box || !reviewWide()) return;
@@ -103,12 +138,45 @@ function renderFocusPane() {
   const had = on || (document.activeElement === document.body ? lastFa : null);
   const r = S.focusBusy ? null : focusedRow();
   if (!r) {
-    box.replaceChildren(el("h2", null, "הממצא הנבחר"),
+    box.replaceChildren(el("h2", { class: "sr-only" }, "הממצא הנבחר"),
       el("div", { class: "fp-empty" }, S.focusBusy ? "טוען ממצאים…" : S.tableRows.length ? "בחרו ממצא בתור" : "אין ממצאים להצגה"));
     return;
   }
   const idx = S.tableRows.indexOf(r), n = S.tableRows.length;
   const st = effStatus(r), fix = effFix(r);
+
+  // what kind of error, and whether it is verified
+  const chips = el("div", { class: "fp-chips" },
+    el("span", { class: "ch", title: errtypeInfo(r.errtype).explanation || "" }, errtypeInfo(r.errtype).hebrew || r.errtype || ""));
+  if (r.verified) chips.append(el("span", { class: "ch on" }, "מאומת"));
+  const where = el("div", { class: "fp-where" }, el("bdi", null, [r.source, r.ref].filter(Boolean).join(" · ")),
+    r.rank != null ? el("span", { class: "fp-rank" }, " · ציון " + fmtRank(r.rank)) : null);
+  const snippet = el("div", { class: "fp-snippet" }, swapSentence(r.snippet, r.word, fix));
+
+  // the decision: three big buttons with their keys; the rest one step further
+  const decide = (s, primary) => {
+    const key = HEB_KEYS[FOCUS_KEYS[s.key]][0];
+    const b = el("button", {
+      type: "button", class: "fp-act" + (s.key === "approved" ? " ok" : ""), dataset: { fa: "st-" + s.key },
+      "aria-pressed": String(st === s.key), "aria-keyshortcuts": HEB_KEYS[FOCUS_KEYS[s.key]][1].replace("Key", ""),
+    }, (s.icon ? s.icon + " " : "") + s.hebrew, el("kbd", { class: "kbd", "aria-hidden": "true" }, key));
+    b.addEventListener("click", () => focusDecide(r.id, s.key));
+    return b;
+  };
+  const all = statuses().filter(s => s.key !== "pending");
+  const main = all.filter(s => ["approved", "not_error", "unsure"].includes(s.key));
+  const rest = all.filter(s => !main.includes(s));
+  const acts = el("div", { class: "fp-actions", role: "group", "aria-label": "החלטה על הממצא" }, ...main.map(s => decide(s)));
+
+  const more = el("details", { class: "fp-more" }, el("summary", { dataset: { fa: "more" } }, "עוד פעולות…"));
+  more.open = moreOpen || (had && had !== "more" && !main.some(s => "st-" + s.key === had) && had !== "prev" && had !== "next");
+  more.addEventListener("toggle", () => { moreOpen = more.open; });
+  const moreBody = el("div", { class: "fp-more-body" }, ...rest.map(s => decide(s)));
+  const detail = el("button", { type: "button", class: "fp-act", dataset: { fa: "detail" }, "aria-haspopup": "dialog" },
+    "פרטים: ראיות, הערות והיסטוריה");
+  detail.addEventListener("click", () => openDrawer(r.id));
+  moreBody.append(detail);
+  more.append(moreBody);
 
   const navBtn = (fa, label, delta, dis) => {
     const b = el("button", { type: "button", class: "btn sm", dataset: { fa } }, label);
@@ -121,39 +189,7 @@ function renderFocusPane() {
     el("span", { class: "fp-pos" }, "ממצא " + fmtNum(idx + 1) + " מתוך " + fmtNum(n) + " בעמוד"),
     navBtn("next", "הבא ›", 1, idx >= n - 1 && S.page >= lastPage()));
 
-  const pair = el("div", { class: "fp-pair", dir: "rtl" },
-    wordDiffNode(r.word || "", fix, "err", "w-err"));
-  if (fix) pair.append(el("span", { class: "fp-arrow", "aria-hidden": "true" }, "←"),
-    wordDiffNode(fix, r.word || "", "fix", "w-fix"));
-
-  const snippet = el("div", { class: "fp-snippet" }, renderSnippet(r.snippet, r.word, null, fix));
-
-  const info = statusInfo(st);
-  const meta = el("dl", { class: "fp-meta" },
-    el("dt", null, "סטטוס"), el("dd", null, el("span", { class: "chip st-" + st }, (info.icon ? info.icon + " " : "") + info.hebrew)),
-    el("dt", null, "סוג שגיאה"), el("dd", null, errtypeInfo(r.errtype).hebrew || r.errtype || ""),
-    el("dt", null, "ציון"), el("dd", null, fmtRank(r.rank), r.verified ? el("span", { class: "vbadge" }, "מאומת") : null),
-    el("dt", null, "ספר"), el("dd", null, el("bdi", null, r.source || "")),
-    el("dt", null, "מראה מקום"), el("dd", null, el("bdi", null, r.ref || "")));
-
-  const acts = el("div", { class: "fp-actions", role: "group", "aria-label": "החלטה על הממצא" });
-  for (const s of statuses()) {
-    if (s.key === "pending") continue;
-    const b = el("button", { type: "button", class: "btn", dataset: { fa: "st-" + s.key }, "aria-pressed": String(st === s.key) },
-      (s.icon ? s.icon + " " : "") + s.hebrew);
-    b.addEventListener("click", async () => {
-      const id = r.id;
-      try { await setStatus([id], s.key); } catch (e) { return; }   // the toast is shown
-      // on to the next finding, the keyboard staying on the same button
-      if (S.focusId === id) await stepFocus(1);
-    });
-    acts.append(b);
-  }
-  const more = el("button", { type: "button", class: "btn", dataset: { fa: "detail" }, "aria-haspopup": "dialog" },
-    "פרטים: ראיות, הערות והיסטוריה");
-  more.addEventListener("click", () => openDrawer(r.id));
-
-  box.replaceChildren(el("h2", null, "הממצא הנבחר"), nav, pair, snippet, meta, acts, more);
+  box.replaceChildren(el("h2", { class: "sr-only" }, "הממצא הנבחר"), chips, where, snippet, acts, more, nav);
   if (had) {
     const again = box.querySelector('[data-fa="' + had + '"]');
     if (again && !again.disabled) again.focus();
