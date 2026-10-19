@@ -1888,3 +1888,21 @@ table.stats td.rowtotal, table.stats th.rowtotal { font-weight: var(--fw-bold); 
 @media (max-width: 760px) { #cardBox .card-actions.primary-row { grid-template-columns: minmax(0, 1fr); } }
 #cardBox .cl .pair-copy .ic { width: 14px; height: 14px; }
 #cardBox .cl .pair-copy { line-height: 1; display: inline-flex; }
+
+/* ---- help, as in the layout prototype: one topic at a time, the topics in a column ---- */
+#main:has(> #view-help.visible) { padding: 0; background: var(--panel); }
+#view-help { position: relative; padding: 0; max-width: none; }
+.help-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 190px; align-items: stretch; min-height: calc(100vh - var(--topbar-h)); }
+#helpBody { max-width: 760px; width: 100%; margin: 0 auto; padding: 18px 24px 40px; }
+#helpBody .help-block { border: 0; box-shadow: none; padding: 0; background: none; margin: 0; }
+#helpBody .help-block[hidden] { display: none; }
+#helpBody .help-block h3 { color: var(--text); font-size: var(--fs-md); font-weight: var(--fw-medium); margin: 0 0 var(--sp-3); }
+#helpNav { background: var(--panel-2); border-inline-start: 1px solid var(--border); display: flex; flex-direction: column; }
+#helpNav button { text-align: start; padding: 10px 14px; border: 0; border-bottom: 1px solid var(--border); background: none; color: var(--text); font: inherit; font-size: var(--fs-sm); cursor: pointer; }
+#helpNav button:hover { background: var(--accent-soft); }
+#helpNav button.active { background: var(--accent-soft); color: var(--accent-strong); }
+@media (max-width: 760px) {
+  .help-wrap { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  #helpNav { flex-direction: row; flex-wrap: wrap; border-inline-start: 0; border-bottom: 1px solid var(--border); }
+  #helpNav button { border-bottom: 0; }
+}
